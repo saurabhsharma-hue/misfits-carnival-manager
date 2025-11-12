@@ -852,6 +852,37 @@
                 if (savedClubs) clubsList = JSON.parse(savedClubs);
                 if (savedTasks) allTasks = JSON.parse(savedTasks);
 
+                // Add sample data for testing if no data exists
+                if (carnivalsList.length === 0) {
+                    carnivalsList = [
+                        {id: 1, name: "Test Carnival 2024", description: "Sample carnival for testing", startDate: "2024-11-15", endDate: "2024-11-30"}
+                    ];
+
+                    clubsList = [
+                        {id: 1, name: "Test Club Operations", activity: "Operations", commissionType: "performance", carnivals: [1]},
+                        {id: 2, name: "Test Club Marketing", activity: "Marketing", commissionType: "fixed", carnivals: [1]}
+                    ];
+
+                    allTasks = {
+                        1: {
+                            carnivalTasks: [
+                                {id: 'c1', description: 'Setup venue decorations', team: 'Operations', owner: 'Joy', status: 'Pending', expectedDate: '2024-11-20', priority: 'high'},
+                                {id: 'c2', description: 'Social media campaign launch', team: 'Marketing', owner: 'Ayushi', status: 'In Progress', expectedDate: '2024-11-18', priority: 'medium'}
+                            ],
+                            clubs: {
+                                1: [
+                                    {id: 'cl1', description: 'Coordinate logistics team', team: 'Operations', owner: 'Joy', status: 'Pending', expectedDate: '2024-11-19', priority: 'high'},
+                                    {id: 'cl2', description: 'Equipment check', team: 'Operations', owner: 'Tauheed', status: 'Completed', expectedDate: '2024-11-15', priority: 'medium'}
+                                ],
+                                2: [
+                                    {id: 'cl3', description: 'Create promotional content', team: 'Marketing', owner: 'Ayushi', status: 'In Progress', expectedDate: '2024-11-17', priority: 'high'},
+                                    {id: 'cl4', description: 'Design flyers', team: 'Marketing', owner: 'Team Lead', status: 'Pending', expectedDate: '2024-11-25', priority: 'low'}
+                                ]
+                            }
+                        }
+                    };
+                }
+
                 updateAllDropdowns();
                 renderDashboard();
             } catch (error) {
@@ -1361,6 +1392,7 @@
                     carnivalTasks.forEach(task => {
                         if (task.team) teams.add(task.team);
                         if (task.owner) owners.add(task.owner);
+                        if (task.status) statuses.add(task.status);
                     });
 
                     // Get teams/owners from club tasks
@@ -1370,6 +1402,7 @@
                         clubTasks.forEach(task => {
                             if (task.team) teams.add(task.team);
                             if (task.owner) owners.add(task.owner);
+                            if (task.status) statuses.add(task.status);
                         });
                     });
                 });
@@ -1759,6 +1792,7 @@
                 // Use same data approach as getFilteredTimelineTasks (working approach)
                 const teams = new Set(['Operations', 'Marketing', 'Finance', 'Tech']);
                 const owners = new Set(['Joy', 'Ayushi', 'Tauheed', 'Team Lead']);
+                const statuses = new Set(['Pending', 'In Progress', 'Completed', 'Done', 'Blocked']);
 
                 console.log('📋 Initial teams:', Array.from(teams));
                 console.log('📋 Initial owners:', Array.from(owners));
@@ -1781,6 +1815,7 @@
                     carnivalTasks.forEach(task => {
                         if (task.team) teams.add(task.team);
                         if (task.owner) owners.add(task.owner);
+                        if (task.status) statuses.add(task.status);
                     });
 
                     // Get teams/owners from club tasks
@@ -1792,6 +1827,7 @@
                         clubTasks.forEach(task => {
                             if (task.team) teams.add(task.team);
                             if (task.owner) owners.add(task.owner);
+                            if (task.status) statuses.add(task.status);
                         });
                     });
                 });
@@ -1875,14 +1911,15 @@
                     return;
                 }
                 statusFilter.innerHTML = '<option value="all">All Status</option>';
-                const statuses = ['pending', 'in-progress', 'completed'];
-                statuses.forEach(status => {
+                const statusesArray = Array.from(statuses).sort();
+                console.log('📋 Statuses to add:', statusesArray);
+                statusesArray.forEach(status => {
                     const option = document.createElement('option');
                     option.value = status;
-                    option.textContent = status === 'in-progress' ? 'In Progress' : status.charAt(0).toUpperCase() + status.slice(1);
+                    option.textContent = status;
                     statusFilter.appendChild(option);
                 });
-                console.log(`✅ Status filter updated with ${statuses.length} options`);
+                console.log(`✅ Status filter updated with ${statusesArray.length} options`);
 
                 console.log('✅ updateTimelineDropdowns completed successfully');
 
@@ -1893,42 +1930,46 @@
 
         function updateTimelineView() {
             console.log('🔍 Timeline filters triggered');
-            const viewMode = document.getElementById('timeline-view-mode').value;
-            const personalSelect = document.getElementById('personal-owner-select');
-            const personalAlert = document.getElementById('personal-dashboard-alert');
-
-            if (viewMode === 'my-tasks') {
-                personalSelect.classList.remove('hidden');
-                personalAlert.classList.remove('hidden');
-
-                // Update personal owner dropdown
-                const allTasks = getAllTasksFlat();
-                const owners = new Set();
-                allTasks.forEach(task => {
-                    if (task.owner) owners.add(task.owner);
-                });
-
-                personalSelect.innerHTML = '<option value="">Select Your Name</option>';
-                Array.from(owners).sort().forEach(owner => {
-                    const option = document.createElement('option');
-                    option.value = owner;
-                    option.textContent = owner;
-                    personalSelect.appendChild(option);
-                });
-
-                const selectedOwner = personalSelect.value;
-                if (selectedOwner) {
-                    document.getElementById('personal-owner-name').textContent = selectedOwner;
-                }
-            } else {
-                personalSelect.classList.add('hidden');
-                personalAlert.classList.add('hidden');
-            }
-
+            // Simplified Timeline - just re-render with current filters
             renderTimeline();
         }
 
         function getFilteredTimelineTasks() {
+            console.log('🔍 ===== getFilteredTimelineTasks START =====');
+
+            // TEMP DEBUG: Return all tasks without filtering to test rendering
+            if (false) {  // Change to false to enable normal filtering
+                console.log('🚨 BYPASS MODE: Returning all tasks without filtering');
+                const allTasksList = [];
+
+                carnivalsList.forEach(carnival => {
+                    const carnivalData = allTasks[carnival.id];
+                    if (carnivalData) {
+                        // Add all carnival tasks
+                        (carnivalData.carnivalTasks || []).forEach(task => {
+                            allTasksList.push({...task, carnivalId: carnival.id, carnivalName: carnival.name, taskType: 'carnival'});
+                        });
+
+                        // Add all club tasks
+                        clubsList.filter(club => club.carnivals.includes(carnival.id)).forEach(club => {
+                            (carnivalData.clubs[club.id] || []).forEach(task => {
+                                allTasksList.push({...task, carnivalId: carnival.id, carnivalName: carnival.name, clubId: club.id, clubName: club.name, taskType: 'club'});
+                            });
+                        });
+                    }
+                });
+
+                console.log(`🚨 BYPASS RESULT: ${allTasksList.length} tasks`);
+                console.log('🔍 ===== getFilteredTimelineTasks END (BYPASS) =====');
+                return allTasksList;
+            }
+
+            // Debug: Check basic data availability
+            console.log('📊 Data Check:');
+            console.log('  carnivalsList.length:', carnivalsList.length);
+            console.log('  clubsList.length:', clubsList.length);
+            console.log('  allTasks keys:', Object.keys(allTasks));
+
             // Use EXACT same approach as Task Tracker - simple and reliable
             const allTasksList = [];
 
@@ -1940,23 +1981,68 @@
             const statusFilter = document.getElementById('timeline-status-filter').value;
             const taskTypeFilter = document.getElementById('timeline-task-type').value;
 
+            // Debug: Log filter values
+            console.log('🔍 FILTER VALUES:');
+            console.log('  Team Filter:', teamFilter, '(should be "all" or specific team)');
+            console.log('  Owner Filter:', ownerFilter, '(should be "all" or specific owner)');
+            console.log('  Status Filter:', statusFilter, '(should be "all" or specific status)');
+            console.log('  Carnival Filter:', carnivalFilter, '(should be "all" or specific ID)');
+            console.log('  Club Filter:', clubFilter, '(should be "all" or specific ID)');
+            console.log('  Task Type Filter:', taskTypeFilter, '(should be "all", "carnival", or "club")');
+
+            // Check for null/undefined filter values
+            if (!teamFilter) console.log('⚠️ teamFilter is null/undefined!');
+            if (!ownerFilter) console.log('⚠️ ownerFilter is null/undefined!');
+            if (!statusFilter) console.log('⚠️ statusFilter is null/undefined!');
+            if (!carnivalFilter) console.log('⚠️ carnivalFilter is null/undefined!');
+            if (!clubFilter) console.log('⚠️ clubFilter is null/undefined!');
+            if (!taskTypeFilter) console.log('⚠️ taskTypeFilter is null/undefined!');
+
             // Simple filter function (copied from Task Tracker)
             const filterTasks = (tasks) => {
                 return tasks.filter(task => {
-                    if (teamFilter !== 'all' && task.team !== teamFilter) return false;
-                    if (ownerFilter !== 'all' && task.owner !== ownerFilter) return false;
-                    if (statusFilter !== 'all' && task.status !== statusFilter) return false;
+                    console.log(`🧪 Testing task: "${task.description}"`);
+                    console.log(`  Task team: "${task.team}" vs Filter: "${teamFilter}"`);
+                    console.log(`  Task owner: "${task.owner}" vs Filter: "${ownerFilter}"`);
+                    console.log(`  Task status: "${task.status}" vs Filter: "${statusFilter}"`);
+
+                    if (teamFilter !== 'all' && task.team !== teamFilter) {
+                        console.log(`  ❌ REJECTED: Team mismatch`);
+                        return false;
+                    }
+                    if (ownerFilter !== 'all' && task.owner !== ownerFilter) {
+                        console.log(`  ❌ REJECTED: Owner mismatch`);
+                        return false;
+                    }
+                    if (statusFilter !== 'all' && task.status !== statusFilter) {
+                        console.log(`  ❌ REJECTED: Status mismatch`);
+                        return false;
+                    }
+                    console.log(`  ✅ ACCEPTED: Task passed all filters`);
                     return true;
                 });
             };
 
             // Process each carnival (same structure as Task Tracker)
+            console.log('🎪 Processing carnivals:');
             carnivalsList.forEach(carnival => {
+                console.log(`  Processing carnival: ${carnival.id} (${carnival.name})`);
+                console.log(`  Carnival filter: "${carnivalFilter}"`);
+                console.log(`  Type check: carnival.id = ${carnival.id} (${typeof carnival.id}), carnivalFilter = ${carnivalFilter} (${typeof carnivalFilter})`);
+
                 // Apply carnival filter first
-                if (carnivalFilter !== 'all' && carnival.id != carnivalFilter) return;
+                if (carnivalFilter !== 'all' && carnival.id != carnivalFilter) {
+                    console.log(`  ⏭️ Skipping carnival ${carnival.id} due to filter`);
+                    return;
+                }
+                console.log(`  ✅ Carnival ${carnival.id} passed filter`);
 
                 const carnivalData = allTasks[carnival.id];
-                if (!carnivalData) return;
+                if (!carnivalData) {
+                    console.log(`  ❌ No data found for carnival ${carnival.id}`);
+                    return;
+                }
+                console.log(`  ✅ Found carnival data for ${carnival.id}`);
 
                 // Add carnival tasks
                 const carnivalTasks = carnivalData.carnivalTasks || [];
@@ -1997,15 +2083,12 @@
                 });
             });
 
-            // Special handling for personal dashboard
-            if (viewMode === 'my-tasks') {
-                const personalOwner = document.getElementById('personal-owner-select').value;
-                if (personalOwner) {
-                    return allTasksList.filter(task => task.owner === personalOwner);
-                } else {
-                    return [];
-                }
-            }
+            // Removed personal dashboard viewMode logic - not needed for simple Timeline
+
+            console.log('🎯 Final Results:');
+            console.log('  allTasksList.length:', allTasksList.length);
+            console.log('  Sample tasks:', allTasksList.slice(0, 2));
+            console.log('🔍 ===== getFilteredTimelineTasks END =====');
 
             return allTasksList;
         }
@@ -2072,9 +2155,20 @@
             document.getElementById('timeline-completion-rate').textContent = completionRate + '%';
 
             if (totalFiltered === 0) {
-                container.innerHTML = `<div class="bg-yellow-50 border border-yellow-200 p-6 rounded-lg text-center">
-                    <h3 class="text-lg font-medium text-yellow-800 mb-2">No Tasks Match Your Filters</h3>
-                    <p class="text-yellow-700">Try adjusting the filters above to see more tasks.</p>
+                // TEMP DEBUG: Show raw data even if filtered result is empty
+                console.log('🚨 ZERO TASKS - SHOWING DEBUG INFO');
+                container.innerHTML = `<div class="bg-red-50 border border-red-200 p-6 rounded-lg">
+                    <h3 class="text-lg font-medium text-red-800 mb-2">DEBUG: No Tasks Found</h3>
+                    <p class="text-red-700">Carnivals: ${carnivalsList.length}, AllTasks keys: [${Object.keys(allTasks).join(', ')}]</p>
+                    <p class="text-red-700">Check browser console for detailed debug output.</p>
+                    <details class="mt-4">
+                        <summary class="cursor-pointer font-medium">Raw Data Sample</summary>
+                        <pre class="mt-2 text-xs bg-gray-100 p-2 rounded">${JSON.stringify({
+                            carnivalsList: carnivalsList,
+                            allTasksKeys: Object.keys(allTasks),
+                            sampleCarnivalData: allTasks[1] ? 'Found' : 'Missing'
+                        }, null, 2)}</pre>
+                    </details>
                 </div>`;
                 return;
             }
