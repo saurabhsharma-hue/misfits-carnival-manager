@@ -564,6 +564,42 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Task Transfer Options -->
+                    <div class="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                        <h4 class="font-medium text-purple-800 mb-3">🎪 Transfer Task</h4>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-purple-700 mb-2">Transfer Options</label>
+                                <select id="task-transfer-type" class="w-full px-3 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500" onchange="updateTransferOptions()">
+                                    <option value="">Select transfer option...</option>
+                                    <option value="template-to-carnival">Move from Template to Carnival Level</option>
+                                    <option value="club-to-carnival">Move from Club to Carnival Level</option>
+                                    <option value="carnival-to-club">Move from Carnival to Club Level</option>
+                                    <option value="template-to-club">Move from Template to Specific Club</option>
+                                </select>
+                            </div>
+
+                            <div id="transfer-carnival-section" class="hidden">
+                                <label class="block text-sm font-medium text-purple-700 mb-2">Select Carnival</label>
+                                <select id="task-transfer-carnival" class="w-full px-3 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                                    <option value="">Choose carnival...</option>
+                                </select>
+                            </div>
+
+                            <div id="transfer-club-section" class="hidden">
+                                <label class="block text-sm font-medium text-purple-700 mb-2">Select Club</label>
+                                <select id="task-transfer-club" class="w-full px-3 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                                    <option value="">Choose club...</option>
+                                    <option value="all">All Clubs in Carnival</option>
+                                </select>
+                            </div>
+
+                            <button id="transfer-action-btn" onclick="executeTaskTransfer()" class="hidden w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors">
+                                Execute Transfer
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="flex items-center justify-between p-6 border-t bg-gray-50">
@@ -1562,7 +1598,7 @@
                                         <div class="flex items-start justify-between">
                                             <div class="flex-1">
                                                 <p class="text-sm font-medium text-gray-800 mb-2">${task.description}</p>
-                                                <div class="flex items-center space-x-2">
+                                                <div class="flex items-center space-x-2 mb-2">
                                                     <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">${task.team}</span>
                                                     <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">${task.owner}</span>
                                                     <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">${task.status}</span>
@@ -1598,7 +1634,7 @@
                                     <div class="flex items-start justify-between">
                                         <div class="flex-1">
                                             <p class="text-sm font-medium text-gray-800 mb-2">${task.description}</p>
-                                            <div class="flex items-center space-x-2">
+                                            <div class="flex items-center space-x-2 mb-2">
                                                 <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">${task.team}</span>
                                                 <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">${task.owner}</span>
                                                 <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">${task.status}</span>
@@ -2246,6 +2282,59 @@
         }
 
         // Delete task function
+        // Transfer Task from Club Level to Carnival Level
+        function transferTaskToCarnival(carnivalId, clubId, taskId, taskDescription) {
+            if (!confirm(`Transfer "${taskDescription}" from club level to carnival level?\n\nThis will:\n• Remove the task from ${clubsList.find(c => c.id == clubId)?.name || 'this club'}\n• Add it as a carnival-level task\n• Apply to ALL clubs in this carnival\n\nContinue?`)) {
+                return;
+            }
+
+            try {
+                // Find the task in club tasks
+                const carnival = allTasks[carnivalId];
+                if (!carnival || !carnival.clubs[clubId]) {
+                    alert('Club tasks not found.');
+                    return;
+                }
+
+                const clubTasks = carnival.clubs[clubId];
+                const taskIndex = clubTasks.findIndex(task => task.id === taskId);
+
+                if (taskIndex === -1) {
+                    alert('Task not found in club.');
+                    return;
+                }
+
+                const taskToTransfer = clubTasks[taskIndex];
+
+                // Create carnival-level task
+                const carnivalTask = {
+                    ...taskToTransfer,
+                    id: Date.now().toString(),
+                    transferredFrom: clubsList.find(c => c.id == clubId)?.name || 'Unknown Club',
+                    transferredAt: new Date().toISOString().split('T')[0]
+                };
+
+                // Add to carnival-level tasks
+                if (!carnival.carnivalTasks) {
+                    carnival.carnivalTasks = [];
+                }
+                carnival.carnivalTasks.push(carnivalTask);
+
+                // Remove from club tasks
+                clubTasks.splice(taskIndex, 1);
+
+                // Update UI
+                renderTaskTracker();
+
+                alert(`Task "${taskDescription}" transferred to carnival level successfully!\n\nIt now applies to all clubs in this carnival.`);
+
+            } catch (error) {
+                console.error("Error transferring task:", error);
+                alert("Error transferring task to carnival level.");
+            }
+        }
+
+
         function deleteTask(index) {
             const task = taskTemplate[index];
             const confirmed = confirm('Are you sure you want to delete this mandatory task?\n\n' + task.description + '\n\nThis will affect all future club registrations.');
@@ -2322,6 +2411,263 @@
         function closeTaskDetailsModal() {
             document.getElementById('task-details-modal').classList.add('hidden');
             currentTaskDetails = null;
+            // Reset transfer options
+            document.getElementById('task-transfer-type').value = '';
+            document.getElementById('transfer-carnival-section').classList.add('hidden');
+            document.getElementById('transfer-club-section').classList.add('hidden');
+            document.getElementById('transfer-action-btn').classList.add('hidden');
+        }
+
+        // Update transfer options based on selection
+        function updateTransferOptions() {
+            const transferType = document.getElementById('task-transfer-type').value;
+            const carnivalSection = document.getElementById('transfer-carnival-section');
+            const clubSection = document.getElementById('transfer-club-section');
+            const actionBtn = document.getElementById('transfer-action-btn');
+
+            // Hide all sections initially
+            carnivalSection.classList.add('hidden');
+            clubSection.classList.add('hidden');
+            actionBtn.classList.add('hidden');
+
+            if (!transferType) return;
+
+            // Populate carnival dropdown
+            const carnivalSelect = document.getElementById('task-transfer-carnival');
+            carnivalSelect.innerHTML = '<option value="">Choose carnival...</option>';
+            carnivalsList.forEach(carnival => {
+                carnivalSelect.innerHTML += `<option value="${carnival.id}">${carnival.name}</option>`;
+            });
+
+            if (transferType === 'template-to-carnival') {
+                carnivalSection.classList.remove('hidden');
+                actionBtn.classList.remove('hidden');
+                actionBtn.textContent = 'Transfer to Carnival Level';
+            } else if (transferType === 'club-to-carnival') {
+                actionBtn.classList.remove('hidden');
+                actionBtn.textContent = 'Transfer to Carnival Level';
+            } else if (transferType === 'carnival-to-club') {
+                carnivalSection.classList.remove('hidden');
+                clubSection.classList.remove('hidden');
+                actionBtn.classList.remove('hidden');
+                actionBtn.textContent = 'Transfer to Club Level';
+
+                // Set up club selection based on carnival
+                carnivalSelect.addEventListener('change', function() {
+                    updateClubOptions(this.value);
+                });
+            } else if (transferType === 'template-to-club') {
+                carnivalSection.classList.remove('hidden');
+                clubSection.classList.remove('hidden');
+                actionBtn.classList.remove('hidden');
+                actionBtn.textContent = 'Transfer to Club Level';
+
+                carnivalSelect.addEventListener('change', function() {
+                    updateClubOptions(this.value);
+                });
+            }
+        }
+
+        // Update club options based on selected carnival
+        function updateClubOptions(carnivalId) {
+            const clubSelect = document.getElementById('task-transfer-club');
+            clubSelect.innerHTML = '<option value="">Choose club...</option>';
+
+            if (carnivalId) {
+                const clubs = clubsList.filter(club => club.carnivals.includes(parseInt(carnivalId)));
+                clubSelect.innerHTML += '<option value="all">All Clubs in Carnival</option>';
+                clubs.forEach(club => {
+                    clubSelect.innerHTML += `<option value="${club.id}">${club.name} (${club.activity})</option>`;
+                });
+            }
+        }
+
+        // Execute the transfer based on current selection
+        function executeTaskTransfer() {
+            if (!currentTaskDetails) return;
+
+            const transferType = document.getElementById('task-transfer-type').value;
+            const carnivalId = document.getElementById('task-transfer-carnival').value;
+            const clubId = document.getElementById('task-transfer-club').value;
+
+            const task = currentTaskDetails.task;
+            const taskDescription = task.description;
+
+            switch(transferType) {
+                case 'template-to-carnival':
+                    if (!carnivalId) {
+                        alert('Please select a carnival.');
+                        return;
+                    }
+                    transferTemplateToCarnaval(task, carnivalId, taskDescription);
+                    break;
+
+                case 'club-to-carnival':
+                    transferClubToCarnival(task, taskDescription);
+                    break;
+
+                case 'carnival-to-club':
+                    if (!carnivalId || !clubId) {
+                        alert('Please select both carnival and club.');
+                        return;
+                    }
+                    transferCarnivalToClub(task, carnivalId, clubId, taskDescription);
+                    break;
+
+                case 'template-to-club':
+                    if (!carnivalId || !clubId) {
+                        alert('Please select both carnival and club.');
+                        return;
+                    }
+                    transferTemplateToClub(task, carnivalId, clubId, taskDescription);
+                    break;
+
+                default:
+                    alert('Please select a transfer option.');
+                    return;
+            }
+        }
+
+        // Transfer functions for different scenarios
+        function transferTemplateToCarnaval(task, carnivalId, taskDescription) {
+            const carnival = carnivalsList.find(c => c.id == carnivalId);
+            if (!carnival) return;
+
+            if (!confirm(`Transfer "${taskDescription}" from template to ${carnival.name}?\n\n• Removes from mandatory template\n• Adds to ${carnival.name} carnival level\n• Applies to all clubs in ${carnival.name}`)) {
+                return;
+            }
+
+            // Find task index in template
+            const taskIndex = taskTemplate.findIndex(t => t.id === task.id);
+            if (taskIndex === -1) return;
+
+            // Create carnival task
+            const carnivalTask = { ...task, id: Date.now().toString() };
+
+            // Add to carnival
+            if (!allTasks[carnivalId]) allTasks[carnivalId] = { carnivalTasks: [], clubs: {} };
+            if (!allTasks[carnivalId].carnivalTasks) allTasks[carnivalId].carnivalTasks = [];
+            allTasks[carnivalId].carnivalTasks.push(carnivalTask);
+
+            // Remove from template
+            taskTemplate.splice(taskIndex, 1);
+
+            closeTaskDetailsModal();
+            renderTaskTemplate();
+            updateTemplateCount();
+            alert(`✅ Task transferred to ${carnival.name} successfully!`);
+        }
+
+        function transferClubToCarnival(task, taskDescription) {
+            const carnivalId = currentTaskDetails.carnivalId;
+            const clubId = currentTaskDetails.clubId;
+
+            if (!carnivalId || !clubId) return;
+
+            const carnival = carnivalsList.find(c => c.id == carnivalId);
+            const club = clubsList.find(c => c.id == clubId);
+
+            if (!confirm(`Transfer "${taskDescription}" from ${club?.name} to ${carnival?.name} carnival level?\n\n• Removes from club\n• Adds to carnival level\n• Applies to all clubs in carnival`)) {
+                return;
+            }
+
+            // Find task in club tasks
+            const clubTasks = allTasks[carnivalId]?.clubs?.[clubId] || [];
+            const taskIndex = clubTasks.findIndex(t => t.id === task.id);
+            if (taskIndex === -1) return;
+
+            // Create carnival task
+            const carnivalTask = { ...task, id: Date.now().toString() };
+
+            // Add to carnival level
+            if (!allTasks[carnivalId].carnivalTasks) allTasks[carnivalId].carnivalTasks = [];
+            allTasks[carnivalId].carnivalTasks.push(carnivalTask);
+
+            // Remove from club
+            clubTasks.splice(taskIndex, 1);
+
+            closeTaskDetailsModal();
+            renderTaskTracker();
+            alert(`✅ Task transferred to carnival level successfully!`);
+        }
+
+        function transferCarnivalToClub(task, carnivalId, clubId, taskDescription) {
+            const carnival = carnivalsList.find(c => c.id == carnivalId);
+            const club = clubsList.find(c => c.id == clubId);
+
+            if (clubId === 'all') {
+                // Transfer to all clubs
+                if (!confirm(`Transfer "${taskDescription}" from carnival to ALL clubs in ${carnival?.name}?\n\n• Removes from carnival level\n• Adds to each club individually`)) {
+                    return;
+                }
+
+                const clubs = clubsList.filter(c => c.carnivals.includes(parseInt(carnivalId)));
+                clubs.forEach(club => {
+                    const clubTask = { ...task, id: Date.now() + Math.random().toString() };
+                    if (!allTasks[carnivalId].clubs[club.id]) allTasks[carnivalId].clubs[club.id] = [];
+                    allTasks[carnivalId].clubs[club.id].push(clubTask);
+                });
+            } else {
+                // Transfer to specific club
+                if (!confirm(`Transfer "${taskDescription}" from carnival to ${club?.name}?\n\n• Removes from carnival level\n• Adds to ${club?.name} only`)) {
+                    return;
+                }
+
+                const clubTask = { ...task, id: Date.now().toString() };
+                if (!allTasks[carnivalId].clubs[clubId]) allTasks[carnivalId].clubs[clubId] = [];
+                allTasks[carnivalId].clubs[clubId].push(clubTask);
+            }
+
+            // Remove from carnival level
+            const carnivalTasks = allTasks[currentTaskDetails.carnivalId]?.carnivalTasks || [];
+            const taskIndex = carnivalTasks.findIndex(t => t.id === task.id);
+            if (taskIndex !== -1) {
+                carnivalTasks.splice(taskIndex, 1);
+            }
+
+            closeTaskDetailsModal();
+            renderTaskTracker();
+            alert(`✅ Task transferred to club level successfully!`);
+        }
+
+        function transferTemplateToClub(task, carnivalId, clubId, taskDescription) {
+            const carnival = carnivalsList.find(c => c.id == carnivalId);
+            const club = clubsList.find(c => c.id == clubId);
+
+            if (clubId === 'all') {
+                if (!confirm(`Transfer "${taskDescription}" from template to ALL clubs in ${carnival?.name}?\n\n• Removes from template\n• Adds to each club in ${carnival?.name}`)) {
+                    return;
+                }
+
+                const clubs = clubsList.filter(c => c.carnivals.includes(parseInt(carnivalId)));
+                clubs.forEach(club => {
+                    const clubTask = { ...task, id: Date.now() + Math.random().toString() };
+                    if (!allTasks[carnivalId]) allTasks[carnivalId] = { carnivalTasks: [], clubs: {} };
+                    if (!allTasks[carnivalId].clubs[club.id]) allTasks[carnivalId].clubs[club.id] = [];
+                    allTasks[carnivalId].clubs[club.id].push(clubTask);
+                });
+            } else {
+                if (!confirm(`Transfer "${taskDescription}" from template to ${club?.name}?\n\n• Removes from template\n• Adds to ${club?.name} only`)) {
+                    return;
+                }
+
+                const clubTask = { ...task, id: Date.now().toString() };
+                if (!allTasks[carnivalId]) allTasks[carnivalId] = { carnivalTasks: [], clubs: {} };
+                if (!allTasks[carnivalId].clubs[clubId]) allTasks[carnivalId].clubs[clubId] = [];
+                allTasks[carnivalId].clubs[clubId].push(clubTask);
+            }
+
+            // Remove from template
+            const taskIndex = taskTemplate.findIndex(t => t.id === task.id);
+            if (taskIndex !== -1) {
+                taskTemplate.splice(taskIndex, 1);
+            }
+
+            closeTaskDetailsModal();
+            renderTaskTemplate();
+            renderTaskTracker();
+            updateTemplateCount();
+            alert(`✅ Task transferred to club level successfully!`);
         }
 
         function saveTaskDetails() {
