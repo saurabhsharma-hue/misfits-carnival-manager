@@ -2146,7 +2146,7 @@
 
             // Update summary stats
             const totalFiltered = filteredTasks.length;
-            const completed = filteredTasks.filter(t => t.status === 'completed').length;
+            const completed = filteredTasks.filter(t => t.status === 'Completed').length;
             const completionRate = totalFiltered > 0 ? Math.round((completed / totalFiltered) * 100) : 0;
 
             document.getElementById('timeline-total-filtered').textContent = totalFiltered;
@@ -2195,7 +2195,7 @@
                 if (expectedDate) {
                     const daysUntilDue = Math.ceil((expectedDate - today) / (1000 * 60 * 60 * 24));
 
-                    if (task.status === 'completed' || task.status === 'Done') {
+                    if (task.status === 'Completed' || task.status === 'Done') {
                         if (actualDate && actualDate <= expectedDate) {
                             timelineStatus = '✅ Completed on time';
                             timelineColor = 'green';
@@ -2276,8 +2276,8 @@
                             // Fall through to urgency sort for non-overdue tasks
 
                         case 'completed-last':
-                            const aCompleted = a.status === 'completed' || a.status === 'Done';
-                            const bCompleted = b.status === 'completed' || b.status === 'Done';
+                            const aCompleted = a.status === 'Completed' || a.status === 'Done';
+                            const bCompleted = b.status === 'Completed' || b.status === 'Done';
                             if (!aCompleted && bCompleted) return -1;
                             if (aCompleted && !bCompleted) return 1;
                             // Fall through to urgency sort for non-completed tasks
@@ -2375,13 +2375,7 @@
         }
 
         function renderTimelineListView(tasks, container) {
-            const viewMode = document.getElementById('timeline-view-mode').value;
-
-            // Handle personal dashboard mode
-            if (viewMode === 'my-tasks') {
-                renderPersonalDashboard(tasks, container);
-                return;
-            }
+            // Removed personal dashboard logic - not needed
 
             // Group tasks by carnival and club
             const groupedTasks = {};
