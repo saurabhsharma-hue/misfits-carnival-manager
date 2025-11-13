@@ -193,9 +193,10 @@ function initializeSampleData() {
 - ✅ Date validation for task creation working properly
 
 ## Deployment Status
-- ✅ **Local Commit:** Successfully committed to git repository
-- ⚠️ **Main Website Deployment:** Pending (SSH key authentication issue)
+- ✅ **Local Commit:** Successfully committed to git repository (commit: b621532)
+- ✅ **Main Website Deployment:** Successfully deployed to 13.201.15.180 using ec2-user@cdk-key-staging.pem
 - ✅ **Version Update:** Updated to v2.1.0
+- ✅ **Documentation:** Created comprehensive commit documentation
 
 ## Next Steps
 1. Resolve SSH key authentication for main website deployment
