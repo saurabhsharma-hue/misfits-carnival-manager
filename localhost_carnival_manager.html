@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Misfits Carnival Program Manager v2.1.1</title>
-    <!-- Version: 2.1.1 - Removed test functions and fixed club name display -->
+    <title>Misfits Carnival Program Manager v2.1.2</title>
+    <!-- Version: 2.1.2 - Removed test welcome popup -->
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- CSS Fix for Dropdown Interaction Issues -->
@@ -4786,12 +4786,6 @@
             updateAllDropdowns();
             renderDashboard();
 
-            // Show welcome message if test data was loaded
-            if (carnivalsList.length > 0) {
-                setTimeout(() => {
-                    alert('🎪 Welcome! Test data has been loaded with 2 carnivals, 3 clubs, and 90+ tasks. Try clicking on any task to see the enhanced details modal!');
-                }, 1000);
-            }
         };
     </script>
 </body>
