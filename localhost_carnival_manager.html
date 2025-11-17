@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Misfits Carnival Program Manager v2.1.3</title>
-    <!-- Version: 2.1.3 - Removed Firebase collaboration notification banner -->
+    <title>Misfits Carnival Program Manager v2.1.4</title>
+    <!-- Version: 2.1.4 - Fixed clubs dropdown in revenue tracking -->
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- CSS Fix for Dropdown Interaction Issues -->
@@ -4385,11 +4385,10 @@
 
             clubSelect.innerHTML = '<option value="">Select Club</option>';
 
-            if (carnivalId && allTasks[carnivalId]) {
-                Object.keys(allTasks[carnivalId]).forEach(clubId => {
-                    if (clubId !== 'carnivalTasks') {
-                        clubSelect.innerHTML += `<option value="${clubId}">${clubId}</option>`;
-                    }
+            if (carnivalId && allTasks[carnivalId] && allTasks[carnivalId].clubs) {
+                Object.keys(allTasks[carnivalId].clubs).forEach(clubId => {
+                    const club = clubsList.find(c => c.id == clubId) || { name: `Club ${clubId}` };
+                    clubSelect.innerHTML += `<option value="${clubId}">${club.name}</option>`;
                 });
             }
         }
