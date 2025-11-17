@@ -1,13 +1,21 @@
 # Carnival Commit Code Documentation
 
-## Latest Version: 2.1.3
-**Current Commit Hash:** 44fe331
-**Date:** November 13, 2025
+## Latest Version: 2.1.5
+**Current Commit Hash:** 83962eb
+**Date:** November 17, 2025
 **Author:** Claude Code Assistant
 
 ## Version History
 
-### v2.1.3 (Current) - Firebase Banner Removal
+### v2.1.5 (Current) - Club Dropdown Fix
+**Commit Hash:** 83962eb
+**Summary:** Fixed clubs dropdown in revenue tracking to show all clubs assigned to carnival, not just those with tasks
+
+### v2.1.4 - Revenue Dropdown Enhancement
+**Commit Hash:** [previous]
+**Summary:** Fixed clubs dropdown to display actual club names instead of IDs
+
+### v2.1.3 - Firebase Banner Removal
 **Commit Hash:** 44fe331
 **Summary:** Removed Firebase collaboration notification banner from production interface
 
@@ -23,7 +31,25 @@
 **Commit Hash:** b621532
 **Summary:** Fixed expandable carnival management functionality and alerts system with comprehensive data structure synchronization
 
-## v2.1.3 Changes (Current Version)
+## v2.1.5 Changes (Current Version)
+
+### 🎯 Club Dropdown Filter Fix
+- **Issue:** Revenue tracking clubs dropdown only showing clubs with tasks, not all clubs assigned to carnival
+- **User Report:** "Now I see the drop down but not every club is coming which is within sports fever"
+- **Root Cause:** `updateClubDropdown()` function only iterating through `allTasks[carnivalId].clubs` instead of all clubs assigned to carnival
+- **Fix:**
+  - Changed from task-based filtering to carnival assignment-based filtering
+  - Now uses `clubsList.filter(club => club.carnivals.includes(parseInt(carnivalId)))`
+  - Shows ALL clubs assigned to the selected carnival regardless of task existence
+  - Proper type conversion for carnivalId comparison
+
+## v2.1.4 Changes
+
+### 🏷️ Revenue Dropdown Club Names
+- **Issue:** Clubs dropdown showing club IDs instead of names
+- **Fix:** Enhanced dropdown to display actual club names using `club.name`
+
+## v2.1.3 Changes
 
 ### 🔥 Firebase Banner Removal
 - **Issue:** Firebase collaboration banner showing on production: "Initializing Real-Time Collaboration..." and "Firebase real-time collaboration active - All team members sync automatically!"
@@ -250,14 +276,14 @@ function initializeSampleData() {
 - ✅ Navigation tabs and dashboard sections working
 - ✅ Date validation for task creation working properly
 
-## Current Deployment Status (v2.1.3)
-- ✅ **Local Commit:** Successfully committed to git repository (commit: 44fe331)
-- ✅ **Localhost:** /Users/retalplaza/Downloads/localhost_carnival_manager.html - v2.1.3
-- ✅ **Main Website:** http://13.201.15.180 - v2.1.3 deployed
-- ✅ **Carnival Website:** http://carnival.misfits.net.in - v2.1.3 deployed
+## Current Deployment Status (v2.1.5)
+- ✅ **Local Commit:** Successfully committed to git repository (commit: 83962eb)
+- ✅ **Localhost:** /Users/retalplaza/Downloads/localhost_carnival_manager.html - v2.1.5
+- ✅ **Main Website:** http://13.201.15.180 - v2.1.5 deployed
+- ✅ **Carnival Website:** http://carnival.misfits.net.in - v2.1.5 deployed
 - ✅ **Synchronization:** All environments identical and synchronized
-- ✅ **Documentation:** Updated for v2.1.3 changes
-- ✅ **Production Ready:** No test functions, popups, or Firebase banners
+- ✅ **Documentation:** Updated for v2.1.5 changes
+- ✅ **Production Ready:** Revenue dropdown shows all clubs assigned to carnivals
 
 ## Previous Deployment (v2.1.0)
 - ✅ **Local Commit:** Successfully committed to git repository (commit: b621532)
