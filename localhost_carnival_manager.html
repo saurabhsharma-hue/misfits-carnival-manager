@@ -4385,10 +4385,14 @@
 
             clubSelect.innerHTML = '<option value="">Select Club</option>';
 
-            if (carnivalId && allTasks[carnivalId] && allTasks[carnivalId].clubs) {
-                Object.keys(allTasks[carnivalId].clubs).forEach(clubId => {
-                    const club = clubsList.find(c => c.id == clubId) || { name: `Club ${clubId}` };
-                    clubSelect.innerHTML += `<option value="${clubId}">${club.name}</option>`;
+            if (carnivalId) {
+                // Show all clubs assigned to this carnival (based on club.carnivals array)
+                const assignedClubs = clubsList.filter(club =>
+                    club.carnivals && club.carnivals.includes(parseInt(carnivalId))
+                );
+
+                assignedClubs.forEach(club => {
+                    clubSelect.innerHTML += `<option value="${club.id}">${club.name}</option>`;
                 });
             }
         }
