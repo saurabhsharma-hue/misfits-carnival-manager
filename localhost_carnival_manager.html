@@ -855,7 +855,8 @@
 
             // Initialize revenue data properly
             if (!window.revenueData) {
-                window.revenueData = {};
+                window.revenueData = revenueData || {};
+            } else {
                 revenueData = window.revenueData;
             }
 
@@ -3684,7 +3685,7 @@
 
         // Expandable Dashboard Functions
         let expandedCarnivals = new Set();
-        let revenueData = window.revenueData || {}; // Store revenue data: {carnivalId: {clubId: {total: 0, entries: []}}}
+        let revenueData = {}; // Store revenue data: {carnivalId: {clubId: {total: 0, entries: []}}}
 
         function toggleAllCarnivals() {
             const toggleText = document.getElementById('toggle-all-text');
@@ -4764,14 +4765,41 @@
                 return;
             }
 
-            // Use the existing revenue modal logic
-            window.currentRevenueTarget = { carnivalId, clubId };
-            document.getElementById('revenue-amount').value = amount;
-            document.getElementById('revenue-date').value = new Date().toISOString().split('T')[0];
-            addRevenue();
+            if (!amount || amount <= 0) {
+                alert('Please enter a valid amount');
+                return;
+            }
+
+            // Initialize revenue data structure
+            if (!revenueData[carnivalId]) revenueData[carnivalId] = {};
+            if (!revenueData[carnivalId][clubId]) revenueData[carnivalId][clubId] = { total: 0, entries: [] };
+
+            // Add revenue entry
+            const revenueEntry = {
+                id: Date.now().toString(),
+                amount: amount,
+                date: new Date().toISOString().split('T')[0],
+                description: 'Quick add revenue',
+                timestamp: new Date().toISOString()
+            };
+
+            revenueData[carnivalId][clubId].entries.push(revenueEntry);
+            revenueData[carnivalId][clubId].total += amount;
+
+            // Save to Firebase/localStorage
+            saveToFirebase('revenue', revenueData);
+
+            console.log(`💰 Quick added ₹${amount.toLocaleString()} revenue for club ${clubId} in carnival ${carnivalId}`);
 
             // Clear form
             document.getElementById('quick-revenue-amount').value = '';
+
+            // Refresh views
+            renderCarnivalMatrix();
+            renderRevenueSection();
+            updateBasicStats();
+
+            alert(`✅ Added ₹${amount.toLocaleString()} revenue successfully!`);
         }
 
         function updateClubDropdown() {
@@ -5125,6 +5153,13 @@
         window.onload = function() {
             console.log('Misfits Carnival Manager loaded');
             console.log('Template tasks:', taskTemplate.length);
+
+            // Initialize revenue data first
+            if (window.revenueData) {
+                revenueData = window.revenueData;
+            } else {
+                window.revenueData = revenueData;
+            }
 
             // For localhost testing - load immediate test data
             if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
