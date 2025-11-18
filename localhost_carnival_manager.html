@@ -1065,7 +1065,10 @@
                 if (savedCarnivals) carnivalsList = JSON.parse(savedCarnivals);
                 if (savedClubs) clubsList = JSON.parse(savedClubs);
                 if (savedTasks) allTasks = JSON.parse(savedTasks);
-                if (savedRevenue) revenueData = JSON.parse(savedRevenue);
+                if (savedRevenue) {
+                    revenueData = JSON.parse(savedRevenue);
+                    window.revenueData = revenueData; // Ensure window.revenueData is also set
+                }
 
                 // Add sample data for testing if no data exists
                 if (carnivalsList.length === 0) {
@@ -3418,6 +3421,107 @@
         }
 
 
+        // TEST FUNCTION - Verify task isolation between clubs
+        function testTaskIsolation() {
+            console.log('🧪 TESTING: Task Isolation Between Clubs');
+            console.log('=========================================');
+
+            // Find "Post event content" tasks across all clubs
+            let postEventTasks = [];
+
+            carnivalsList.forEach(carnival => {
+                const carnivalData = allTasks[carnival.id];
+                if (carnivalData && carnivalData.clubs) {
+                    Object.entries(carnivalData.clubs).forEach(([clubId, tasks]) => {
+                        tasks.forEach(task => {
+                            if (task.description && task.description.toLowerCase().includes('post event content')) {
+                                const club = clubsList.find(c => c.id == clubId);
+                                postEventTasks.push({
+                                    carnival: carnival.name,
+                                    club: club ? club.name : `Club ${clubId}`,
+                                    task: task,
+                                    location: `allTasks[${carnival.id}].clubs[${clubId}]`
+                                });
+                            }
+                        });
+                    });
+                }
+            });
+
+            console.log(`✅ Found ${postEventTasks.length} "Post event content" tasks:`);
+            postEventTasks.forEach((item, index) => {
+                console.log(`  ${index + 1}. ${item.carnival} → ${item.club}`);
+                console.log(`     ID: ${item.task.id}`);
+                console.log(`     Status: ${item.task.status || 'pending'}`);
+                console.log(`     Owner: ${item.task.owner || 'Not assigned'}`);
+            });
+
+            if (postEventTasks.length >= 2) {
+                // Test: Modify the first task
+                const firstTask = postEventTasks[0];
+                console.log('\n📝 TEST: Modifying first task...');
+                console.log(`   Before: "${firstTask.task.description}"`);
+
+                // Create a unique test description
+                const testDescription = `Post event content - TEST ${Date.now()}`;
+                firstTask.task.description = testDescription;
+
+                console.log(`   After: "${firstTask.task.description}"`);
+
+                // Check if other tasks were affected
+                console.log('\n🔍 Checking other tasks...');
+                let isolated = true;
+                postEventTasks.slice(1).forEach((item, index) => {
+                    if (item.task.description === testDescription) {
+                        console.log(`   ❌ Task ${index + 2} was ALSO modified! (${item.carnival} → ${item.club})`);
+                        isolated = false;
+                    } else {
+                        console.log(`   ✅ Task ${index + 2} remains unchanged (${item.carnival} → ${item.club})`);
+                    }
+                });
+
+                // Restore original description
+                firstTask.task.description = "Post event content";
+
+                if (isolated) {
+                    console.log('\n✅ SUCCESS: Task updates are properly isolated!');
+                } else {
+                    console.log('\n❌ FAILED: Task updates are affecting multiple clubs!');
+                }
+            } else {
+                console.log('\n⚠️  Need at least 2 "Post event content" tasks to test isolation');
+            }
+
+            console.log('=========================================\n');
+
+            // Also test unique IDs
+            console.log('🔍 Testing Task ID Uniqueness:');
+            const allTaskIds = new Set();
+            const duplicateIds = [];
+
+            carnivalsList.forEach(carnival => {
+                const carnivalData = allTasks[carnival.id];
+                if (carnivalData && carnivalData.clubs) {
+                    Object.entries(carnivalData.clubs).forEach(([clubId, tasks]) => {
+                        tasks.forEach(task => {
+                            if (allTaskIds.has(task.id)) {
+                                duplicateIds.push(task.id);
+                            }
+                            allTaskIds.add(task.id);
+                        });
+                    });
+                }
+            });
+
+            if (duplicateIds.length > 0) {
+                console.log(`❌ Found ${duplicateIds.length} duplicate task IDs:`, duplicateIds);
+            } else {
+                console.log(`✅ All ${allTaskIds.size} task IDs are unique!`);
+            }
+
+            return isolated && duplicateIds.length === 0;
+        }
+
         // TEST FUNCTION - Verify no auto-syncing between carnivals
         function testNoAutoSync() {
             console.log('🧪 TESTING: Verifying no auto-sync between carnivals...');
@@ -3580,7 +3684,7 @@
 
         // Expandable Dashboard Functions
         let expandedCarnivals = new Set();
-        let revenueData = {}; // Store revenue data: {carnivalId: {clubId: {total: 0, entries: []}}}
+        let revenueData = window.revenueData || {}; // Store revenue data: {carnivalId: {clubId: {total: 0, entries: []}}}
 
         function toggleAllCarnivals() {
             const toggleText = document.getElementById('toggle-all-text');
@@ -4329,20 +4433,51 @@
                 const carnivalRevenue = calculateCarnivalRevenue(carnival.id);
                 const carnivalData = revenueData[carnival.id] || {};
 
+                // Get clubs assigned to this carnival
+                const assignedClubs = clubsList.filter(club =>
+                    club.carnivals && club.carnivals.includes(parseInt(carnival.id))
+                );
+
                 container.innerHTML += `
-                    <div class="border rounded-lg p-4">
-                        <div class="flex items-center justify-between mb-2">
+                    <div class="border rounded-lg p-4 bg-white shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
                             <h5 class="font-medium text-gray-800">${carnival.name}</h5>
-                            <span class="font-bold text-green-600">₹${carnivalRevenue.toLocaleString()}</span>
+                            <span class="font-bold text-green-600 text-lg">₹${carnivalRevenue.toLocaleString()}</span>
                         </div>
-                        <div class="space-y-1">
-                            ${Object.entries(carnivalData).map(([clubId, clubData]) => `
-                                <div class="flex justify-between text-sm">
-                                    <span class="text-gray-600">${clubId}:</span>
-                                    <span class="text-gray-800">₹${clubData.total.toLocaleString()}</span>
-                                </div>
-                            `).join('')}
-                        </div>
+
+                        ${Object.keys(carnivalData).length > 0 ? `
+                            <div class="space-y-2">
+                                <div class="text-xs text-gray-500 font-medium mb-1">Club-wise Breakdown:</div>
+                                ${assignedClubs.map(club => {
+                                    const clubRevenue = carnivalData[club.id]?.total || 0;
+                                    const hasRevenue = clubRevenue > 0;
+                                    return `
+                                        <div class="flex justify-between items-center text-sm ${hasRevenue ? 'bg-green-50' : 'bg-gray-50'} p-2 rounded">
+                                            <div class="flex items-center space-x-2">
+                                                <span class="${hasRevenue ? 'text-gray-700 font-medium' : 'text-gray-500'}">${club.name}</span>
+                                                <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">${club.activity}</span>
+                                            </div>
+                                            <span class="${hasRevenue ? 'text-green-700 font-medium' : 'text-gray-400'}">₹${clubRevenue.toLocaleString()}</span>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        ` : `
+                            <div class="text-sm text-gray-500 italic">
+                                No revenue recorded yet
+                                ${assignedClubs.length > 0 ? `
+                                    <div class="mt-2 text-xs">
+                                        <div class="font-medium mb-1">Assigned Clubs:</div>
+                                        ${assignedClubs.map(club => `
+                                            <div class="flex items-center space-x-2 mb-1">
+                                                <span class="text-gray-600">• ${club.name}</span>
+                                                <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">${club.activity}</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `}
                     </div>
                 `;
             });
