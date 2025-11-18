@@ -260,6 +260,19 @@
                                 </button>
                             </div>
                         </div>
+
+                        <!-- Revenue Management -->
+                        <div>
+                            <h4 class="font-medium text-gray-700 mb-3">Manage Revenue Entries</h4>
+                            <div class="space-y-3">
+                                <select id="manage-revenue-carnival" class="w-full px-3 py-2 border rounded-lg" onchange="loadRevenueEntries()">
+                                    <option value="">Select Carnival</option>
+                                </select>
+                                <div id="revenue-entries-list" class="max-h-64 overflow-y-auto space-y-2">
+                                    <p class="text-sm text-gray-500">Select a carnival to view revenue entries</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -306,6 +319,40 @@
                         </button>
                         <button onclick="addRevenue()" class="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
                             Add Revenue
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Revenue Modal -->
+            <div id="edit-revenue-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+                <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">✏️ Edit Revenue Entry</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Amount (₹)</label>
+                            <input type="number" id="edit-revenue-amount" class="w-full px-3 py-2 border rounded-lg" placeholder="Amount">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                            <input type="text" id="edit-revenue-description" class="w-full px-3 py-2 border rounded-lg" placeholder="Description">
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">
+                                <strong>Club:</strong> <span id="edit-revenue-club-name"></span><br>
+                                <strong>Added:</strong> <span id="edit-revenue-timestamp"></span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3 mt-6">
+                        <button onclick="deleteRevenueEntry()" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
+                            Delete
+                        </button>
+                        <button onclick="closeEditRevenueModal()" class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400">
+                            Cancel
+                        </button>
+                        <button onclick="saveRevenueEdit()" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                            Save Changes
                         </button>
                     </div>
                 </div>
@@ -1004,6 +1051,7 @@
             localStorage.setItem('carnivalsList', JSON.stringify(carnivalsList));
             localStorage.setItem('clubsList', JSON.stringify(clubsList));
             localStorage.setItem('allTasks', JSON.stringify(allTasks));
+            localStorage.setItem('revenueData', JSON.stringify(revenueData));
         }
 
         function loadFromLocalStorage() {
@@ -1012,10 +1060,12 @@
                 const savedCarnivals = localStorage.getItem('carnivalsList');
                 const savedClubs = localStorage.getItem('clubsList');
                 const savedTasks = localStorage.getItem('allTasks');
+                const savedRevenue = localStorage.getItem('revenueData');
 
                 if (savedCarnivals) carnivalsList = JSON.parse(savedCarnivals);
                 if (savedClubs) clubsList = JSON.parse(savedClubs);
                 if (savedTasks) allTasks = JSON.parse(savedTasks);
+                if (savedRevenue) revenueData = JSON.parse(savedRevenue);
 
                 // Add sample data for testing if no data exists
                 if (carnivalsList.length === 0) {
@@ -1363,6 +1413,9 @@
             updateCarnivalCheckboxes();
             updateTeamOwnerSuggestions();
             updateTemplateCount();
+
+            // Update revenue management dropdowns
+            updateRevenueDropdowns();
         }
 
         function updateCarnivalDropdown(selectId) {
@@ -3962,6 +4015,152 @@
             return revenueData[carnivalId]?.[clubId]?.total || 0;
         }
 
+        // Revenue Management Functions
+        let currentEditingEntry = null;
+
+        function loadRevenueEntries() {
+            const carnivalId = document.getElementById('manage-revenue-carnival').value;
+            const entriesList = document.getElementById('revenue-entries-list');
+
+            if (!carnivalId) {
+                entriesList.innerHTML = '<p class="text-sm text-gray-500">Select a carnival to view revenue entries</p>';
+                return;
+            }
+
+            if (!revenueData[carnivalId]) {
+                entriesList.innerHTML = '<p class="text-sm text-gray-500">No revenue entries found for this carnival</p>';
+                return;
+            }
+
+            let html = '';
+            let totalRevenue = 0;
+
+            Object.entries(revenueData[carnivalId]).forEach(([clubId, clubData]) => {
+                const club = clubsList.find(c => c.id == clubId) || { name: `Club ${clubId}` };
+
+                if (clubData.entries && clubData.entries.length > 0) {
+                    html += `<div class="bg-gray-50 p-3 rounded-lg">
+                        <h5 class="font-medium text-gray-800 mb-2">${club.name}</h5>
+                        <div class="space-y-2">`;
+
+                    clubData.entries.forEach((entry, index) => {
+                        totalRevenue += entry.amount;
+                        const date = new Date(entry.timestamp).toLocaleDateString();
+                        html += `
+                            <div class="flex items-center justify-between bg-white p-2 rounded border">
+                                <div class="flex-1">
+                                    <div class="text-sm font-medium">₹${entry.amount.toLocaleString()}</div>
+                                    <div class="text-xs text-gray-600">${entry.description || 'No description'}</div>
+                                    <div class="text-xs text-gray-500">${date}</div>
+                                </div>
+                                <button onclick="openEditRevenueModal('${carnivalId}', '${clubId}', ${index})"
+                                        class="bg-blue-100 text-blue-700 px-3 py-1 rounded text-xs hover:bg-blue-200">
+                                    Edit
+                                </button>
+                            </div>`;
+                    });
+
+                    html += `</div></div>`;
+                }
+            });
+
+            if (html) {
+                html = `<div class="mb-3 p-2 bg-green-50 rounded">
+                    <strong>Total Revenue: ₹${totalRevenue.toLocaleString()}</strong>
+                </div>` + html;
+            } else {
+                html = '<p class="text-sm text-gray-500">No revenue entries found for this carnival</p>';
+            }
+
+            entriesList.innerHTML = html;
+        }
+
+        function openEditRevenueModal(carnivalId, clubId, entryIndex) {
+            const entry = revenueData[carnivalId][clubId].entries[entryIndex];
+            const club = clubsList.find(c => c.id == clubId) || { name: `Club ${clubId}` };
+
+            currentEditingEntry = { carnivalId, clubId, entryIndex, originalAmount: entry.amount };
+
+            document.getElementById('edit-revenue-amount').value = entry.amount;
+            document.getElementById('edit-revenue-description').value = entry.description || '';
+            document.getElementById('edit-revenue-club-name').textContent = club.name;
+            document.getElementById('edit-revenue-timestamp').textContent = new Date(entry.timestamp).toLocaleString();
+
+            document.getElementById('edit-revenue-modal').classList.remove('hidden');
+        }
+
+        function closeEditRevenueModal() {
+            document.getElementById('edit-revenue-modal').classList.add('hidden');
+            currentEditingEntry = null;
+        }
+
+        function saveRevenueEdit() {
+            if (!currentEditingEntry) return;
+
+            const newAmount = parseFloat(document.getElementById('edit-revenue-amount').value);
+            const newDescription = document.getElementById('edit-revenue-description').value.trim();
+
+            if (!newAmount || newAmount <= 0) {
+                alert('Please enter a valid amount');
+                return;
+            }
+
+            const { carnivalId, clubId, entryIndex, originalAmount } = currentEditingEntry;
+
+            // Update the entry
+            revenueData[carnivalId][clubId].entries[entryIndex].amount = newAmount;
+            revenueData[carnivalId][clubId].entries[entryIndex].description = newDescription;
+            revenueData[carnivalId][clubId].entries[entryIndex].updatedAt = new Date().toISOString();
+
+            // Update the total
+            revenueData[carnivalId][clubId].total = revenueData[carnivalId][clubId].total - originalAmount + newAmount;
+
+            // Save to storage
+            saveToFirebase('revenue', revenueData);
+
+            // Refresh views
+            loadRevenueEntries();
+            renderCarnivalMatrix();
+            renderRevenueSection();
+
+            closeEditRevenueModal();
+
+            console.log(`✏️ Updated revenue entry: ₹${newAmount.toLocaleString()}`);
+        }
+
+        function deleteRevenueEntry() {
+            if (!currentEditingEntry) return;
+
+            if (!confirm('Are you sure you want to delete this revenue entry? This action cannot be undone.')) {
+                return;
+            }
+
+            const { carnivalId, clubId, entryIndex, originalAmount } = currentEditingEntry;
+
+            // Remove the entry
+            revenueData[carnivalId][clubId].entries.splice(entryIndex, 1);
+
+            // Update the total
+            revenueData[carnivalId][clubId].total -= originalAmount;
+
+            // Clean up if no entries left
+            if (revenueData[carnivalId][clubId].entries.length === 0) {
+                revenueData[carnivalId][clubId].total = 0;
+            }
+
+            // Save to storage
+            saveToFirebase('revenue', revenueData);
+
+            // Refresh views
+            loadRevenueEntries();
+            renderCarnivalMatrix();
+            renderRevenueSection();
+
+            closeEditRevenueModal();
+
+            console.log(`🗑️ Deleted revenue entry: ₹${originalAmount.toLocaleString()}`);
+        }
+
         // Dashboard Section Management
         function showDashboardSection(sectionName) {
             // Hide all sections
@@ -4118,6 +4317,31 @@
             carnivalsList.forEach(carnival => {
                 carnivalSelect.innerHTML += `<option value="${carnival.id}">${carnival.name}</option>`;
             });
+        }
+
+        function updateRevenueDropdowns() {
+            // Update quick add revenue dropdown
+            const quickCarnivalSelect = document.getElementById('quick-revenue-carnival');
+            if (quickCarnivalSelect) {
+                quickCarnivalSelect.innerHTML = '<option value="">Select Carnival</option>';
+                carnivalsList.forEach(carnival => {
+                    quickCarnivalSelect.innerHTML += `<option value="${carnival.id}">${carnival.name}</option>`;
+                });
+            }
+
+            // Update manage revenue dropdown
+            const manageCarnivalSelect = document.getElementById('manage-revenue-carnival');
+            if (manageCarnivalSelect) {
+                const currentValue = manageCarnivalSelect.value; // Preserve selection
+                manageCarnivalSelect.innerHTML = '<option value="">Select Carnival</option>';
+                carnivalsList.forEach(carnival => {
+                    manageCarnivalSelect.innerHTML += `<option value="${carnival.id}">${carnival.name}</option>`;
+                });
+                if (currentValue) {
+                    manageCarnivalSelect.value = currentValue;
+                    loadRevenueEntries(); // Refresh the entries if carnival was selected
+                }
+            }
         }
 
         function renderAlertsSection() {
