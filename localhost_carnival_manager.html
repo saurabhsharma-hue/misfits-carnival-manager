@@ -1289,11 +1289,18 @@
                 if (!allTasks[carnivalId]) {
                     allTasks[carnivalId] = { carnivalTasks: [], clubs: {} };
                 }
-                allTasks[carnivalId].clubs[club.id] = taskTemplate.map(task => ({
+                // Create deep copies of tasks with unique IDs for this specific club
+                allTasks[carnivalId].clubs[club.id] = taskTemplate.map((task, index) => ({
                     ...task,
-                    id: Date.now() + Math.random(),
+                    id: `club_${club.id}_carnival_${carnivalId}_task_${Date.now()}_${index}_${Math.random().toString(36).substr(2, 9)}`,
                     clubId: club.id,
-                    carnivalId: carnivalId
+                    carnivalId: carnivalId,
+                    // Ensure all properties are copied as new values, not references
+                    description: task.description,
+                    team: task.team,
+                    owner: task.owner,
+                    status: task.status,
+                    createdAt: task.createdAt || new Date().toISOString().split('T')[0]
                 }));
             });
 
@@ -3344,7 +3351,7 @@
         function saveTaskDetails() {
             if (!currentTaskDetails) return;
 
-            const task = currentTaskDetails.task;
+            const taskId = currentTaskDetails.task.id;
             const carnivalId = currentTaskDetails.carnivalId;
             const clubId = currentTaskDetails.clubId;
 
@@ -3352,20 +3359,49 @@
             const newExpectedDate = document.getElementById('task-detail-expected-date').value;
             const newActualDate = document.getElementById('task-detail-actual-date').value;
 
-            // Update task properties
-            task.description = document.getElementById('task-detail-description').value;
-            task.team = document.getElementById('task-detail-team').value;
-            task.owner = document.getElementById('task-detail-owner').value;
-            task.status = document.getElementById('task-detail-status').value;
-            task.expectedDate = newExpectedDate;
-            task.actualDate = newActualDate;
-            task.notes = document.getElementById('task-detail-notes').value;
-            task.link1 = document.getElementById('task-detail-link1').value;
-            task.link2 = document.getElementById('task-detail-link2').value;
-            task.link3 = document.getElementById('task-detail-link3').value;
-            task.priority = document.getElementById('task-detail-priority').value;
-            task.progress = parseInt(document.getElementById('task-detail-progress').value);
-            task.updatedAt = new Date().toLocaleDateString();
+            // Create updated task object with new values
+            const updatedTaskData = {
+                description: document.getElementById('task-detail-description').value,
+                team: document.getElementById('task-detail-team').value,
+                owner: document.getElementById('task-detail-owner').value,
+                status: document.getElementById('task-detail-status').value,
+                expectedDate: newExpectedDate,
+                actualDate: newActualDate,
+                notes: document.getElementById('task-detail-notes').value,
+                link1: document.getElementById('task-detail-link1').value,
+                link2: document.getElementById('task-detail-link2').value,
+                link3: document.getElementById('task-detail-link3').value,
+                priority: document.getElementById('task-detail-priority').value,
+                progress: parseInt(document.getElementById('task-detail-progress').value),
+                updatedAt: new Date().toLocaleDateString()
+            };
+
+            // Find and update the specific task in the correct location
+            if (currentTaskDetails.location === 'template') {
+                // Update template task
+                const taskIndex = taskTemplate.findIndex(t => t.id == taskId);
+                if (taskIndex !== -1) {
+                    Object.assign(taskTemplate[taskIndex], updatedTaskData);
+                }
+            } else if (currentTaskDetails.location === 'carnival') {
+                // Update carnival task
+                const carnivalTasks = allTasks[carnivalId]?.carnivalTasks;
+                if (carnivalTasks) {
+                    const taskIndex = carnivalTasks.findIndex(t => t.id == taskId);
+                    if (taskIndex !== -1) {
+                        Object.assign(carnivalTasks[taskIndex], updatedTaskData);
+                    }
+                }
+            } else if (currentTaskDetails.location === 'club') {
+                // Update club task - IMPORTANT: Only update the specific club's task
+                const clubTasks = allTasks[carnivalId]?.clubs?.[clubId];
+                if (clubTasks) {
+                    const taskIndex = clubTasks.findIndex(t => t.id == taskId);
+                    if (taskIndex !== -1) {
+                        Object.assign(clubTasks[taskIndex], updatedTaskData);
+                    }
+                }
+            }
 
             // Save to Firebase
             saveToFirebase('tasks', allTasks);
