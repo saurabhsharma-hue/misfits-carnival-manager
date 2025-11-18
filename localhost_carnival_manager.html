@@ -3422,6 +3422,60 @@
         }
 
 
+        // DEBUG FUNCTION - Inspect data structure for shared references
+        function debugDataStructure() {
+            console.log('🔍 DEBUGGING: Data Structure Analysis');
+            console.log('=====================================');
+
+            // Check revenue data structure
+            console.log('📊 Revenue Data:');
+            console.log(JSON.stringify(revenueData, null, 2));
+
+            // Check if revenue objects are shared
+            let revenueRefs = new Map();
+            Object.entries(revenueData).forEach(([carnivalId, carnivalData]) => {
+                Object.entries(carnivalData).forEach(([clubId, clubData]) => {
+                    const dataStr = JSON.stringify(clubData);
+                    if (revenueRefs.has(dataStr)) {
+                        console.log(`⚠️  Revenue data SHARED between clubs! ${revenueRefs.get(dataStr)} and ${carnivalId}.${clubId}`);
+                    } else {
+                        revenueRefs.set(dataStr, `${carnivalId}.${clubId}`);
+                    }
+                });
+            });
+
+            // Check task data structure
+            console.log('\n📋 Task Data Structure:');
+            carnivalsList.forEach(carnival => {
+                console.log(`\n🎪 Carnival ${carnival.id} (${carnival.name}):`);
+                const carnivalData = allTasks[carnival.id];
+                if (carnivalData) {
+                    if (carnivalData.carnivalTasks) {
+                        console.log(`  Carnival tasks: ${carnivalData.carnivalTasks.length}`);
+                    }
+                    if (carnivalData.clubs) {
+                        Object.entries(carnivalData.clubs).forEach(([clubId, tasks]) => {
+                            const club = clubsList.find(c => c.id == clubId);
+                            console.log(`  🏢 Club ${clubId} (${club?.name || 'Unknown'}): ${tasks.length} tasks`);
+
+                            // Check for task object sharing
+                            tasks.forEach((task, index) => {
+                                if (task.description === 'Post event content') {
+                                    console.log(`    📝 Task ${index}: ${task.description} - ID: ${task.id} - Status: ${task.status}`);
+                                }
+                            });
+                        });
+                    }
+                }
+            });
+
+            // Check clubsList structure
+            console.log('\n🏢 Club Structure:');
+            clubsList.forEach(club => {
+                console.log(`  Club ${club.id}: ${club.name} - Carnivals: [${club.carnivals}]`);
+            });
+        }
+
         // TEST FUNCTION - Verify task isolation between clubs
         function testTaskIsolation() {
             console.log('🧪 TESTING: Task Isolation Between Clubs');
@@ -4450,13 +4504,22 @@
                             <div class="space-y-2">
                                 <div class="text-xs text-gray-500 font-medium mb-1">Club-wise Breakdown:</div>
                                 ${assignedClubs.map(club => {
-                                    const clubRevenue = carnivalData[club.id]?.total || 0;
+                                    // Safely get club revenue with better isolation
+                                    let clubRevenue = 0;
+                                    if (revenueData[carnival.id] && revenueData[carnival.id][club.id] && revenueData[carnival.id][club.id].total) {
+                                        clubRevenue = revenueData[carnival.id][club.id].total;
+                                    }
                                     const hasRevenue = clubRevenue > 0;
+
+                                    // Debug logging for revenue display
+                                    console.log(`🔍 Club ${club.id} (${club.name}) revenue: ₹${clubRevenue} from carnival ${carnival.id}`);
+
                                     return `
                                         <div class="flex justify-between items-center text-sm ${hasRevenue ? 'bg-green-50' : 'bg-gray-50'} p-2 rounded">
                                             <div class="flex items-center space-x-2">
                                                 <span class="${hasRevenue ? 'text-gray-700 font-medium' : 'text-gray-500'}">${club.name}</span>
                                                 <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">${club.activity}</span>
+                                                <span class="text-xs text-gray-400">[ID:${club.id}]</span>
                                             </div>
                                             <span class="${hasRevenue ? 'text-green-700 font-medium' : 'text-gray-400'}">₹${clubRevenue.toLocaleString()}</span>
                                         </div>
@@ -4770,26 +4833,38 @@
                 return;
             }
 
-            // Initialize revenue data structure
-            if (!revenueData[carnivalId]) revenueData[carnivalId] = {};
-            if (!revenueData[carnivalId][clubId]) revenueData[carnivalId][clubId] = { total: 0, entries: [] };
+            // Initialize revenue data structure with proper isolation
+            if (!revenueData[carnivalId]) {
+                revenueData[carnivalId] = {};
+            }
+            if (!revenueData[carnivalId][clubId]) {
+                revenueData[carnivalId][clubId] = {
+                    total: 0,
+                    entries: []
+                };
+            }
 
-            // Add revenue entry
+            // Add revenue entry with better tracking
             const revenueEntry = {
-                id: Date.now().toString(),
+                id: `rev_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                 amount: amount,
                 date: new Date().toISOString().split('T')[0],
                 description: 'Quick add revenue',
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
+                clubId: clubId,
+                carnivalId: carnivalId
             };
 
-            revenueData[carnivalId][clubId].entries.push(revenueEntry);
-            revenueData[carnivalId][clubId].total += amount;
+            // Ensure we're updating the correct club's data
+            const targetClub = revenueData[carnivalId][clubId];
+            targetClub.entries.push(revenueEntry);
+            targetClub.total = (targetClub.total || 0) + amount;
 
             // Save to Firebase/localStorage
             saveToFirebase('revenue', revenueData);
 
-            console.log(`💰 Quick added ₹${amount.toLocaleString()} revenue for club ${clubId} in carnival ${carnivalId}`);
+            console.log(`💰 Quick added ₹${amount.toLocaleString()} revenue for club ${clubId} (${clubsList.find(c => c.id == clubId)?.name}) in carnival ${carnivalId}`);
+            console.log(`📊 Club ${clubId} new total: ₹${targetClub.total.toLocaleString()}`);
 
             // Clear form
             document.getElementById('quick-revenue-amount').value = '';
@@ -4827,16 +4902,30 @@
             let totalRevenue = 0;
 
             carnivalsList.forEach(carnival => {
-                const carnivalTasks = allTasks[carnival.id] || {};
-                Object.entries(carnivalTasks).forEach(([clubId, tasks]) => {
-                    if (clubId !== 'carnivalTasks' && Array.isArray(tasks)) {
-                        tasks.forEach(task => {
-                            totalTasks++;
-                            const isCompleted = task.status === 'completed' || task.status === 'Completed' || task.actualDate;
-                            if (isCompleted) completedTasks++;
-                        });
-                    }
-                });
+                const carnivalData = allTasks[carnival.id] || {};
+
+                // Count carnival-level tasks
+                if (carnivalData.carnivalTasks && Array.isArray(carnivalData.carnivalTasks)) {
+                    carnivalData.carnivalTasks.forEach(task => {
+                        totalTasks++;
+                        const isCompleted = task.status === 'completed' || task.status === 'Completed' || task.actualDate;
+                        if (isCompleted) completedTasks++;
+                    });
+                }
+
+                // Count club-level tasks
+                if (carnivalData.clubs) {
+                    Object.entries(carnivalData.clubs).forEach(([clubId, tasks]) => {
+                        if (Array.isArray(tasks)) {
+                            tasks.forEach(task => {
+                                totalTasks++;
+                                const isCompleted = task.status === 'completed' || task.status === 'Completed' || task.actualDate;
+                                if (isCompleted) completedTasks++;
+                            });
+                        }
+                    });
+                }
+
                 totalRevenue += calculateCarnivalRevenue(carnival.id);
             });
 
