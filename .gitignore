@@ -1,0 +1,102 @@
+# OS Files
+.DS_Store
+.localized
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+~$*
+
+# Personal documents and keys
+*.pdf
+*.docx
+*.pptx
+*.xlsx
+*.pem
+*.key
+*.pub
+*.zip
+*.jpeg
+*.jpg
+*.png
+*.mp4
+*.webp
+
+# Excel files
+*.xlsx
+
+# VS Code
+*.app/
+VSCode-*.zip
+vscode_*
+
+# Backup files
+*_backup_*
+*BACKUP*
+*backup*
+
+# Test files
+test_*
+debug_*
+simple_*
+temp_*
+ultra_*
+minimal_*
+comprehensive_*
+
+# Personal documents
+*Singh*
+*Aadhar*
+*offer*
+*Invoice*
+*Order_*
+*QrCode*
+*WhatsApp*
+*Scan*
+*Screenshot*
+*Training*
+*Leader_*
+*Onboarded*
+*Shark*
+*Venue*
+*REGISTER*
+*Transaction*
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Node modules
+node_modules/
+
+# Logs
+*.log
+
+# Marketing files
+Marketing*/
+
+# Random files
+random.*
+export*.csv
+final*.xlsx
+
+# Working directories
+*working*
+*test*
+*emergency*
+*nuclear*
+*sports_fever*
+
+# Analysis files
+*ANALYSIS*
+*EXPANSION*
+*STRATEGY*
+*COMPLETE_*
+*CORRECTED_*
+*ENHANCED_*
+*FINAL_*
+*PRIORITY_*
+*TARGET_*
+*UPDATE_*

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Misfits Carnival Program Manager v2.1.18</title>
-    <!-- Version: 2.1.18 - Fixed timeline club segregation + revenue isolation -->
+    <title>Misfits Carnival Program Manager - FB v2.1.14</title>
+    <!-- Version: 2.1.14 - Complete data reset to fix contamination -->
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- CSS Fix for Dropdown Interaction Issues -->
@@ -46,42 +46,38 @@
         }
     </style>
 
-    <!-- Firebase SDK - Enabled for all environments -->
+    <!-- Firebase SDK -->
     <script type="module">
-        // Enable Firebase for all environments (including localhost)
-        if (true) {
-            // Load Firebase only for production
-            import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-            import { getDatabase, ref, set, get, onValue, push, update, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, set, get, onValue, push, update, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
-            // Firebase configuration - Real project for team collaboration
-            const firebaseConfig = {
-                apiKey: "AIzaSyCweHkt882pn_1A-KkEqisYU_YlwOsfFxQ",
-                authDomain: "event-management-app-fbbae.firebaseapp.com",
-                databaseURL: "https://event-management-app-fbbae-default-rtdb.asia-southeast1.firebasedatabase.app/",
-                projectId: "event-management-app-fbbae",
-                storageBucket: "event-management-app-fbbae.firebasestorage.app",
-                messagingSenderId: "924131616519",
-                appId: "1:924131616519:web:ad5105519c72963d5ac7a2",
-                measurementId: "G-RGBYH07B4G"
-            };
+        // Firebase configuration - Real project for team collaboration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCweHkt882pn_1A-KkEqisYU_YlwOsfFxQ",
+            authDomain: "event-management-app-fbbae.firebaseapp.com",
+            databaseURL: "https://event-management-app-fbbae-default-rtdb.asia-southeast1.firebasedatabase.app/",
+            projectId: "event-management-app-fbbae",
+            storageBucket: "event-management-app-fbbae.firebasestorage.app",
+            messagingSenderId: "924131616519",
+            appId: "1:924131616519:web:ad5105519c72963d5ac7a2",
+            measurementId: "G-RGBYH07B4G"
+        };
 
-            // Initialize Firebase
-            const app = initializeApp(firebaseConfig);
-            const database = getDatabase(app);
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
 
-            // Make Firebase functions available globally
-            window.firebase = {
-                database,
-                ref,
-                set,
-                get,
-                onValue,
-                push,
-                update,
-                remove
-            };
-        }
+        // Make Firebase functions available globally
+        window.firebase = {
+            database,
+            ref,
+            set,
+            get,
+            onValue,
+            push,
+            update,
+            remove
+        };
     </script>
 
     <style>
@@ -95,7 +91,7 @@
     <div id="app" class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <header class="mb-8">
             <h1 class="text-4xl font-extrabold text-indigo-700 tracking-tight">
-                🎪 Misfits Carnival Program Manager
+                🎪 Misfits Carnival Program Manager - FB
             </h1>
             <p class="mt-2 text-lg text-gray-600">
                 Complete Task Management System
@@ -829,8 +825,8 @@
 
         // Initialize empty data - Firebase only mode
         function initializeSampleData() {
+            // Clear all hardcoded data - Firebase only
             carnivalsList = [];
-
             clubsList = [];
             allTasks = {};
 
@@ -1055,7 +1051,7 @@
                 }
 
                 // No fallback data - Firebase only mode
-                // App will show empty state if no Firebase data
+                // If no data in Firebase, the app will show empty state
 
                 updateAllDropdowns();
                 renderDashboard();
@@ -2373,8 +2369,8 @@
                 return;
             }
 
-            // Use club-segregated list view for better organization
-            renderTimelineListView(filteredTasks, container);
+            // Always use hierarchical list view
+            renderTimelineHierarchicalView(filteredTasks, container);
         }
 
         function renderTimelineHierarchicalView(tasks, container) {
@@ -5369,102 +5365,33 @@
             }
         }
 
-        function loadLocalTestData() {
-            console.log('🧪 LOADING CLEAN LOCALHOST TEST DATA v2.1.15');
-
-            // COMPLETE WIPE FIRST
-            carnivalsList = [];
-            clubsList = [];
-            allTasks = {};
-            revenueData = {};
-
-            // Create test carnivals
-            const carnival1 = {
-                id: 1,
-                name: "Sports Fever",
-                description: "Summer sports carnival",
-                startDate: "2025-06-01",
-                endDate: "2025-06-15"
-            };
-
-            carnivalsList = [carnival1]; // Only one carnival for simplicity
-            nextCarnivalId = 2;
-
-            // Initialize tasks structure
-            allTasks[1] = { carnivalTasks: [], clubs: {} };
-
-            // Add minimal carnival-level tasks
-            allTasks[1].carnivalTasks = [
-                { id: 101, description: "Plan Sports Fever logistics", team: "Operations", owner: "Admin", status: "pending", expectedDate: "2025-05-01", priority: "high" }
-            ];
-
-            // Create clean test clubs with UNIQUE IDs
-            const club1 = { id: 1, name: "Just Dink It", activity: "Pickleball", commissionType: "Percentage", commissionAmount: "5", carnivals: [1] };
-            const club2 = { id: 2, name: "888 Smash Lab Club", activity: "Badminton", commissionType: "Fixed", commissionAmount: "1000", carnivals: [1] };
-            const club3 = { id: 3, name: "Picklers", activity: "Pickleball", commissionType: "Percentage", commissionAmount: "8", carnivals: [1] };
-            const club4 = { id: 4, name: "Gamers Den", activity: "Video Gaming Club", commissionType: "Revenue Share", commissionAmount: "10", carnivals: [1] };
-            const club5 = { id: 5, name: "Ballers", activity: "Basketball", commissionType: "Fixed", commissionAmount: "1500", carnivals: [1] };
-            const club6 = { id: 6, name: "RallyGully", activity: "Pickleball", commissionType: "Percentage", commissionAmount: "6", carnivals: [1] };
-            const club7 = { id: 7, name: "Trail it (Hikethon)", activity: "Hiking", commissionType: "Fixed", commissionAmount: "2000", carnivals: [1] };
-
-            clubsList = [club1, club2, club3, club4, club5, club6, club7];
-            nextClubId = 8;
-
-            // Create proper tasks for each club - ALL 19 template tasks with ISOLATED data
-            clubsList.forEach(club => {
-                allTasks[1].clubs[club.id] = taskTemplate.map((task, index) => ({
-                    ...task,
-                    id: `club_${club.id}_template_${index}_${Date.now()}`,
-                    clubId: club.id,
-                    carnivalId: 1,
-                    // Copy properties to avoid reference sharing
-                    description: task.description,
-                    team: task.team,
-                    owner: task.owner,
-                    status: task.status,
-                    priority: task.priority,
-                    expectedDate: task.expectedDate,
-                    createdAt: new Date().toISOString().split('T')[0]
-                }));
-            });
-
-            // Initialize empty revenue data - NO pre-filled contaminated data
-            revenueData = {};
-
-            // Save clean data
-            saveToLocalStorage();
-
-            console.log('✅ CLEAN localhost test data loaded:');
-            console.log('  Carnivals:', carnivalsList.length);
-            console.log('  Clubs:', clubsList.length, 'with unique IDs:', clubsList.map(c => c.id));
-            console.log('  Template tasks per club:', taskTemplate.length);
-            console.log('  Total tasks:', 1 + (clubsList.length * taskTemplate.length), '(1 carnival + ' + clubsList.length + ' clubs × ' + taskTemplate.length + ' tasks)');
-            console.log('  Revenue data:', Object.keys(revenueData).length, '(empty)');
-
-            updateAllDropdowns();
-            renderDashboard();
-        }
+        // Function removed - Firebase-only mode
 
         // Initialize on page load
         window.onload = function() {
             console.log('Misfits Carnival Manager loaded');
             console.log('Template tasks:', taskTemplate.length);
 
+            // Clear all localStorage to force Firebase-only mode
+            console.log('🧹 Clearing localStorage to ensure Firebase-only mode');
+            localStorage.removeItem('carnivalsList');
+            localStorage.removeItem('clubsList');
+            localStorage.removeItem('allTasks');
+            localStorage.removeItem('revenueData');
+            localStorage.removeItem('carnivalManagerTestData');
+            localStorage.clear(); // Clear everything to be safe
+
             // Initialize revenue data with proper isolation
             revenueData = revenueData || {};
 
-            // Enable Firebase for all environments
-            console.log('🔥 Firebase enabled for all environments');
+            // Firebase-only mode for all environments
+            console.log('🔥 Firebase-only mode - initializing...');
 
-            // Initialize Firebase for production and localhost
+            // Initialize empty data
+            initializeSampleData();
+
+            // Initialize Firebase for all environments
             initializeFirebase();
-
-            // Load test data if available (only if Firebase fails)
-            setTimeout(() => {
-                if (!isFirebaseReady && carnivalsList.length === 0) {
-                    loadTestDataIfAvailable();
-                }
-            }, 2000);
 
             updateAllDropdowns();
             renderDashboard();

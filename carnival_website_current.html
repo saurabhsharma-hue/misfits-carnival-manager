@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Misfits Carnival Program Manager v2.1.18</title>
-    <!-- Version: 2.1.18 - Fixed timeline club segregation + revenue isolation -->
+    <title>Misfits Carnival Program Manager v2.1.1</title>
+    <!-- Version: 2.1.1 - Removed test functions and fixed club name display -->
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- CSS Fix for Dropdown Interaction Issues -->
@@ -46,42 +46,38 @@
         }
     </style>
 
-    <!-- Firebase SDK - Enabled for all environments -->
+    <!-- Firebase SDK -->
     <script type="module">
-        // Enable Firebase for all environments (including localhost)
-        if (true) {
-            // Load Firebase only for production
-            import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-            import { getDatabase, ref, set, get, onValue, push, update, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, set, get, onValue, push, update, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
-            // Firebase configuration - Real project for team collaboration
-            const firebaseConfig = {
-                apiKey: "AIzaSyCweHkt882pn_1A-KkEqisYU_YlwOsfFxQ",
-                authDomain: "event-management-app-fbbae.firebaseapp.com",
-                databaseURL: "https://event-management-app-fbbae-default-rtdb.asia-southeast1.firebasedatabase.app/",
-                projectId: "event-management-app-fbbae",
-                storageBucket: "event-management-app-fbbae.firebasestorage.app",
-                messagingSenderId: "924131616519",
-                appId: "1:924131616519:web:ad5105519c72963d5ac7a2",
-                measurementId: "G-RGBYH07B4G"
-            };
+        // Firebase configuration - Real project for team collaboration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCweHkt882pn_1A-KkEqisYU_YlwOsfFxQ",
+            authDomain: "event-management-app-fbbae.firebaseapp.com",
+            databaseURL: "https://event-management-app-fbbae-default-rtdb.asia-southeast1.firebasedatabase.app/",
+            projectId: "event-management-app-fbbae",
+            storageBucket: "event-management-app-fbbae.firebasestorage.app",
+            messagingSenderId: "924131616519",
+            appId: "1:924131616519:web:ad5105519c72963d5ac7a2",
+            measurementId: "G-RGBYH07B4G"
+        };
 
-            // Initialize Firebase
-            const app = initializeApp(firebaseConfig);
-            const database = getDatabase(app);
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
 
-            // Make Firebase functions available globally
-            window.firebase = {
-                database,
-                ref,
-                set,
-                get,
-                onValue,
-                push,
-                update,
-                remove
-            };
-        }
+        // Make Firebase functions available globally
+        window.firebase = {
+            database,
+            ref,
+            set,
+            get,
+            onValue,
+            push,
+            update,
+            remove
+        };
     </script>
 
     <style>
@@ -102,6 +98,16 @@
             </p>
         </header>
 
+        <!-- Collaboration Status Banner -->
+        <div id="collaboration-status" class="mb-6 p-4 rounded-lg border-2 border-blue-200 bg-blue-50">
+            <div class="flex items-center">
+                <div id="status-icon" class="text-2xl mr-3">🔄</div>
+                <div>
+                    <h3 class="font-semibold text-blue-800">Initializing Real-Time Collaboration...</h3>
+                    <p id="status-text" class="text-sm text-blue-600">Setting up multi-user synchronization...</p>
+                </div>
+            </div>
+        </div>
 
         <!-- Navigation Tabs -->
         <nav class="flex space-x-4 border-b border-gray-200 mb-6">
@@ -264,19 +270,6 @@
                                 </button>
                             </div>
                         </div>
-
-                        <!-- Revenue Management -->
-                        <div>
-                            <h4 class="font-medium text-gray-700 mb-3">Manage Revenue Entries</h4>
-                            <div class="space-y-3">
-                                <select id="manage-revenue-carnival" class="w-full px-3 py-2 border rounded-lg" onchange="loadRevenueEntries()">
-                                    <option value="">Select Carnival</option>
-                                </select>
-                                <div id="revenue-entries-list" class="max-h-64 overflow-y-auto space-y-2">
-                                    <p class="text-sm text-gray-500">Select a carnival to view revenue entries</p>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -323,40 +316,6 @@
                         </button>
                         <button onclick="addRevenue()" class="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
                             Add Revenue
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Edit Revenue Modal -->
-            <div id="edit-revenue-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-                <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">✏️ Edit Revenue Entry</h3>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Amount (₹)</label>
-                            <input type="number" id="edit-revenue-amount" class="w-full px-3 py-2 border rounded-lg" placeholder="Amount">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                            <input type="text" id="edit-revenue-description" class="w-full px-3 py-2 border rounded-lg" placeholder="Description">
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-600">
-                                <strong>Club:</strong> <span id="edit-revenue-club-name"></span><br>
-                                <strong>Added:</strong> <span id="edit-revenue-timestamp"></span>
-                            </p>
-                        </div>
-                    </div>
-                    <div class="flex gap-3 mt-6">
-                        <button onclick="deleteRevenueEntry()" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
-                            Delete
-                        </button>
-                        <button onclick="closeEditRevenueModal()" class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400">
-                            Cancel
-                        </button>
-                        <button onclick="saveRevenueEdit()" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                            Save Changes
                         </button>
                     </div>
                 </div>
@@ -829,15 +788,18 @@
 
         // Initialize empty data - Firebase only mode
         function initializeSampleData() {
+            // Clear all hardcoded data - Firebase only
             carnivalsList = [];
-
             clubsList = [];
             allTasks = {};
 
-            // Initialize revenue data properly - avoid window references
-            revenueData = revenueData || {};
+            // Initialize revenue data properly
+            if (!window.revenueData) {
+                window.revenueData = {};
+                revenueData = window.revenueData;
+            }
 
-            console.log('✅ Sample data initialized:', { carnivals: carnivalsList.length, tasks: Object.keys(allTasks).length });
+            console.log('🔥 Firebase-only mode - no hardcoded data loaded');
         }
 
         // Real-time collaboration setup (BroadcastChannel for multi-tab sync + Firebase fallback)
@@ -904,13 +866,6 @@
                         console.log('🔄 Tasks synced from another tab');
                         showSyncNotification('Tasks synced from team member');
                         break;
-                    case 'revenue-updated':
-                        revenueData = data;
-                        renderDashboard();
-                        renderRevenueSection();
-                        console.log('🔄 Revenue synced from another tab');
-                        showSyncNotification('Revenue synced from team member');
-                        break;
                 }
             };
 
@@ -924,8 +879,34 @@
         }
 
         function updateCollaborationStatus(status, message, icon = '🔄') {
-            // Banner removed for production - no action needed
-            return;
+            const statusEl = document.getElementById('collaboration-status');
+            const iconEl = document.getElementById('status-icon');
+            const textEl = document.getElementById('status-text');
+
+            if (statusEl) {
+                iconEl.textContent = icon;
+                textEl.textContent = message;
+
+                // Update banner color based on status
+                statusEl.className = statusEl.className.replace(/border-\w+-\d+|bg-\w+-\d+/g, '');
+
+                if (status === 'success') {
+                    statusEl.classList.add('border-green-200', 'bg-green-50');
+                    textEl.classList.remove('text-blue-600');
+                    textEl.classList.add('text-green-600');
+                } else if (status === 'warning') {
+                    statusEl.classList.add('border-yellow-200', 'bg-yellow-50');
+                    textEl.classList.remove('text-blue-600', 'text-green-600');
+                    textEl.classList.add('text-yellow-600');
+                } else if (status === 'error') {
+                    statusEl.classList.add('border-red-200', 'bg-red-50');
+                    textEl.classList.remove('text-blue-600', 'text-green-600', 'text-yellow-600');
+                    textEl.classList.add('text-red-600');
+                } else {
+                    statusEl.classList.add('border-blue-200', 'bg-blue-50');
+                    textEl.classList.add('text-blue-600');
+                }
+            }
         }
 
         function showSyncNotification(message) {
@@ -1036,7 +1017,6 @@
             localStorage.setItem('carnivalsList', JSON.stringify(carnivalsList));
             localStorage.setItem('clubsList', JSON.stringify(clubsList));
             localStorage.setItem('allTasks', JSON.stringify(allTasks));
-            localStorage.setItem('revenueData', JSON.stringify(revenueData));
         }
 
         function loadFromLocalStorage() {
@@ -1045,17 +1025,13 @@
                 const savedCarnivals = localStorage.getItem('carnivalsList');
                 const savedClubs = localStorage.getItem('clubsList');
                 const savedTasks = localStorage.getItem('allTasks');
-                const savedRevenue = localStorage.getItem('revenueData');
 
                 if (savedCarnivals) carnivalsList = JSON.parse(savedCarnivals);
                 if (savedClubs) clubsList = JSON.parse(savedClubs);
                 if (savedTasks) allTasks = JSON.parse(savedTasks);
-                if (savedRevenue) {
-                    revenueData = JSON.parse(savedRevenue);
-                }
 
                 // No fallback data - Firebase only mode
-                // App will show empty state if no Firebase data
+                // If no data in Firebase, the app will show empty state
 
                 updateAllDropdowns();
                 renderDashboard();
@@ -1248,18 +1224,11 @@
                 if (!allTasks[carnivalId]) {
                     allTasks[carnivalId] = { carnivalTasks: [], clubs: {} };
                 }
-                // Create deep copies of tasks with unique IDs for this specific club
-                allTasks[carnivalId].clubs[club.id] = taskTemplate.map((task, index) => ({
+                allTasks[carnivalId].clubs[club.id] = taskTemplate.map(task => ({
                     ...task,
-                    id: `club_${club.id}_carnival_${carnivalId}_task_${Date.now()}_${index}_${Math.random().toString(36).substr(2, 9)}`,
+                    id: Date.now() + Math.random(),
                     clubId: club.id,
-                    carnivalId: carnivalId,
-                    // Ensure all properties are copied as new values, not references
-                    description: task.description,
-                    team: task.team,
-                    owner: task.owner,
-                    status: task.status,
-                    createdAt: task.createdAt || new Date().toISOString().split('T')[0]
+                    carnivalId: carnivalId
                 }));
             });
 
@@ -1379,9 +1348,6 @@
             updateCarnivalCheckboxes();
             updateTeamOwnerSuggestions();
             updateTemplateCount();
-
-            // Update revenue management dropdowns
-            updateRevenueDropdowns();
         }
 
         function updateCarnivalDropdown(selectId) {
@@ -2373,8 +2339,8 @@
                 return;
             }
 
-            // Use club-segregated list view for better organization
-            renderTimelineListView(filteredTasks, container);
+            // Always use hierarchical list view
+            renderTimelineHierarchicalView(filteredTasks, container);
         }
 
         function renderTimelineHierarchicalView(tasks, container) {
@@ -3310,7 +3276,7 @@
         function saveTaskDetails() {
             if (!currentTaskDetails) return;
 
-            const taskId = currentTaskDetails.task.id;
+            const task = currentTaskDetails.task;
             const carnivalId = currentTaskDetails.carnivalId;
             const clubId = currentTaskDetails.clubId;
 
@@ -3318,49 +3284,20 @@
             const newExpectedDate = document.getElementById('task-detail-expected-date').value;
             const newActualDate = document.getElementById('task-detail-actual-date').value;
 
-            // Create updated task object with new values
-            const updatedTaskData = {
-                description: document.getElementById('task-detail-description').value,
-                team: document.getElementById('task-detail-team').value,
-                owner: document.getElementById('task-detail-owner').value,
-                status: document.getElementById('task-detail-status').value,
-                expectedDate: newExpectedDate,
-                actualDate: newActualDate,
-                notes: document.getElementById('task-detail-notes').value,
-                link1: document.getElementById('task-detail-link1').value,
-                link2: document.getElementById('task-detail-link2').value,
-                link3: document.getElementById('task-detail-link3').value,
-                priority: document.getElementById('task-detail-priority').value,
-                progress: parseInt(document.getElementById('task-detail-progress').value),
-                updatedAt: new Date().toLocaleDateString()
-            };
-
-            // Find and update the specific task in the correct location
-            if (currentTaskDetails.location === 'template') {
-                // Update template task
-                const taskIndex = taskTemplate.findIndex(t => t.id == taskId);
-                if (taskIndex !== -1) {
-                    Object.assign(taskTemplate[taskIndex], updatedTaskData);
-                }
-            } else if (currentTaskDetails.location === 'carnival') {
-                // Update carnival task
-                const carnivalTasks = allTasks[carnivalId]?.carnivalTasks;
-                if (carnivalTasks) {
-                    const taskIndex = carnivalTasks.findIndex(t => t.id == taskId);
-                    if (taskIndex !== -1) {
-                        Object.assign(carnivalTasks[taskIndex], updatedTaskData);
-                    }
-                }
-            } else if (currentTaskDetails.location === 'club') {
-                // Update club task - IMPORTANT: Only update the specific club's task
-                const clubTasks = allTasks[carnivalId]?.clubs?.[clubId];
-                if (clubTasks) {
-                    const taskIndex = clubTasks.findIndex(t => t.id == taskId);
-                    if (taskIndex !== -1) {
-                        Object.assign(clubTasks[taskIndex], updatedTaskData);
-                    }
-                }
-            }
+            // Update task properties
+            task.description = document.getElementById('task-detail-description').value;
+            task.team = document.getElementById('task-detail-team').value;
+            task.owner = document.getElementById('task-detail-owner').value;
+            task.status = document.getElementById('task-detail-status').value;
+            task.expectedDate = newExpectedDate;
+            task.actualDate = newActualDate;
+            task.notes = document.getElementById('task-detail-notes').value;
+            task.link1 = document.getElementById('task-detail-link1').value;
+            task.link2 = document.getElementById('task-detail-link2').value;
+            task.link3 = document.getElementById('task-detail-link3').value;
+            task.priority = document.getElementById('task-detail-priority').value;
+            task.progress = parseInt(document.getElementById('task-detail-progress').value);
+            task.updatedAt = new Date().toLocaleDateString();
 
             // Save to Firebase
             saveToFirebase('tasks', allTasks);
@@ -3376,450 +3313,6 @@
             alert('Task details saved successfully!');
         }
 
-
-        // Function to completely reset and rebuild data with proper IDs
-        function resetAndFixData() {
-            console.log('🔄 COMPLETELY RESETTING AND FIXING DATA');
-            console.log('=========================================');
-
-            // Step 1: Clear all corrupted revenue data
-            revenueData = {};
-            console.log('✅ Revenue data cleared');
-
-            // Step 2: Reassign club IDs to ensure uniqueness
-            console.log('\n🔧 Reassigning club IDs...');
-            clubsList.forEach((club, index) => {
-                const oldId = club.id;
-                const newId = index + 1; // 1, 2, 3, 4, 5, 6, 7
-                club.id = newId;
-                console.log(`Club "${club.name}": ${oldId} → ${newId}`);
-            });
-
-            // Step 3: Update all task references
-            console.log('\n📋 Updating task references...');
-            Object.entries(allTasks).forEach(([carnivalId, carnival]) => {
-                if (carnival.clubs) {
-                    const newClubTasks = {};
-                    Object.entries(carnival.clubs).forEach(([oldClubId, tasks]) => {
-                        // Find which club this belongs to by matching tasks or use index
-                        const club = clubsList.find(c => c.id <= clubsList.length); // Get by new ID
-                        if (club && Array.isArray(tasks)) {
-                            tasks.forEach(task => {
-                                task.clubId = club.id;
-                            });
-                            newClubTasks[club.id] = tasks;
-                        }
-                    });
-                    carnival.clubs = newClubTasks;
-                }
-            });
-
-            // Step 4: Set proper nextClubId
-            nextClubId = clubsList.length + 1;
-            console.log(`\n📊 Set nextClubId to ${nextClubId}`);
-
-            // Step 5: Save everything
-            saveToLocalStorage();
-
-            // Step 6: Refresh all views
-            renderCarnivalMatrix();
-            renderRevenueSection();
-            updateBasicStats();
-            updateAllDropdowns();
-
-            console.log('\n✅ Data reset complete! All club IDs are now unique.');
-            console.log('Final club list:', clubsList.map(club => ({id: club.id, name: club.name})));
-
-            alert('Data has been completely reset with proper club IDs. Revenue data cleared. Please re-add revenue to test.');
-        }
-
-        // Function to fix duplicate club IDs
-        function fixClubIDs() {
-            console.log('🔧 FIXING DUPLICATE CLUB IDs');
-            console.log('==============================');
-
-            // Check current club IDs
-            console.log('Before fix - clubsList:', clubsList.map(club => ({id: club.id, name: club.name})));
-
-            // Create a map to track used IDs and fix duplicates
-            const usedIds = new Set();
-            let maxId = 0;
-
-            clubsList.forEach((club, index) => {
-                maxId = Math.max(maxId, club.id || 0);
-
-                if (usedIds.has(club.id) || club.id === undefined) {
-                    const oldId = club.id;
-                    const newId = ++maxId;
-                    console.log(`🔄 Fixing club "${club.name}": ${oldId} → ${newId}`);
-
-                    // Update the club ID
-                    club.id = newId;
-
-                    // Update all references in tasks and revenue data
-                    Object.entries(allTasks).forEach(([carnivalId, carnival]) => {
-                        if (carnival.clubs && carnival.clubs[oldId]) {
-                            carnival.clubs[newId] = carnival.clubs[oldId];
-                            delete carnival.clubs[oldId];
-
-                            // Update clubId in tasks
-                            carnival.clubs[newId].forEach(task => {
-                                task.clubId = newId;
-                            });
-                        }
-                    });
-
-                    // Update revenue data
-                    Object.entries(revenueData).forEach(([carnivalId, carnival]) => {
-                        if (carnival[oldId]) {
-                            carnival[newId] = carnival[oldId];
-                            delete carnival[oldId];
-                        }
-                    });
-                } else {
-                    console.log(`✅ Club "${club.name}" ID ${club.id} is unique`);
-                }
-
-                usedIds.add(club.id);
-            });
-
-            // Update nextClubId
-            nextClubId = maxId + 1;
-            console.log(`📊 Set nextClubId to ${nextClubId}`);
-
-            // Save the fixed data
-            saveToLocalStorage();
-
-            console.log('After fix - clubsList:', clubsList.map(club => ({id: club.id, name: club.name})));
-
-            // Refresh views
-            renderCarnivalMatrix();
-            renderRevenueSection();
-            updateBasicStats();
-            updateAllDropdowns();
-
-            alert('Club IDs have been fixed! Please test revenue addition now.');
-        }
-
-        // Function to clear corrupted data
-        function clearCorruptedData() {
-            console.log('🧹 CLEARING CORRUPTED DATA');
-            console.log('==========================');
-
-            // Clear only revenue data (keep tasks and carnivals)
-            revenueData = {};
-            localStorage.setItem('revenueData', JSON.stringify(revenueData));
-
-            console.log('✅ Revenue data cleared');
-            console.log('📊 Refreshing views...');
-
-            renderCarnivalMatrix();
-            renderRevenueSection();
-            updateBasicStats();
-
-            alert('Revenue data has been cleared. Please re-enter revenue data.');
-        }
-
-        // Function to examine localStorage data directly
-        function examineStorageData() {
-            console.log('🔍 EXAMINING STORAGE DATA DIRECTLY v2.1.11');
-            console.log('============================================');
-
-            try {
-                const rawRevenue = localStorage.getItem('revenueData');
-                const rawTasks = localStorage.getItem('allTasks');
-
-                if (rawRevenue) {
-                    const parsed = JSON.parse(rawRevenue);
-                    console.log('\n📦 RAW REVENUE DATA:');
-                    console.log(JSON.stringify(parsed, null, 2));
-
-                    // Check for identical entries
-                    const entriesMap = new Map();
-                    Object.entries(parsed).forEach(([carnivalId, carnival]) => {
-                        Object.entries(carnival || {}).forEach(([clubId, club]) => {
-                            if (club && club.entries) {
-                                club.entries.forEach(entry => {
-                                    const key = JSON.stringify(entry);
-                                    if (entriesMap.has(key)) {
-                                        console.log(`🚨 IDENTICAL ENTRY in multiple clubs!`);
-                                        console.log(`  First: Carnival ${entriesMap.get(key).carnival} Club ${entriesMap.get(key).club}`);
-                                        console.log(`  Second: Carnival ${carnivalId} Club ${clubId}`);
-                                        console.log(`  Entry:`, entry);
-                                    } else {
-                                        entriesMap.set(key, {carnival: carnivalId, club: clubId});
-                                    }
-                                });
-                            }
-                        });
-                    });
-                }
-
-                if (rawTasks) {
-                    const parsed = JSON.parse(rawTasks);
-                    console.log('\n📦 TASK COUNT BY CARNIVAL/CLUB:');
-                    let totalTasks = 0;
-                    Object.entries(parsed).forEach(([carnivalId, carnival]) => {
-                        let carnivalTotalTasks = 0;
-                        if (carnival.carnivalTasks) {
-                            carnivalTotalTasks += carnival.carnivalTasks.length;
-                        }
-                        if (carnival.clubs) {
-                            Object.entries(carnival.clubs).forEach(([clubId, tasks]) => {
-                                if (Array.isArray(tasks)) {
-                                    carnivalTotalTasks += tasks.length;
-                                    console.log(`  Carnival ${carnivalId} Club ${clubId}: ${tasks.length} tasks`);
-                                }
-                            });
-                        }
-                        console.log(`Carnival ${carnivalId} total: ${carnivalTotalTasks} tasks`);
-                        totalTasks += carnivalTotalTasks;
-                    });
-                    console.log(`\nGRAND TOTAL: ${totalTasks} tasks`);
-                }
-
-                console.log('\n🔍 CURRENT MEMORY STATE:');
-                console.log('revenueData in memory:', revenueData);
-                console.log('Are they same?', rawRevenue === JSON.stringify(revenueData));
-
-            } catch (e) {
-                console.error('Error examining storage:', e);
-            }
-
-            return {localStorage: true};
-        }
-
-        // COMPREHENSIVE DEBUG FUNCTION - Find the root cause
-        function findDataContamination() {
-            console.log('🚨 FINDING DATA CONTAMINATION ROOT CAUSE');
-            console.log('===============================================');
-
-            console.log('\n📊 1. REVENUE DATA STRUCTURE:');
-            console.log('Raw revenueData:', revenueData);
-
-            // Test for object reference sharing
-            console.log('\n🔍 2. TESTING OBJECT REFERENCE SHARING:');
-            let refMap = new Map();
-            Object.entries(revenueData).forEach(([carnivalId, carnivalData]) => {
-                Object.entries(carnivalData).forEach(([clubId, clubData]) => {
-                    const objId = Object.prototype.toString.call(clubData) + '_' + JSON.stringify(clubData);
-                    if (refMap.has(objId)) {
-                        console.log(`⚠️ SHARED REFERENCE DETECTED! Clubs ${refMap.get(objId)} and ${carnivalId}.${clubId} share the same object!`);
-                    } else {
-                        refMap.set(objId, `${carnivalId}.${clubId}`);
-                    }
-
-                    // Check if entries array is shared
-                    if (clubData.entries) {
-                        const entriesId = clubData.entries.toString();
-                        if (refMap.has('entries_' + entriesId)) {
-                            console.log(`⚠️ SHARED ENTRIES ARRAY! Clubs ${refMap.get('entries_' + entriesId)} and ${carnivalId}.${clubId} share entries array!`);
-                        } else {
-                            refMap.set('entries_' + entriesId, `${carnivalId}.${clubId}`);
-                        }
-                    }
-                });
-            });
-
-            console.log('\n🏢 3. CLUBS LIST STRUCTURE:');
-            clubsList.forEach((club, index) => {
-                console.log(`Club ${index}: ID=${club.id}, Name="${club.name}", Carnivals=[${club.carnivals}]`);
-            });
-
-            console.log('\n🎪 4. TASKS STRUCTURE:');
-            Object.entries(allTasks).forEach(([carnivalId, carnivalData]) => {
-                console.log(`\nCarnival ${carnivalId}:`);
-                if (carnivalData.clubs) {
-                    Object.entries(carnivalData.clubs).forEach(([clubId, tasks]) => {
-                        console.log(`  Club ${clubId}: ${tasks.length} tasks`);
-                        // Check for task reference sharing
-                        tasks.forEach(task => {
-                            const club = clubsList.find(c => c.id == clubId);
-                            console.log(`    Task: ${task.description.substring(0, 30)}... ID=${task.id} Status=${task.status}`);
-                        });
-                    });
-                }
-            });
-
-            console.log('\n🧮 5. TESTING CALCULATION LOGIC:');
-            carnivalsList.forEach(carnival => {
-                console.log(`\nCarnival ${carnival.id} (${carnival.name}):`);
-                const directRevenue = calculateCarnivalRevenue(carnival.id);
-                console.log(`  Direct calculation: ₹${directRevenue}`);
-
-                const manualTotal = Object.values(revenueData[carnival.id] || {}).reduce((total, club) => total + (club.total || 0), 0);
-                console.log(`  Manual calculation: ₹${manualTotal}`);
-
-                if (directRevenue !== manualTotal) {
-                    console.log(`  ⚠️ CALCULATION MISMATCH!`);
-                }
-            });
-
-            console.log('\n🎯 6. LIVE RENDER TEST:');
-            const assignedClubs = clubsList.filter(club =>
-                club.carnivals && club.carnivals.includes(parseInt(1)) // Assuming carnival 1
-            );
-
-            assignedClubs.forEach(club => {
-                const clubRevenue = revenueData[1]?.[club.id]?.total || 0;
-                console.log(`  Club ${club.id} (${club.name}): ₹${clubRevenue}`);
-            });
-        }
-
-        // DEBUG FUNCTION - Inspect data structure for shared references
-        function debugDataStructure() {
-            console.log('🔍 DEBUGGING: Data Structure Analysis');
-            console.log('=====================================');
-
-            // Check revenue data structure
-            console.log('📊 Revenue Data:');
-            console.log(JSON.stringify(revenueData, null, 2));
-
-            // Check if revenue objects are shared
-            let revenueRefs = new Map();
-            Object.entries(revenueData).forEach(([carnivalId, carnivalData]) => {
-                Object.entries(carnivalData).forEach(([clubId, clubData]) => {
-                    const dataStr = JSON.stringify(clubData);
-                    if (revenueRefs.has(dataStr)) {
-                        console.log(`⚠️  Revenue data SHARED between clubs! ${revenueRefs.get(dataStr)} and ${carnivalId}.${clubId}`);
-                    } else {
-                        revenueRefs.set(dataStr, `${carnivalId}.${clubId}`);
-                    }
-                });
-            });
-
-            // Check task data structure
-            console.log('\n📋 Task Data Structure:');
-            carnivalsList.forEach(carnival => {
-                console.log(`\n🎪 Carnival ${carnival.id} (${carnival.name}):`);
-                const carnivalData = allTasks[carnival.id];
-                if (carnivalData) {
-                    if (carnivalData.carnivalTasks) {
-                        console.log(`  Carnival tasks: ${carnivalData.carnivalTasks.length}`);
-                    }
-                    if (carnivalData.clubs) {
-                        Object.entries(carnivalData.clubs).forEach(([clubId, tasks]) => {
-                            const club = clubsList.find(c => c.id == clubId);
-                            console.log(`  🏢 Club ${clubId} (${club?.name || 'Unknown'}): ${tasks.length} tasks`);
-
-                            // Check for task object sharing
-                            tasks.forEach((task, index) => {
-                                if (task.description === 'Post event content') {
-                                    console.log(`    📝 Task ${index}: ${task.description} - ID: ${task.id} - Status: ${task.status}`);
-                                }
-                            });
-                        });
-                    }
-                }
-            });
-
-            // Check clubsList structure
-            console.log('\n🏢 Club Structure:');
-            clubsList.forEach(club => {
-                console.log(`  Club ${club.id}: ${club.name} - Carnivals: [${club.carnivals}]`);
-            });
-        }
-
-        // TEST FUNCTION - Verify task isolation between clubs
-        function testTaskIsolation() {
-            console.log('🧪 TESTING: Task Isolation Between Clubs');
-            console.log('=========================================');
-
-            // Find "Post event content" tasks across all clubs
-            let postEventTasks = [];
-
-            carnivalsList.forEach(carnival => {
-                const carnivalData = allTasks[carnival.id];
-                if (carnivalData && carnivalData.clubs) {
-                    Object.entries(carnivalData.clubs).forEach(([clubId, tasks]) => {
-                        tasks.forEach(task => {
-                            if (task.description && task.description.toLowerCase().includes('post event content')) {
-                                const club = clubsList.find(c => c.id == clubId);
-                                postEventTasks.push({
-                                    carnival: carnival.name,
-                                    club: club ? club.name : `Club ${clubId}`,
-                                    task: task,
-                                    location: `allTasks[${carnival.id}].clubs[${clubId}]`
-                                });
-                            }
-                        });
-                    });
-                }
-            });
-
-            console.log(`✅ Found ${postEventTasks.length} "Post event content" tasks:`);
-            postEventTasks.forEach((item, index) => {
-                console.log(`  ${index + 1}. ${item.carnival} → ${item.club}`);
-                console.log(`     ID: ${item.task.id}`);
-                console.log(`     Status: ${item.task.status || 'pending'}`);
-                console.log(`     Owner: ${item.task.owner || 'Not assigned'}`);
-            });
-
-            if (postEventTasks.length >= 2) {
-                // Test: Modify the first task
-                const firstTask = postEventTasks[0];
-                console.log('\n📝 TEST: Modifying first task...');
-                console.log(`   Before: "${firstTask.task.description}"`);
-
-                // Create a unique test description
-                const testDescription = `Post event content - TEST ${Date.now()}`;
-                firstTask.task.description = testDescription;
-
-                console.log(`   After: "${firstTask.task.description}"`);
-
-                // Check if other tasks were affected
-                console.log('\n🔍 Checking other tasks...');
-                let isolated = true;
-                postEventTasks.slice(1).forEach((item, index) => {
-                    if (item.task.description === testDescription) {
-                        console.log(`   ❌ Task ${index + 2} was ALSO modified! (${item.carnival} → ${item.club})`);
-                        isolated = false;
-                    } else {
-                        console.log(`   ✅ Task ${index + 2} remains unchanged (${item.carnival} → ${item.club})`);
-                    }
-                });
-
-                // Restore original description
-                firstTask.task.description = "Post event content";
-
-                if (isolated) {
-                    console.log('\n✅ SUCCESS: Task updates are properly isolated!');
-                } else {
-                    console.log('\n❌ FAILED: Task updates are affecting multiple clubs!');
-                }
-            } else {
-                console.log('\n⚠️  Need at least 2 "Post event content" tasks to test isolation');
-            }
-
-            console.log('=========================================\n');
-
-            // Also test unique IDs
-            console.log('🔍 Testing Task ID Uniqueness:');
-            const allTaskIds = new Set();
-            const duplicateIds = [];
-
-            carnivalsList.forEach(carnival => {
-                const carnivalData = allTasks[carnival.id];
-                if (carnivalData && carnivalData.clubs) {
-                    Object.entries(carnivalData.clubs).forEach(([clubId, tasks]) => {
-                        tasks.forEach(task => {
-                            if (allTaskIds.has(task.id)) {
-                                duplicateIds.push(task.id);
-                            }
-                            allTaskIds.add(task.id);
-                        });
-                    });
-                }
-            });
-
-            if (duplicateIds.length > 0) {
-                console.log(`❌ Found ${duplicateIds.length} duplicate task IDs:`, duplicateIds);
-            } else {
-                console.log(`✅ All ${allTaskIds.size} task IDs are unique!`);
-            }
-
-            return isolated && duplicateIds.length === 0;
-        }
 
         // TEST FUNCTION - Verify no auto-syncing between carnivals
         function testNoAutoSync() {
@@ -4454,152 +3947,6 @@
             return revenueData[carnivalId]?.[clubId]?.total || 0;
         }
 
-        // Revenue Management Functions
-        let currentEditingEntry = null;
-
-        function loadRevenueEntries() {
-            const carnivalId = document.getElementById('manage-revenue-carnival').value;
-            const entriesList = document.getElementById('revenue-entries-list');
-
-            if (!carnivalId) {
-                entriesList.innerHTML = '<p class="text-sm text-gray-500">Select a carnival to view revenue entries</p>';
-                return;
-            }
-
-            if (!revenueData[carnivalId]) {
-                entriesList.innerHTML = '<p class="text-sm text-gray-500">No revenue entries found for this carnival</p>';
-                return;
-            }
-
-            let html = '';
-            let totalRevenue = 0;
-
-            Object.entries(revenueData[carnivalId]).forEach(([clubId, clubData]) => {
-                const club = clubsList.find(c => c.id == clubId) || { name: `Club ${clubId}` };
-
-                if (clubData.entries && clubData.entries.length > 0) {
-                    html += `<div class="bg-gray-50 p-3 rounded-lg">
-                        <h5 class="font-medium text-gray-800 mb-2">${club.name}</h5>
-                        <div class="space-y-2">`;
-
-                    clubData.entries.forEach((entry, index) => {
-                        totalRevenue += entry.amount;
-                        const date = new Date(entry.timestamp).toLocaleDateString();
-                        html += `
-                            <div class="flex items-center justify-between bg-white p-2 rounded border">
-                                <div class="flex-1">
-                                    <div class="text-sm font-medium">₹${entry.amount.toLocaleString()}</div>
-                                    <div class="text-xs text-gray-600">${entry.description || 'No description'}</div>
-                                    <div class="text-xs text-gray-500">${date}</div>
-                                </div>
-                                <button onclick="openEditRevenueModal('${carnivalId}', '${clubId}', ${index})"
-                                        class="bg-blue-100 text-blue-700 px-3 py-1 rounded text-xs hover:bg-blue-200">
-                                    Edit
-                                </button>
-                            </div>`;
-                    });
-
-                    html += `</div></div>`;
-                }
-            });
-
-            if (html) {
-                html = `<div class="mb-3 p-2 bg-green-50 rounded">
-                    <strong>Total Revenue: ₹${totalRevenue.toLocaleString()}</strong>
-                </div>` + html;
-            } else {
-                html = '<p class="text-sm text-gray-500">No revenue entries found for this carnival</p>';
-            }
-
-            entriesList.innerHTML = html;
-        }
-
-        function openEditRevenueModal(carnivalId, clubId, entryIndex) {
-            const entry = revenueData[carnivalId][clubId].entries[entryIndex];
-            const club = clubsList.find(c => c.id == clubId) || { name: `Club ${clubId}` };
-
-            currentEditingEntry = { carnivalId, clubId, entryIndex, originalAmount: entry.amount };
-
-            document.getElementById('edit-revenue-amount').value = entry.amount;
-            document.getElementById('edit-revenue-description').value = entry.description || '';
-            document.getElementById('edit-revenue-club-name').textContent = club.name;
-            document.getElementById('edit-revenue-timestamp').textContent = new Date(entry.timestamp).toLocaleString();
-
-            document.getElementById('edit-revenue-modal').classList.remove('hidden');
-        }
-
-        function closeEditRevenueModal() {
-            document.getElementById('edit-revenue-modal').classList.add('hidden');
-            currentEditingEntry = null;
-        }
-
-        function saveRevenueEdit() {
-            if (!currentEditingEntry) return;
-
-            const newAmount = parseFloat(document.getElementById('edit-revenue-amount').value);
-            const newDescription = document.getElementById('edit-revenue-description').value.trim();
-
-            if (!newAmount || newAmount <= 0) {
-                alert('Please enter a valid amount');
-                return;
-            }
-
-            const { carnivalId, clubId, entryIndex, originalAmount } = currentEditingEntry;
-
-            // Update the entry
-            revenueData[carnivalId][clubId].entries[entryIndex].amount = newAmount;
-            revenueData[carnivalId][clubId].entries[entryIndex].description = newDescription;
-            revenueData[carnivalId][clubId].entries[entryIndex].updatedAt = new Date().toISOString();
-
-            // Update the total
-            revenueData[carnivalId][clubId].total = revenueData[carnivalId][clubId].total - originalAmount + newAmount;
-
-            // Save to storage
-            saveToFirebase('revenue', revenueData);
-
-            // Refresh views
-            loadRevenueEntries();
-            renderCarnivalMatrix();
-            renderRevenueSection();
-
-            closeEditRevenueModal();
-
-            console.log(`✏️ Updated revenue entry: ₹${newAmount.toLocaleString()}`);
-        }
-
-        function deleteRevenueEntry() {
-            if (!currentEditingEntry) return;
-
-            if (!confirm('Are you sure you want to delete this revenue entry? This action cannot be undone.')) {
-                return;
-            }
-
-            const { carnivalId, clubId, entryIndex, originalAmount } = currentEditingEntry;
-
-            // Remove the entry
-            revenueData[carnivalId][clubId].entries.splice(entryIndex, 1);
-
-            // Update the total
-            revenueData[carnivalId][clubId].total -= originalAmount;
-
-            // Clean up if no entries left
-            if (revenueData[carnivalId][clubId].entries.length === 0) {
-                revenueData[carnivalId][clubId].total = 0;
-            }
-
-            // Save to storage
-            saveToFirebase('revenue', revenueData);
-
-            // Refresh views
-            loadRevenueEntries();
-            renderCarnivalMatrix();
-            renderRevenueSection();
-
-            closeEditRevenueModal();
-
-            console.log(`🗑️ Deleted revenue entry: ₹${originalAmount.toLocaleString()}`);
-        }
-
         // Dashboard Section Management
         function showDashboardSection(sectionName) {
             // Hide all sections
@@ -4732,60 +4079,20 @@
                 const carnivalRevenue = calculateCarnivalRevenue(carnival.id);
                 const carnivalData = revenueData[carnival.id] || {};
 
-                // Get clubs assigned to this carnival
-                const assignedClubs = clubsList.filter(club =>
-                    club.carnivals && club.carnivals.includes(parseInt(carnival.id))
-                );
-
                 container.innerHTML += `
-                    <div class="border rounded-lg p-4 bg-white shadow-sm">
-                        <div class="flex items-center justify-between mb-3">
+                    <div class="border rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
                             <h5 class="font-medium text-gray-800">${carnival.name}</h5>
-                            <span class="font-bold text-green-600 text-lg">₹${carnivalRevenue.toLocaleString()}</span>
+                            <span class="font-bold text-green-600">₹${carnivalRevenue.toLocaleString()}</span>
                         </div>
-
-                        ${Object.keys(carnivalData).length > 0 ? `
-                            <div class="space-y-2">
-                                <div class="text-xs text-gray-500 font-medium mb-1">Club-wise Breakdown:</div>
-                                ${assignedClubs.map(club => {
-                                    // Safely get club revenue with better isolation
-                                    let clubRevenue = 0;
-                                    if (revenueData[carnival.id] && revenueData[carnival.id][club.id] && revenueData[carnival.id][club.id].total) {
-                                        clubRevenue = revenueData[carnival.id][club.id].total;
-                                    }
-                                    const hasRevenue = clubRevenue > 0;
-
-                                    // Debug logging for revenue display
-                                    console.log(`🔍 Club ${club.id} (${club.name}) revenue: ₹${clubRevenue} from carnival ${carnival.id}`);
-
-                                    return `
-                                        <div class="flex justify-between items-center text-sm ${hasRevenue ? 'bg-green-50' : 'bg-gray-50'} p-2 rounded">
-                                            <div class="flex items-center space-x-2">
-                                                <span class="${hasRevenue ? 'text-gray-700 font-medium' : 'text-gray-500'}">${club.name}</span>
-                                                <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">${club.activity}</span>
-                                                <span class="text-xs text-gray-400">[ID:${club.id}]</span>
-                                            </div>
-                                            <span class="${hasRevenue ? 'text-green-700 font-medium' : 'text-gray-400'}">₹${clubRevenue.toLocaleString()}</span>
-                                        </div>
-                                    `;
-                                }).join('')}
-                            </div>
-                        ` : `
-                            <div class="text-sm text-gray-500 italic">
-                                No revenue recorded yet
-                                ${assignedClubs.length > 0 ? `
-                                    <div class="mt-2 text-xs">
-                                        <div class="font-medium mb-1">Assigned Clubs:</div>
-                                        ${assignedClubs.map(club => `
-                                            <div class="flex items-center space-x-2 mb-1">
-                                                <span class="text-gray-600">• ${club.name}</span>
-                                                <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">${club.activity}</span>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                ` : ''}
-                            </div>
-                        `}
+                        <div class="space-y-1">
+                            ${Object.entries(carnivalData).map(([clubId, clubData]) => `
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">${clubId}:</span>
+                                    <span class="text-gray-800">₹${clubData.total.toLocaleString()}</span>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
                 `;
             });
@@ -4796,31 +4103,6 @@
             carnivalsList.forEach(carnival => {
                 carnivalSelect.innerHTML += `<option value="${carnival.id}">${carnival.name}</option>`;
             });
-        }
-
-        function updateRevenueDropdowns() {
-            // Update quick add revenue dropdown
-            const quickCarnivalSelect = document.getElementById('quick-revenue-carnival');
-            if (quickCarnivalSelect) {
-                quickCarnivalSelect.innerHTML = '<option value="">Select Carnival</option>';
-                carnivalsList.forEach(carnival => {
-                    quickCarnivalSelect.innerHTML += `<option value="${carnival.id}">${carnival.name}</option>`;
-                });
-            }
-
-            // Update manage revenue dropdown
-            const manageCarnivalSelect = document.getElementById('manage-revenue-carnival');
-            if (manageCarnivalSelect) {
-                const currentValue = manageCarnivalSelect.value; // Preserve selection
-                manageCarnivalSelect.innerHTML = '<option value="">Select Carnival</option>';
-                carnivalsList.forEach(carnival => {
-                    manageCarnivalSelect.innerHTML += `<option value="${carnival.id}">${carnival.name}</option>`;
-                });
-                if (currentValue) {
-                    manageCarnivalSelect.value = currentValue;
-                    loadRevenueEntries(); // Refresh the entries if carnival was selected
-                }
-            }
         }
 
         function renderAlertsSection() {
@@ -5072,53 +4354,14 @@
                 return;
             }
 
-            if (!amount || amount <= 0) {
-                alert('Please enter a valid amount');
-                return;
-            }
-
-            // Initialize revenue data structure with proper isolation
-            if (!revenueData[carnivalId]) {
-                revenueData[carnivalId] = {};
-            }
-            if (!revenueData[carnivalId][clubId]) {
-                revenueData[carnivalId][clubId] = {
-                    total: 0,
-                    entries: []
-                };
-            }
-
-            // Add revenue entry with better tracking
-            const revenueEntry = {
-                id: `rev_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                amount: amount,
-                date: new Date().toISOString().split('T')[0],
-                description: 'Quick add revenue',
-                timestamp: new Date().toISOString(),
-                clubId: clubId,
-                carnivalId: carnivalId
-            };
-
-            // Ensure we're updating the correct club's data
-            const targetClub = revenueData[carnivalId][clubId];
-            targetClub.entries.push(revenueEntry);
-            targetClub.total = (targetClub.total || 0) + amount;
-
-            // Save to Firebase/localStorage
-            saveToFirebase('revenue', revenueData);
-
-            console.log(`💰 Quick added ₹${amount.toLocaleString()} revenue for club ${clubId} (${clubsList.find(c => c.id == clubId)?.name}) in carnival ${carnivalId}`);
-            console.log(`📊 Club ${clubId} new total: ₹${targetClub.total.toLocaleString()}`);
+            // Use the existing revenue modal logic
+            window.currentRevenueTarget = { carnivalId, clubId };
+            document.getElementById('revenue-amount').value = amount;
+            document.getElementById('revenue-date').value = new Date().toISOString().split('T')[0];
+            addRevenue();
 
             // Clear form
             document.getElementById('quick-revenue-amount').value = '';
-
-            // Refresh views
-            renderCarnivalMatrix();
-            renderRevenueSection();
-            updateBasicStats();
-
-            alert(`✅ Added ₹${amount.toLocaleString()} revenue successfully!`);
         }
 
         function updateClubDropdown() {
@@ -5127,14 +4370,11 @@
 
             clubSelect.innerHTML = '<option value="">Select Club</option>';
 
-            if (carnivalId) {
-                // Show all clubs assigned to this carnival (based on club.carnivals array)
-                const assignedClubs = clubsList.filter(club =>
-                    club.carnivals && club.carnivals.includes(parseInt(carnivalId))
-                );
-
-                assignedClubs.forEach(club => {
-                    clubSelect.innerHTML += `<option value="${club.id}">${club.name}</option>`;
+            if (carnivalId && allTasks[carnivalId]) {
+                Object.keys(allTasks[carnivalId]).forEach(clubId => {
+                    if (clubId !== 'carnivalTasks') {
+                        clubSelect.innerHTML += `<option value="${clubId}">${clubId}</option>`;
+                    }
                 });
             }
         }
@@ -5146,30 +4386,16 @@
             let totalRevenue = 0;
 
             carnivalsList.forEach(carnival => {
-                const carnivalData = allTasks[carnival.id] || {};
-
-                // Count carnival-level tasks
-                if (carnivalData.carnivalTasks && Array.isArray(carnivalData.carnivalTasks)) {
-                    carnivalData.carnivalTasks.forEach(task => {
-                        totalTasks++;
-                        const isCompleted = task.status === 'completed' || task.status === 'Completed' || task.actualDate;
-                        if (isCompleted) completedTasks++;
-                    });
-                }
-
-                // Count club-level tasks
-                if (carnivalData.clubs) {
-                    Object.entries(carnivalData.clubs).forEach(([clubId, tasks]) => {
-                        if (Array.isArray(tasks)) {
-                            tasks.forEach(task => {
-                                totalTasks++;
-                                const isCompleted = task.status === 'completed' || task.status === 'Completed' || task.actualDate;
-                                if (isCompleted) completedTasks++;
-                            });
-                        }
-                    });
-                }
-
+                const carnivalTasks = allTasks[carnival.id] || {};
+                Object.entries(carnivalTasks).forEach(([clubId, tasks]) => {
+                    if (clubId !== 'carnivalTasks' && Array.isArray(tasks)) {
+                        tasks.forEach(task => {
+                            totalTasks++;
+                            const isCompleted = task.status === 'completed' || task.status === 'Completed' || task.actualDate;
+                            if (isCompleted) completedTasks++;
+                        });
+                    }
+                });
                 totalRevenue += calculateCarnivalRevenue(carnival.id);
             });
 
@@ -5370,79 +4596,116 @@
         }
 
         function loadLocalTestData() {
-            console.log('🧪 LOADING CLEAN LOCALHOST TEST DATA v2.1.15');
-
-            // COMPLETE WIPE FIRST
-            carnivalsList = [];
-            clubsList = [];
-            allTasks = {};
-            revenueData = {};
-
             // Create test carnivals
             const carnival1 = {
                 id: 1,
-                name: "Sports Fever",
-                description: "Summer sports carnival",
+                name: "Summer Sports Fest 2025",
+                description: "Annual summer sports festival",
                 startDate: "2025-06-01",
                 endDate: "2025-06-15"
             };
 
-            carnivalsList = [carnival1]; // Only one carnival for simplicity
-            nextCarnivalId = 2;
+            const carnival2 = {
+                id: 2,
+                name: "Winter Arts Carnival 2025",
+                description: "Winter arts and cultural fest",
+                startDate: "2025-12-10",
+                endDate: "2025-12-20"
+            };
+
+            carnivalsList.push(carnival1, carnival2);
+            nextCarnivalId = 3;
 
             // Initialize tasks structure
             allTasks[1] = { carnivalTasks: [], clubs: {} };
+            allTasks[2] = { carnivalTasks: [], clubs: {} };
 
-            // Add minimal carnival-level tasks
+            // Add carnival-level tasks
             allTasks[1].carnivalTasks = [
-                { id: 101, description: "Plan Sports Fever logistics", team: "Operations", owner: "Admin", status: "pending", expectedDate: "2025-05-01", priority: "high" }
+                { id: 101, description: "Deciding the fest name for Summer Sports Fest", team: "Operations", owner: "Joy", status: "completed", expectedDate: "2025-05-01", priority: "high" },
+                { id: 102, description: "Announcement to leaders group for Sports Fest", team: "Operations", owner: "Joy", status: "in-progress", expectedDate: "2025-05-15", priority: "medium" }
             ];
 
-            // Create clean test clubs with UNIQUE IDs
-            const club1 = { id: 1, name: "Just Dink It", activity: "Pickleball", commissionType: "Percentage", commissionAmount: "5", carnivals: [1] };
-            const club2 = { id: 2, name: "888 Smash Lab Club", activity: "Badminton", commissionType: "Fixed", commissionAmount: "1000", carnivals: [1] };
-            const club3 = { id: 3, name: "Picklers", activity: "Pickleball", commissionType: "Percentage", commissionAmount: "8", carnivals: [1] };
-            const club4 = { id: 4, name: "Gamers Den", activity: "Video Gaming Club", commissionType: "Revenue Share", commissionAmount: "10", carnivals: [1] };
-            const club5 = { id: 5, name: "Ballers", activity: "Basketball", commissionType: "Fixed", commissionAmount: "1500", carnivals: [1] };
-            const club6 = { id: 6, name: "RallyGully", activity: "Pickleball", commissionType: "Percentage", commissionAmount: "6", carnivals: [1] };
-            const club7 = { id: 7, name: "Trail it (Hikethon)", activity: "Hiking", commissionType: "Fixed", commissionAmount: "2000", carnivals: [1] };
+            allTasks[2].carnivalTasks = [
+                { id: 201, description: "Deciding the fest name for Winter Arts Carnival", team: "Operations", owner: "Joy", status: "pending", expectedDate: "2025-11-15", priority: "high" },
+                { id: 202, description: "Artist invitations for Arts Carnival", team: "Marketing", owner: "Ayushi", status: "pending", expectedDate: "2025-11-01", priority: "medium" }
+            ];
 
-            clubsList = [club1, club2, club3, club4, club5, club6, club7];
-            nextClubId = 8;
+            // Create test clubs
+            const club1 = {
+                id: 1,
+                name: "Delhi Football Club",
+                activity: "Football",
+                commissionType: "Percentage",
+                commissionAmount: "5",
+                carnivals: [1] // Only Summer Sports
+            };
 
-            // Create proper tasks for each club - ALL 19 template tasks with ISOLATED data
-            clubsList.forEach(club => {
-                allTasks[1].clubs[club.id] = taskTemplate.map((task, index) => ({
+            const club2 = {
+                id: 2,
+                name: "Mumbai Music Society",
+                activity: "Music",
+                commissionType: "Fixed",
+                commissionAmount: "10000",
+                carnivals: [2] // Only Winter Arts
+            };
+
+            const club3 = {
+                id: 3,
+                name: "Bangalore Dance Troupe",
+                activity: "Dance",
+                commissionType: "Revenue Share",
+                commissionAmount: "8",
+                carnivals: [1, 2] // Both carnivals
+            };
+
+            clubsList.push(club1, club2, club3);
+            nextClubId = 4;
+
+            // Create club tasks
+            club1.carnivals.forEach(carnivalId => {
+                allTasks[carnivalId].clubs[club1.id] = taskTemplate.slice(0, 5).map((task, index) => ({
                     ...task,
-                    id: `club_${club.id}_template_${index}_${Date.now()}`,
-                    clubId: club.id,
-                    carnivalId: 1,
-                    // Copy properties to avoid reference sharing
-                    description: task.description,
-                    team: task.team,
-                    owner: task.owner,
-                    status: task.status,
-                    priority: task.priority,
-                    expectedDate: task.expectedDate,
-                    createdAt: new Date().toISOString().split('T')[0]
+                    id: 1000 + carnivalId * 100 + club1.id * 10 + index,
+                    clubId: club1.id,
+                    carnivalId: carnivalId,
+                    status: index < 2 ? 'completed' : index < 4 ? 'in-progress' : 'pending',
+                    expectedDate: new Date(Date.now() + (index * 7 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
+                    priority: index < 2 ? 'high' : 'medium'
                 }));
             });
 
-            // Initialize empty revenue data - NO pre-filled contaminated data
-            revenueData = {};
+            club2.carnivals.forEach(carnivalId => {
+                allTasks[carnivalId].clubs[club2.id] = taskTemplate.slice(0, 6).map((task, index) => ({
+                    ...task,
+                    id: 1000 + carnivalId * 100 + club2.id * 10 + index,
+                    clubId: club2.id,
+                    carnivalId: carnivalId,
+                    status: index < 1 ? 'completed' : index < 3 ? 'in-progress' : 'pending',
+                    expectedDate: new Date(Date.now() + (index * 5 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
+                    priority: index < 3 ? 'high' : 'medium'
+                }));
+            });
 
-            // Save clean data
-            saveToLocalStorage();
+            club3.carnivals.forEach(carnivalId => {
+                allTasks[carnivalId].clubs[club3.id] = taskTemplate.slice(0, 4).map((task, index) => ({
+                    ...task,
+                    id: 1000 + carnivalId * 100 + club3.id * 10 + index,
+                    clubId: club3.id,
+                    carnivalId: carnivalId,
+                    status: index < 1 ? 'completed' : index < 2 ? 'in-progress' : 'pending',
+                    expectedDate: new Date(Date.now() + (index * 10 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
+                    priority: index < 2 ? 'high' : 'medium'
+                }));
+            });
 
-            console.log('✅ CLEAN localhost test data loaded:');
-            console.log('  Carnivals:', carnivalsList.length);
-            console.log('  Clubs:', clubsList.length, 'with unique IDs:', clubsList.map(c => c.id));
-            console.log('  Template tasks per club:', taskTemplate.length);
-            console.log('  Total tasks:', 1 + (clubsList.length * taskTemplate.length), '(1 carnival + ' + clubsList.length + ' clubs × ' + taskTemplate.length + ' tasks)');
-            console.log('  Revenue data:', Object.keys(revenueData).length, '(empty)');
-
-            updateAllDropdowns();
-            renderDashboard();
+            console.log('✅ Test data loaded:', {
+                carnivals: carnivalsList.length,
+                clubs: clubsList.length,
+                totalTasks: Object.values(allTasks).reduce((total, carnival) => {
+                    return total + carnival.carnivalTasks.length + Object.values(carnival.clubs).reduce((clubTotal, tasks) => clubTotal + tasks.length, 0);
+                }, 0)
+            });
         }
 
         // Initialize on page load
@@ -5450,25 +4713,34 @@
             console.log('Misfits Carnival Manager loaded');
             console.log('Template tasks:', taskTemplate.length);
 
-            // Initialize revenue data with proper isolation
-            revenueData = revenueData || {};
+            // For localhost testing - load immediate test data
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                console.log('🧪 Loading test data for localhost testing');
+                loadLocalTestData();
+            } else {
+                // Initialize sample data for testing
+                initializeSampleData();
 
-            // Enable Firebase for all environments
-            console.log('🔥 Firebase enabled for all environments');
+                // Initialize Firebase first for production
+                initializeFirebase();
 
-            // Initialize Firebase for production and localhost
-            initializeFirebase();
-
-            // Load test data if available (only if Firebase fails)
-            setTimeout(() => {
-                if (!isFirebaseReady && carnivalsList.length === 0) {
-                    loadTestDataIfAvailable();
-                }
-            }, 2000);
+                // Load test data if available (only if Firebase fails)
+                setTimeout(() => {
+                    if (!isFirebaseReady && carnivalsList.length === 0) {
+                        loadTestDataIfAvailable();
+                    }
+                }, 2000);
+            }
 
             updateAllDropdowns();
             renderDashboard();
 
+            // Show welcome message if test data was loaded
+            if (carnivalsList.length > 0) {
+                setTimeout(() => {
+                    alert('🎪 Welcome! Test data has been loaded with 2 carnivals, 3 clubs, and 90+ tasks. Try clicking on any task to see the enhanced details modal!');
+                }, 1000);
+            }
         };
     </script>
 </body>
