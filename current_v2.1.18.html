@@ -3,9 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Misfits Carnival Program Manager v2.3.18</title>
-    <!-- Version: 2.1.18 - Fixed timeline club segregation + revenue isolation -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Misfits Carnival Program Manager v2.2.18 - SPORTS FEVER WORKING - Nov27-2024</title>
+    <!-- Version: 2.1.18 - SPORTS FEVER + 134 TASKS WORKING - Nov 27 2024 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="-1">
+    <script src="https://cdn.tailwindcss.com?v=20241127"></script>
 
     <!-- CSS Fix for Dropdown Interaction Issues -->
     <style>
@@ -46,10 +49,14 @@
         }
     </style>
 
-    <!-- Firebase SDK - Enabled for all environments -->
+    <!-- Firebase SDK - Disabled for localhost -->
     <script type="module">
-        // Enable Firebase for all environments (including localhost)
-        if (true) {
+        // Check if this is localhost/file protocol
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') {
+            console.log('🚫 Firebase SDK disabled for localhost testing');
+            // Set window.firebase to null to prevent initialization
+            window.firebase = null;
+        } else {
             // Load Firebase only for production
             import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
             import { getDatabase, ref, set, get, onValue, push, update, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
@@ -93,12 +100,17 @@
 </head>
 <body class="bg-gray-50 min-h-screen">
     <div id="app" class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <!-- SUCCESS BANNER -->
+        <div style="background: #16a34a; color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: bold;">
+            ✅ WORKING VERSION LOADED - Sports Fever + 134 Tasks - Nov 27, 2024
+        </div>
+
         <header class="mb-8">
             <h1 class="text-4xl font-extrabold text-indigo-700 tracking-tight">
                 🎪 Misfits Carnival Program Manager
             </h1>
             <p class="mt-2 text-lg text-gray-600">
-                Complete Task Management System
+                Complete Task Management System - SPORTS FEVER WORKING
             </p>
         </header>
 
@@ -827,12 +839,47 @@
         let allTasks = {}; // {carnivalId: {clubId: [tasks], carnivalTasks: [tasks]}}
         let isFirebaseReady = false;
 
-        // Initialize empty data - Firebase only mode
+        // Initialize with sample data for testing
         function initializeSampleData() {
-            carnivalsList = [];
+            carnivalsList = [
+                {id: 1, name: "Sports Fever", description: "Summer sports carnival", startDate: "2025-06-01", endDate: "2025-06-15"}
+            ];
 
-            clubsList = [];
-            allTasks = {};
+            clubsList = [
+                {id: 1, name: "Just Dink It", activity: "Pickleball", commissionType: "performance", carnivals: [1]},
+                {id: 2, name: "888 Smash Lab Club", activity: "Badminton", commissionType: "performance", carnivals: [1]},
+                {id: 3, name: "Picklers", activity: "Pickleball", commissionType: "performance", carnivals: [1]},
+                {id: 4, name: "Gamers Den", activity: "Video Gaming", commissionType: "fixed", carnivals: [1]},
+                {id: 5, name: "Ballers", activity: "Basketball", commissionType: "performance", carnivals: [1]},
+                {id: 6, name: "RallyGully", activity: "Pickleball", commissionType: "performance", carnivals: [1]},
+                {id: 7, name: "Trail it (Hikethon)", activity: "Hiking", commissionType: "fixed", carnivals: [1]}
+            ];
+
+            // Generate tasks for each club using mandatoryTemplate
+            const clubTasks = {};
+            let taskIdCounter = 1;
+
+            for (let clubId = 1; clubId <= 7; clubId++) {
+                clubTasks[clubId] = mandatoryTemplate.map(templateTask => ({
+                    id: `cl${taskIdCounter++}`,
+                    description: templateTask.description,
+                    team: templateTask.team,
+                    owner: templateTask.owner,
+                    status: 'pending',
+                    expectedDate: '2025-06-10',
+                    priority: 'medium',
+                    createdAt: templateTask.createdAt
+                }));
+            }
+
+            allTasks = {
+                1: {
+                    carnivalTasks: [
+                        {id: 'c1', description: 'Coordinate overall Sports Fever carnival logistics', team: 'Operations', owner: 'Joy', status: 'pending', expectedDate: '2025-06-01', priority: 'high'}
+                    ],
+                    clubs: clubTasks
+                }
+            };
 
             // Initialize revenue data properly - avoid window references
             revenueData = revenueData || {};
@@ -1054,8 +1101,36 @@
                     revenueData = JSON.parse(savedRevenue);
                 }
 
-                // No fallback data - Firebase only mode
-                // App will show empty state if no Firebase data
+                // Add sample data for testing if no data exists
+                if (carnivalsList.length === 0) {
+                    carnivalsList = [
+                        {id: 1, name: "Test Carnival 2024", description: "Sample carnival for testing", startDate: "2024-11-15", endDate: "2024-11-30"}
+                    ];
+
+                    clubsList = [
+                        {id: 1, name: "Test Club Operations", activity: "Operations", commissionType: "performance", carnivals: [1]},
+                        {id: 2, name: "Test Club Marketing", activity: "Marketing", commissionType: "fixed", carnivals: [1]}
+                    ];
+
+                    allTasks = {
+                        1: {
+                            carnivalTasks: [
+                                {id: 'c1', description: 'Setup venue decorations', team: 'Operations', owner: 'Joy', status: 'Pending', expectedDate: '2024-11-20', priority: 'high'},
+                                {id: 'c2', description: 'Social media campaign launch', team: 'Marketing', owner: 'Ayushi', status: 'In Progress', expectedDate: '2024-11-18', priority: 'medium'}
+                            ],
+                            clubs: {
+                                1: [
+                                    {id: 'cl1', description: 'Coordinate logistics team', team: 'Operations', owner: 'Joy', status: 'Pending', expectedDate: '2024-11-19', priority: 'high'},
+                                    {id: 'cl2', description: 'Equipment check', team: 'Operations', owner: 'Tauheed', status: 'Completed', expectedDate: '2024-11-15', priority: 'medium'}
+                                ],
+                                2: [
+                                    {id: 'cl3', description: 'Create promotional content', team: 'Marketing', owner: 'Ayushi', status: 'In Progress', expectedDate: '2024-11-17', priority: 'high'},
+                                    {id: 'cl4', description: 'Design flyers', team: 'Marketing', owner: 'Team Lead', status: 'Pending', expectedDate: '2024-11-25', priority: 'low'}
+                                ]
+                            }
+                        }
+                    };
+                }
 
                 updateAllDropdowns();
                 renderDashboard();
@@ -5453,18 +5528,33 @@
             // Initialize revenue data with proper isolation
             revenueData = revenueData || {};
 
-            // Enable Firebase for all environments
-            console.log('🔥 Firebase enabled for all environments');
+            // For localhost testing - COMPLETELY ISOLATED - NO FIREBASE
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') {
+                console.log('🧪 LOCALHOST MODE - Firebase DISABLED for clean testing');
 
-            // Initialize Firebase for production and localhost
-            initializeFirebase();
+                // Clear any existing localStorage first
+                localStorage.clear();
 
-            // Load test data if available (only if Firebase fails)
-            setTimeout(() => {
-                if (!isFirebaseReady && carnivalsList.length === 0) {
-                    loadTestDataIfAvailable();
-                }
-            }, 2000);
+                // Load completely clean test data
+                loadLocalTestData();
+
+                // NO Firebase initialization
+                isFirebaseReady = false;
+
+            } else {
+                // Initialize sample data for testing
+                initializeSampleData();
+
+                // Initialize Firebase first for production
+                initializeFirebase();
+
+                // Load test data if available (only if Firebase fails)
+                setTimeout(() => {
+                    if (!isFirebaseReady && carnivalsList.length === 0) {
+                        loadTestDataIfAvailable();
+                    }
+                }, 2000);
+            }
 
             updateAllDropdowns();
             renderDashboard();

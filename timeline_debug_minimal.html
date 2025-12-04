@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Timeline Debug</title>
+</head>
+<body>
+    <h1>Timeline Debug Test</h1>
+
+    <button onclick="testTimelineLogic()">Test Timeline Logic</button>
+    <div id="debug-output"></div>
+    <div id="timeline-content"></div>
+
+    <script>
+        // Exact same data structure as localhost
+        let carnivalsList = [
+            {id: 1, name: "Test Carnival 2024", description: "Sample carnival", startDate: "2024-11-15", endDate: "2024-11-30"}
+        ];
+
+        let clubsList = [
+            {id: 1, name: "Test Club Operations", activity: "Operations", carnivals: [1]},
+            {id: 2, name: "Test Club Marketing", activity: "Marketing", carnivals: [1]}
+        ];
+
+        let allTasks = {
+            1: {
+                carnivalTasks: [
+                    {id: 'c1', description: 'Setup venue decorations', team: 'Operations', owner: 'Joy', status: 'Pending'},
+                    {id: 'c2', description: 'Social media campaign', team: 'Marketing', owner: 'Ayushi', status: 'In Progress'}
+                ],
+                clubs: {
+                    1: [
+                        {id: 'cl1', description: 'Coordinate logistics', team: 'Operations', owner: 'Joy', status: 'Pending'},
+                        {id: 'cl2', description: 'Equipment check', team: 'Operations', owner: 'Tauheed', status: 'Completed'}
+                    ],
+                    2: [
+                        {id: 'cl3', description: 'Create promotional content', team: 'Marketing', owner: 'Ayushi', status: 'In Progress'},
+                        {id: 'cl4', description: 'Design flyers', team: 'Marketing', owner: 'Team Lead', status: 'Pending'}
+                    ]
+                }
+            }
+        };
+
+        function getFilteredTimelineTasks() {
+            console.log('=== getFilteredTimelineTasks START ===');
+
+            // Simplified - assume all filters are "all"
+            const carnivalFilter = 'all';
+            const clubFilter = 'all';
+            const teamFilter = 'all';
+            const ownerFilter = 'all';
+            const statusFilter = 'all';
+            const taskTypeFilter = 'all';
+
+            console.log('Data check:');
+            console.log('  carnivalsList.length:', carnivalsList.length);
+            console.log('  allTasks keys:', Object.keys(allTasks));
+
+            const allTasksList = [];
+
+            // Simple filter function
+            const filterTasks = (tasks) => {
+                return tasks.filter(task => {
+                    console.log(`  Testing task: ${task.description}`);
+                    if (teamFilter !== 'all' && task.team !== teamFilter) {
+                        console.log(`    REJECTED: team mismatch`);
+                        return false;
+                    }
+                    if (ownerFilter !== 'all' && task.owner !== ownerFilter) {
+                        console.log(`    REJECTED: owner mismatch`);
+                        return false;
+                    }
+                    if (statusFilter !== 'all' && task.status !== statusFilter) {
+                        console.log(`    REJECTED: status mismatch`);
+                        return false;
+                    }
+                    console.log(`    ACCEPTED`);
+                    return true;
+                });
+            };
+
+            // Process carnivals
+            console.log('Processing carnivals:');
+            carnivalsList.forEach(carnival => {
+                console.log(`  Carnival: ${carnival.id} (${carnival.name})`);
+
+                if (carnivalFilter !== 'all' && carnival.id != carnivalFilter) {
+                    console.log(`    Skipped due to carnival filter`);
+                    return;
+                }
+
+                const carnivalData = allTasks[carnival.id];
+                if (!carnivalData) {
+                    console.log(`    No data found for carnival ${carnival.id}`);
+                    return;
+                }
+                console.log(`    Found carnival data`);
+
+                // Add carnival tasks
+                const carnivalTasks = carnivalData.carnivalTasks || [];
+                console.log(`    Carnival tasks: ${carnivalTasks.length}`);
+                const filteredCarnivalTasks = filterTasks(carnivalTasks);
+                filteredCarnivalTasks.forEach(task => {
+                    if (taskTypeFilter === 'all' || taskTypeFilter === 'carnival') {
+                        allTasksList.push({
+                            ...task,
+                            carnivalId: carnival.id,
+                            carnivalName: carnival.name,
+                            taskType: 'carnival'
+                        });
+                        console.log(`    Added carnival task: ${task.description}`);
+                    }
+                });
+
+                // Add club tasks
+                const clubs = clubsList.filter(club => club.carnivals.includes(carnival.id));
+                console.log(`    Processing ${clubs.length} clubs`);
+                clubs.forEach(club => {
+                    if (clubFilter !== 'all' && club.id != clubFilter) {
+                        console.log(`      Skipped club ${club.id} due to filter`);
+                        return;
+                    }
+
+                    const clubTasks = carnivalData.clubs[club.id] || [];
+                    console.log(`      Club ${club.id} tasks: ${clubTasks.length}`);
+                    const filteredClubTasks = filterTasks(clubTasks);
+                    filteredClubTasks.forEach(task => {
+                        if (taskTypeFilter === 'all' || taskTypeFilter === 'club') {
+                            allTasksList.push({
+                                ...task,
+                                carnivalId: carnival.id,
+                                carnivalName: carnival.name,
+                                clubId: club.id,
+                                clubName: club.name,
+                                taskType: 'club'
+                            });
+                            console.log(`      Added club task: ${task.description}`);
+                        }
+                    });
+                });
+            });
+
+            console.log('Final result:', allTasksList.length, 'tasks');
+            console.log('=== getFilteredTimelineTasks END ===');
+            return allTasksList;
+        }
+
+        function testTimelineLogic() {
+            console.clear();
+            console.log('🧪 TESTING TIMELINE LOGIC');
+
+            const tasks = getFilteredTimelineTasks();
+
+            const debugOutput = document.getElementById('debug-output');
+            debugOutput.innerHTML = `
+                <h2>Debug Results:</h2>
+                <p><strong>Total tasks found:</strong> ${tasks.length}</p>
+                <p><strong>Expected:</strong> 6 tasks (2 carnival + 4 club)</p>
+                <h3>Tasks:</h3>
+                <ul>
+                    ${tasks.map(task =>
+                        `<li>${task.description} (${task.taskType}, ${task.team}, ${task.status})</li>`
+                    ).join('')}
+                </ul>
+            `;
+
+            // Test rendering
+            const container = document.getElementById('timeline-content');
+            if (tasks.length === 0) {
+                container.innerHTML = `<div style="background: #fef2f2; border: 1px solid #fecaca; padding: 20px; border-radius: 5px;">
+                    <h3 style="color: #dc2626;">❌ No Tasks Found</h3>
+                    <p>This indicates a filtering issue. Check console for details.</p>
+                </div>`;
+            } else {
+                container.innerHTML = `<div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 20px; border-radius: 5px;">
+                    <h3 style="color: #16a34a;">✅ ${tasks.length} Tasks Found</h3>
+                    <ul>
+                        ${tasks.map(task => `<li>${task.description}</li>`).join('')}
+                    </ul>
+                </div>`;
+            }
+        }
+
+        // Auto-run test on load
+        window.onload = testTimelineLogic;
+    </script>
+</body>
+</html>

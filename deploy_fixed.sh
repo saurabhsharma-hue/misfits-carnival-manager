@@ -11,7 +11,7 @@ echo "=================================================="
 SERVER_IP="13.201.15.180"
 KEY_FILE="~/Downloads/cdk-key-staging.pem"
 SERVER_USER="ec2-user"
-LOCAL_FILE="Misfits_Carnival_Manager_LOCALHOST.html"
+LOCAL_FILE="Misfits_Carnival_Manager_WORKING_FIXED.html"
 REMOTE_PATH="/var/www/html/index.html"
 BACKUP_PATH="/var/www/html/backup"
 
@@ -67,39 +67,16 @@ ssh -i ~/Downloads/cdk-key-staging.pem $SERVER_USER@$SERVER_IP << 'EOF'
         echo "✓ Existing file backed up"
     fi
 
-    # COMPLETELY CLEAR ALL CACHE AND FILES
-    echo "🗑️ Clearing all cache and temporary files..."
-
-    # Stop web services
-    sudo systemctl stop nginx 2>/dev/null || true
-    sudo systemctl stop apache2 2>/dev/null || true
-
-    # Remove all cached files
-    sudo rm -rf /var/cache/nginx/* 2>/dev/null || true
-    sudo rm -rf /tmp/* 2>/dev/null || true
-    sudo rm -rf /var/tmp/* 2>/dev/null || true
-
-    # Clear system cache
-    sync
-    echo 3 | sudo tee /proc/sys/vm/drop_caches > /dev/null
-
-    # Remove existing web files
-    sudo rm -f /var/www/html/index.html 2>/dev/null || true
-    sudo rm -f /var/www/html/carnival-manager.html 2>/dev/null || true
-
-    echo "✓ All cache and files cleared"
-
     # Ensure www-data owns the directory
     sudo chown -R www-data:www-data /var/www/html
 
-    # Restart web services
-    if systemctl list-unit-files | grep -q apache2; then
-        sudo systemctl start apache2
-        echo "✓ Apache2 restarted"
-    fi
-    if systemctl list-unit-files | grep -q nginx; then
-        sudo systemctl start nginx
-        echo "✓ Nginx restarted"
+    # Check if web server is running
+    if systemctl is-active --quiet apache2; then
+        echo "✓ Apache2 is running"
+    elif systemctl is-active --quiet nginx; then
+        echo "✓ Nginx is running"
+    else
+        echo "Warning: No web server detected"
     fi
 EOF
 
@@ -107,18 +84,7 @@ echo -e "${GREEN}✓ Server environment prepared${NC}"
 
 echo -e "${YELLOW}Step 4: Deploying application...${NC}"
 
-# Echo file details before deployment
-echo "🔍 LOCAL FILE DETAILS:"
-echo "  📁 File: $LOCAL_FILE"
-echo "  📏 Size: $(ls -lh "$LOCAL_FILE" | awk '{print $5}')"
-echo "  🕒 Modified: $(ls -l "$LOCAL_FILE" | awk '{print $6, $7, $8}')"
-
-# Extract and show version from file
-echo "  📋 Version in file:"
-grep -m 1 "title.*v[0-9]" "$LOCAL_FILE" | sed 's/.*<title>//' | sed 's/<\/title>.*//'
-
 # Upload the file
-echo "📤 Uploading $LOCAL_FILE to server..."
 scp -i ~/Downloads/cdk-key-staging.pem "$LOCAL_FILE" $SERVER_USER@$SERVER_IP:/tmp/carnival_manager.html
 
 if [ $? -eq 0 ]; then
@@ -139,16 +105,6 @@ ssh -i ~/Downloads/cdk-key-staging.pem $SERVER_USER@$SERVER_IP << 'EOF'
 
     # Create a symbolic link for easier access
     sudo ln -sf /var/www/html/index.html /var/www/html/carnival-manager.html
-
-    # Clear browser cache by updating file timestamp
-    sudo touch /var/www/html/index.html
-
-    # Verify what was actually deployed
-    echo "🔍 DEPLOYED FILE VERIFICATION:"
-    echo "  📋 Title/Version on server:"
-    grep -m 1 "title.*v[0-9]" /var/www/html/index.html | sed 's/.*<title>//' | sed 's/<\/title>.*//' | head -1
-    echo "  📏 File size: $(ls -lh /var/www/html/index.html | awk '{print $5}')"
-    echo "  🕒 Modified: $(ls -l /var/www/html/index.html | awk '{print $6, $7, $8}')"
 
     echo "✓ Application deployed to /var/www/html/index.html"
 EOF
@@ -227,10 +183,7 @@ NGINX_EOF
         # Enable the site
         sudo ln -sf /etc/nginx/sites-available/carnival-manager /etc/nginx/sites-enabled/
         sudo nginx -t && sudo systemctl reload nginx
-
-        # Force clear any cached content
-        sudo systemctl restart nginx
-        echo "✓ Nginx configured and cache cleared"
+        echo "✓ Nginx configured"
     fi
 EOF
 

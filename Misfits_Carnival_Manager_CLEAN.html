@@ -1,0 +1,3061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Misfits Carnival Program Manager</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Use Inter Font -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .hidden { display: none !important; }
+        .view { display: block; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div id="app" class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <header class="mb-8">
+            <h1 class="text-4xl font-extrabold text-indigo-700 tracking-tight">
+                Misfits Carnival Program Manager
+            </h1>
+            <p id="carnival-name-display" class="text-xl text-gray-500 mt-2">
+                Loading Carnival Setup...
+            </p>
+            <div id="debug-info" class="text-sm text-gray-400 mt-1"></div>
+        </header>
+
+        <!-- EMERGENCY TEST BUTTON -->
+        <div style="margin: 20px 0; padding: 20px; background: yellow; border: 3px solid red;">
+            <h2 style="color: red;">🚨 EMERGENCY TASK TEST 🚨</h2>
+            <button onclick="window.emergencyShowTasks()" style="background: red; color: white; padding: 15px 30px; font-size: 18px; border: none; border-radius: 5px; cursor: pointer;">
+                📋 FORCE SHOW 19 TASKS HERE
+            </button>
+            <div id="emergency-task-display" style="margin-top: 10px;"></div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <nav class="flex space-x-4 border-b border-gray-200 mb-6">
+            <button onclick="showView('dashboard')" id="tab-dashboard" class="py-2 px-4 text-sm font-medium rounded-t-lg transition-colors duration-200 text-indigo-600 border-b-2 border-indigo-600 hover:text-indigo-800">
+                Dashboard
+            </button>
+            <button onclick="showView('task-tracker')" id="tab-task-tracker" class="py-2 px-4 text-sm font-medium rounded-t-lg transition-colors duration-200 text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300">
+                Task Tracker
+            </button>
+            <button onclick="showView('timeline')" id="tab-timeline" class="py-2 px-4 text-sm font-medium rounded-t-lg transition-colors duration-200 text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300">
+                Timeline
+            </button>
+            <button onclick="showView('setup')" id="tab-setup" class="py-2 px-4 text-sm font-medium rounded-t-lg transition-colors duration-200 text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300">
+                Setup & Template
+            </button>
+        </nav>
+
+        <!-- Views Container -->
+        <div id="view-container">
+            <!-- 1. Dashboard View -->
+            <div id="dashboard-view" class="view space-y-8">
+                <h2 class="text-3xl font-semibold text-gray-800">Program Dashboard</h2>
+
+                <!-- Dashboard Filters -->
+                <div class="bg-white p-4 rounded-xl shadow-lg">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Dashboard Filters</h3>
+                    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                        <div class="flex-1">
+                            <label for="dashboard-carnival-filter" class="block text-sm font-medium text-gray-700 mb-1">Filter by Carnival:</label>
+                            <select id="dashboard-carnival-filter" onchange="updateDashboard()" class="block w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                                <option value="all">All Carnivals</option>
+                                <!-- Carnivals populated dynamically -->
+                            </select>
+                        </div>
+                        <div class="flex-1">
+                            <label for="dashboard-club-filter" class="block text-sm font-medium text-gray-700 mb-1">Filter by Club:</label>
+                            <select id="dashboard-club-filter" onchange="updateDashboard()" class="block w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                                <option value="all">All Clubs</option>
+                                <!-- Clubs populated dynamically -->
+                            </select>
+                        </div>
+                        <div class="flex-1">
+                            <label for="dashboard-team-filter" class="block text-sm font-medium text-gray-700 mb-1">Filter by Team:</label>
+                            <select id="dashboard-team-filter" onchange="updateDashboard()" class="block w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                                <option value="all">All Teams</option>
+                                <!-- Teams populated dynamically -->
+                            </select>
+                        </div>
+                        <div class="flex-1">
+                            <label for="dashboard-owner-filter" class="block text-sm font-medium text-gray-700 mb-1">Filter by Owner:</label>
+                            <select id="dashboard-owner-filter" onchange="updateDashboard()" class="block w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                                <option value="all">All Owners</option>
+                                <!-- Owners populated dynamically -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-500">
+                        <p class="text-sm font-medium text-gray-500">Total Carnivals Created</p>
+                        <p id="total-carnivals-stat" class="mt-1 text-3xl font-bold text-gray-900">0</p>
+                        <p id="clubs-breakdown" class="mt-1 text-sm text-gray-500">0 clubs total</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-red-500">
+                        <p class="text-sm font-medium text-gray-500">Overdue Tasks</p>
+                        <p id="overdue-tasks-stat" class="mt-1 text-3xl font-bold text-red-600">0</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-green-500">
+                        <p class="text-sm font-medium text-gray-500">Overall Completion</p>
+                        <p id="completion-stat" class="mt-1 text-3xl font-bold text-green-600">0%</p>
+                    </div>
+                </div>
+
+                <!-- Overdue Tasks & Upcoming Deadlines -->
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" clip-rule="evenodd" fill-rule="evenodd"></path><path fill-rule="evenodd" d="M4 5a2 2 0 012-2V4a1 1 0 001 1h6a1 1 0 001-1V3a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm10 5a1 1 0 011 1v2a1 1 0 11-2 0v-2a1 1 0 011-1z" clip-rule="evenodd" fill-rule="evenodd"></path></svg>
+                        Pending Work Summary
+                    </h3>
+                    <div class="flex items-center space-x-4 mb-4">
+                         <label for="owner-filter" class="text-sm font-medium text-gray-700">Filter by Owner:</label>
+                         <select id="owner-filter" onchange="updateDashboard()" class="block w-48 p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                            <option value="all">All Owners</option>
+                            <!-- Owners populated dynamically -->
+                        </select>
+                    </div>
+                    <div id="pending-by-owner-summary" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                         <p class="col-span-4 text-gray-500">Select an owner or wait for data sync...</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold text-red-700 mb-4 flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+                            Top Overdue Tasks
+                        </h3>
+                        <div id="overdue-list" class="space-y-3">
+                            <p class="text-gray-500">No overdue tasks. Great work!</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold text-indigo-700 mb-4 flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" fill-rule="evenodd"></path></svg>
+                            Upcoming Deadlines (Next 7 Days)
+                        </h3>
+                        <div id="upcoming-list" class="space-y-3">
+                             <p class="text-gray-500">No deadlines in the next week.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Task Tracker View -->
+            <div id="task-tracker-view" class="view hidden">
+                <h2 class="text-3xl font-semibold text-gray-800 mb-4">Task Tracker</h2>
+
+                <div class="flex flex-col space-y-4 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                        <select id="carnival-selector" onchange="renderClubSelector(); renderTaskTracker()" class="p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="">All Carnivals</option>
+                        </select>
+                        <select id="task-type-selector" onchange="renderClubSelector(); renderTaskTracker()" class="p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="club">Club Tasks</option>
+                            <option value="carnival">Carnival-Level Tasks</option>
+                            <option value="all">All Tasks</option>
+                        </select>
+                        <select id="club-selector" onchange="renderTaskTracker()" class="p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="">Select a Club to Track</option>
+                            <option value="all-clubs">All Clubs (Selected Carnival)</option>
+                        </select>
+                        <select id="team-filter" onchange="renderTaskTracker()" class="p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="">All Teams</option>
+                            <!-- Teams populated dynamically -->
+                        </select>
+                        <select id="owner-filter" onchange="renderTaskTracker()" class="p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="">All Owners</option>
+                            <!-- Owners populated dynamically -->
+                        </select>
+                        <input type="text" id="team-search" placeholder="Search team/owner..." onkeyup="renderTaskTracker()" class="p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div class="flex justify-end">
+                        <button onclick="clearTaskFilters()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                            Clear Filters
+                        </button>
+                    </div>
+                </div>
+
+                <div id="task-list-container" class="space-y-4">
+                    <p class="text-gray-500">Please select a club above to view and manage tasks.</p>
+                </div>
+            </div>
+
+            <!-- 3. Timeline View -->
+            <div id="timeline-view" class="view hidden space-y-8">
+                <h2 class="text-3xl font-semibold text-gray-800">Timeline View</h2>
+
+                <!-- Timeline Filters -->
+                <div class="bg-white p-4 rounded-xl shadow-lg">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Timeline Filters</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                        <div>
+                            <label for="timeline-carnival-filter" class="block text-sm font-medium text-gray-700 mb-1">Carnival:</label>
+                            <select id="timeline-carnival-filter" onchange="updateTimelineClubs(); renderTimeline()" class="w-full p-2 border border-gray-300 rounded-lg text-sm">
+                                <option value="all">All Carnivals</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="timeline-club-filter" class="block text-sm font-medium text-gray-700 mb-1">Club:</label>
+                            <select id="timeline-club-filter" onchange="renderTimeline()" class="w-full p-2 border border-gray-300 rounded-lg text-sm">
+                                <option value="all">All Clubs</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="timeline-team-filter" class="block text-sm font-medium text-gray-700 mb-1">Team:</label>
+                            <select id="timeline-team-filter" onchange="renderTimeline()" class="w-full p-2 border border-gray-300 rounded-lg text-sm">
+                                <option value="all">All Teams</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="timeline-owner-filter" class="block text-sm font-medium text-gray-700 mb-1">Owner:</label>
+                            <select id="timeline-owner-filter" onchange="renderTimeline()" class="w-full p-2 border border-gray-300 rounded-lg text-sm">
+                                <option value="all">All Owners</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="timeline-period-filter" class="block text-sm font-medium text-gray-700 mb-1">Time Period:</label>
+                            <select id="timeline-period-filter" onchange="renderTimeline()" class="w-full p-2 border border-gray-300 rounded-lg text-sm">
+                                <option value="upcoming">Upcoming Tasks</option>
+                                <option value="this-week">This Week</option>
+                                <option value="this-month">This Month</option>
+                                <option value="overdue">Overdue</option>
+                                <option value="all">All Tasks</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timeline Container -->
+                <div id="timeline-container" class="space-y-4">
+                    <!-- Timeline content will be populated here -->
+                </div>
+            </div>
+
+            <!-- 4. Setup & Template View -->
+            <div id="setup-view" class="view hidden space-y-8">
+                <h2 class="text-3xl font-semibold text-gray-800">Program Setup</h2>
+
+                <!-- Carnival Management -->
+                <div class="bg-white p-6 rounded-xl shadow-lg space-y-4">
+                    <h3 class="text-xl font-semibold text-indigo-700">Carnival Management</h3>
+
+                    <!-- Add New Carnival -->
+                    <div class="border-b border-gray-200 pb-4">
+                        <h4 class="text-lg font-medium text-gray-800 mb-3">Create New Carnival</h4>
+                        <div class="space-y-3">
+                            <div>
+                                <input type="text" id="new-carnival-name-input" placeholder="Enter carnival name (e.g., Christmas Bash)" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label for="announcement-expected-date" class="block text-sm font-medium text-gray-700 mb-1">Expected Announcement Date</label>
+                                    <input type="date" id="announcement-expected-date" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                </div>
+                                <div>
+                                    <label for="announcement-actual-date" class="block text-sm font-medium text-gray-700 mb-1">Actual Announcement Date</label>
+                                    <input type="date" id="announcement-actual-date" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                </div>
+                            </div>
+                            <div class="flex justify-end">
+                                <button onclick="addCarnival()" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Create Carnival
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Existing Carnivals List -->
+                    <div>
+                        <h4 class="text-lg font-medium text-gray-800 mb-3">Existing Carnivals</h4>
+                        <div id="carnival-list" class="space-y-2 max-h-48 overflow-y-auto">
+                            <p class="text-gray-500">No carnivals created yet.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Club Registration (Under Selected Carnival) -->
+                <div class="bg-white p-6 rounded-xl shadow-lg space-y-4">
+                    <h3 class="text-xl font-semibold text-indigo-700">Register Clubs in Carnival</h3>
+
+                    <!-- Select Carnival First -->
+                    <div class="border-b border-gray-200 pb-4">
+                        <label for="carnival-for-club" class="block text-sm font-medium text-gray-700 mb-2">Select Carnival:</label>
+                        <select id="carnival-for-club" onchange="renderClubRegistration()" class="block w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="">Choose a carnival first</option>
+                        </select>
+                    </div>
+
+                    <!-- Add Club to Selected Carnival -->
+                    <div id="club-registration-section" class="hidden">
+                        <h4 class="text-lg font-medium text-gray-800 mb-3">Add Club to <span id="selected-carnival-name">Carnival</span></h4>
+                        <div class="space-y-3 mb-4">
+                            <!-- Club Name -->
+                            <div>
+                                <label for="new-club-name-input" class="block text-sm font-medium text-gray-700 mb-1">Club Name:</label>
+                                <input type="text" id="new-club-name-input" placeholder="Enter club name" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
+
+                            <!-- Commission Settings -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label for="club-commission-input" class="block text-sm font-medium text-gray-700 mb-1">Commission %:</label>
+                                    <div class="flex items-center space-x-2">
+                                        <input type="number" id="club-commission-input" placeholder="%" min="0" max="100" step="0.5" class="flex-1 p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-center">
+                                        <span class="text-sm text-gray-600">%</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="commission-type-select" class="block text-sm font-medium text-gray-700 mb-1">Commission Type:</label>
+                                    <select id="commission-type-select" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                        <option value="gross">Direct on ticket sales (Gross)</option>
+                                        <option value="net">After costs (Net)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Add Button -->
+                            <div class="flex justify-end">
+                                <button onclick="addClubToCarnival()" class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"></path></svg>
+                                    Add Club to Carnival
+                                </button>
+                            </div>
+
+                            <p class="text-sm text-gray-500">
+                                <strong>Gross:</strong> Commission calculated directly on ticket sales (before deducting event costs)<br>
+                                <strong>Net:</strong> Commission calculated after deducting all event costs
+                            </p>
+                        </div>
+
+                        <!-- Clubs in Selected Carnival -->
+                        <div>
+                            <h5 class="text-md font-medium text-gray-700 mb-2">Clubs in this Carnival:</h5>
+                            <div id="clubs-in-carnival" class="space-y-2 max-h-32 overflow-y-auto">
+                                <p class="text-gray-500">No clubs registered in this carnival yet.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task Template -->
+                <div class="bg-white p-6 rounded-xl shadow-lg space-y-4">
+                    <h3 class="text-xl font-semibold text-indigo-700 mb-4">Mandatory Task Template (19 Club Tasks + 2 Carnival Tasks = 21 Total)</h3>
+                    <p class="text-sm text-gray-600">These 19 tasks will be automatically created for each club registered in a carnival. Additionally, 2 carnival-level tasks (including the announcement) are created for each carnival. You can customize the template below.</p>
+
+                    <!-- Show Current Template -->
+                    <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                        <h4 class="text-lg font-medium text-gray-800 mb-3">Current Mandatory Tasks:</h4>
+                        <div id="task-template-display" class="space-y-2 max-h-64 overflow-y-auto">
+                            <!-- Template will be displayed here -->
+                        </div>
+                    </div>
+
+                    <div id="task-template-list" class="space-y-3">
+                        <!-- Task template items will be rendered here for editing -->
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-200 space-y-4">
+                        <h4 class="text-lg font-medium text-gray-800">Add Custom Template Task</h4>
+
+                        <!-- Task Description -->
+                        <div>
+                            <label for="new-task-description" class="block text-sm font-medium text-gray-700 mb-1">Task Description:</label>
+                            <input type="text" id="new-task-description" placeholder="Enter task description" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+
+                        <!-- Carnival and Club Selection -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                            <div>
+                                <label for="new-task-carnival-select" class="block text-sm font-medium text-gray-700 mb-1">Target Carnival:</label>
+                                <select id="new-task-carnival-select" onchange="updateClubsForTask()" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                    <option value="">Choose carnival...</option>
+                                    <!-- Carnivals populated dynamically -->
+                                </select>
+                            </div>
+                            <div>
+                                <label for="new-task-club-select" class="block text-sm font-medium text-gray-700 mb-1">Target Club:</label>
+                                <select id="new-task-club-select" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                    <option value="">All clubs in carnival</option>
+                                    <!-- Clubs populated based on carnival selection -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Team and Owner Row -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="new-task-team-select" class="block text-sm font-medium text-gray-700 mb-1">Default Team:</label>
+                                <div class="flex space-x-2">
+                                    <select id="new-task-team-select" class="flex-1 p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                        <option value="">Choose existing team</option>
+                                        <!-- Teams populated dynamically -->
+                                    </select>
+                                    <input type="text" id="new-task-team-input" placeholder="Or enter new team" class="flex-1 p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="new-task-owner-select" class="block text-sm font-medium text-gray-700 mb-1">Default Owner:</label>
+                                <div class="flex space-x-2">
+                                    <select id="new-task-owner-select" class="flex-1 p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                        <option value="">Choose existing owner</option>
+                                        <!-- Owners populated dynamically -->
+                                    </select>
+                                    <input type="text" id="new-task-owner-input" placeholder="Or enter new owner" class="flex-1 p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Club Assignment Option -->
+                        <div class="space-y-3 p-4 bg-gray-50 rounded-lg">
+                            <h5 class="text-sm font-medium text-gray-800">Task Assignment</h5>
+                            <div class="space-y-3">
+                                <label class="flex items-center">
+                                    <input type="radio" name="task-assignment" value="all" id="assign-to-all" checked class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
+                                    <span class="ml-2 text-sm text-gray-700">Apply to all clubs in carnival (default)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="radio" name="task-assignment" value="specific" id="assign-to-specific" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
+                                    <span class="ml-2 text-sm text-gray-700">Apply to specific club only</span>
+                                </label>
+                                <div id="specific-club-selector" class="ml-6 hidden">
+                                    <label for="specific-club-select" class="block text-xs font-medium text-gray-600 mb-1">Select Club:</label>
+                                    <select id="specific-club-select" class="w-full p-2 text-sm border border-gray-300 rounded-lg">
+                                        <option value="">Choose a club...</option>
+                                        <!-- Clubs populated dynamically -->
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Add Button -->
+                        <div class="flex justify-end">
+                            <button onclick="addCustomTask()" class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"></path></svg>
+                                Add to Template
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+         <!-- Message Box for Alerts (no alert() allowed) -->
+        <div id="message-box" class="fixed top-4 right-4 z-50"></div>
+    </div>
+
+    <!-- Local Data - No Firebase -->
+    <script>
+        // Local data management without Firebase
+        const appId = 'carnival-manager';
+        let userId = 'demo-user';
+        let carnivalsList = [];           // List of all carnivals
+        let selectedCarnival = null;      // Currently selected carnival
+        let carnivalClubs = {};           // Clubs per carnival: {carnivalId: [clubs]}
+        let carnivalClubTasks = {};       // Tasks per carnival+club: {carnivalId: {clubId: [tasks]}}
+        let carnivalTasks = {};           // Carnival-level tasks: {carnivalId: [tasks]}
+        let taskTemplate = [];            // Global task template
+        let clubTasks = {};               // Club tasks storage
+        let clubList = [];                // Global club list
+        let isAuthReady = true;           // Always ready in local mode
+
+        // Initialize taskTemplate with the initialTemplate immediately
+        // Structured template with default owners AND team (club-level tasks)
+        const initialTemplate = [
+            { description: "Once the leader reverts, event coordinator to sit with them, finalise the dates, event flow and commission %", team: "Operations", owner: "Joy" },
+            { description: "Get the venue requested by the venue team and map a venue to the event", team: "Operations", owner: "Tauheed" },
+            { description: "Prepare the content plan with marketing team - how much hype to be done, how etc etc and when", team: "Marketing", owner: "Joy" },
+            { description: "Logistical requirement to be taken on a doc by the club and keep it somewhere against the club with the status of what all is done", team: "Operations", owner: "Joy" },
+            { description: "Banner to be created by the marketing team - alignment and completion", team: "Marketing", owner: "Ayushi" },
+            { description: "Sharing event flow details with marketing team", team: "Operations", owner: "Joy" },
+            { description: "Logo to be created by the marketing team - alignment and completion", team: "Marketing", owner: "Ayushi" },
+            { description: "Marketing asset requirement - Ideally I should be able to add under this section (Example - medals, certificate, standees)", team: "Marketing", owner: "Joy" },
+            { description: "Banner to be placed in the festival section of the app", team: "Operations", owner: "Joy" },
+            { description: "Meetup creation and linking to the festival section", team: "Operations", owner: "Joy" },
+            { description: "Asset making by marketing team", team: "Marketing", owner: "Ayushi" },
+            { description: "Asset printing", team: "Marketing", owner: "Joy" },
+            { description: "Asset delivery", team: "Operations", owner: "Joy" },
+            { description: "Logistical requirement delivery", team: "Operations", owner: "Joy" },
+            { description: "Logistical and asset implementation", team: "Operations", owner: "Joy" },
+            { description: "Videographer requirement and alignment", team: "Marketing", owner: "Joy" },
+            { description: "Post event content", team: "Marketing", owner: "Joy" },
+            { description: "On ground assistant requirements", team: "Operations", owner: "Joy" },
+            { description: "On ground assistant implementation", team: "Operations", owner: "Joy" },
+        ];
+
+        window.onload = initializeAppAndAuth;
+
+        function showMessage(message, type = 'success') {
+            const box = document.getElementById('message-box');
+            const color = type === 'success' ? 'bg-green-100 border-green-400 text-green-700' :
+                          type === 'error' ? 'bg-red-100 border-red-400 text-red-700' :
+                          'bg-yellow-100 border-yellow-400 text-yellow-700';
+
+            const alertHtml = `
+                <div class="${color} border px-4 py-3 rounded-md shadow-md mb-2 transition-opacity duration-300" role="alert">
+                    <p class="font-bold">${type.charAt(0).toUpperCase() + type.slice(1)}</p>
+                    <p class="text-sm">${message}</p>
+                </div>
+            `;
+            box.insertAdjacentHTML('beforeend', alertHtml);
+
+            // Automatically remove after 5 seconds
+            const newAlert = box.lastElementChild;
+            setTimeout(() => {
+                newAlert.style.opacity = '0';
+                setTimeout(() => newAlert.remove(), 300);
+            }, 5000);
+        }
+
+        function getSetupDocRef() {
+            return doc(db, "artifacts", appId, "users", userId, "setup", "config");
+        }
+
+        function getCarnivalsCollectionRef() {
+            return collection(db, "artifacts", appId, "users", userId, "carnivals");
+        }
+
+        function getCarnivalDocRef(carnivalId) {
+            return doc(db, "artifacts", appId, "users", userId, "carnivals", carnivalId);
+        }
+
+        function getClubsCollectionRef(carnivalId) {
+            return collection(db, "artifacts", appId, "users", userId, "carnivals", carnivalId, "clubs");
+        }
+
+        function getTasksCollectionRef(carnivalId, clubId) {
+            return collection(db, "artifacts", appId, "users", userId, "carnivals", carnivalId, "clubs", clubId, "tasks");
+        }
+
+        // Helper to check if a task is a mandatory, initial task (for removal guard)
+        function isMandatoryTask(description) {
+            return initialTemplate.some(t => t.description === description);
+        }
+
+        // Carnival-level task template (tasks done before clubs register)
+        const carnivalLevelTemplate = [
+            { description: "Decide the name of the fest", team: "Operations", owner: "Joy" },
+            { description: "Announce it in the leader group that this carnival is happening and ask them to dm the event coordinator. In case - no leader DMs upfront, event coordinator to send messages to people", team: "Operations", owner: "Joy" }
+        ];
+
+        // Function to create carnival-level tasks
+        async function createCarnivalTasks(carnivalId) {
+            try {
+                const batch = writeBatch(db);
+                const carnivalTasksRef = collection(db, "artifacts", appId, "users", userId, "carnivals", carnivalId, "carnival_tasks");
+
+                carnivalLevelTemplate.forEach((templateTask, index) => {
+                    const taskId = createTaskId(templateTask.description);
+                    batch.set(doc(carnivalTasksRef, taskId), {
+                        description: templateTask.description,
+                        team: templateTask.team || '',
+                        owner: templateTask.owner || '',
+                        expectedDate: '',
+                        actualDate: '',
+                        notes: '',
+                        status: 'To Do',
+                        required: true,
+                        sequence: index + 1,
+                        carnivalId: carnivalId,
+                        taskType: 'carnival' // Distinguish from club tasks
+                    });
+                });
+
+                await batch.commit();
+                console.log(`Created ${carnivalLevelTemplate.length} carnival-level tasks for ${carnivalId}`);
+            } catch (error) {
+                console.error("Error creating carnival tasks:", error);
+                throw error;
+            }
+        }
+
+        // Create test carnival for demo purposes
+        async function createTestCarnival() {
+            try {
+                const testCarnivalId = 'test-winter-carnival-2024';
+                const testCarnival = {
+                    id: testCarnivalId,
+                    name: 'Test Winter Carnival 2024',
+                    announcementExpectedDate: '2024-12-01',
+                    announcementActualDate: '',
+                    createdAt: new Date().toISOString(),
+                    status: 'active'
+                };
+
+                // Create carnival
+                await setDoc(getCarnivalDocRef(testCarnivalId), testCarnival);
+
+                // Create carnival-level tasks
+                await createCarnivalTasks(testCarnivalId);
+
+                // Create a test club
+                const testClubId = 'test-club-1';
+                const testClub = {
+                    id: testClubId,
+                    name: 'Test Dance Club',
+                    activity: 'Dance',
+                    teamName: 'Team Rhythm',
+                    ownerName: 'Test Owner',
+                    contactInfo: 'test@example.com',
+                    eventName: 'Winter Dance Fest',
+                    eventDate: '2024-12-15',
+                    eventTime: '7:00 PM',
+                    eventFlow: 'Opening, Performances, Closing',
+                    commissionType: 'gross',
+                    commissionPercentage: 15,
+                    registrationDate: new Date().toISOString(),
+                    carnivalId: testCarnivalId
+                };
+
+                // Create club document
+                await setDoc(getClubDocRef(testCarnivalId, testClubId), testClub);
+
+                // Create club tasks based on template
+                await createClubTasks(testCarnivalId, testClubId);
+
+                updateDebugInfo("✅ Test carnival created successfully!");
+                console.log('Test carnival and club created successfully');
+
+            } catch (error) {
+                console.error('Error creating test carnival:', error);
+                updateDebugInfo("❌ Error creating test carnival");
+            }
+        }
+
+        // --- Firebase Initialization and Auth ---
+        function updateDebugInfo(message) {
+            const debugDiv = document.getElementById('debug-info');
+            if (debugDiv) {
+                debugDiv.textContent = message;
+            }
+            console.log('Debug:', message);
+        }
+
+        function initializeAppAndAuth() {
+            updateDebugInfo("Initializing local data...");
+
+            // Initialize taskTemplate with the initial template
+            taskTemplate = [...initialTemplate];
+
+            // Add the 2 carnival-level tasks
+            taskTemplate.push(
+                { description: "Deciding the fest name which is deciding the carnival name", team: "Operations", owner: "Joy" },
+                { description: "Announcement to leaders group", team: "Operations", owner: "Joy" }
+            );
+
+            userId = 'demo-user';
+            isAuthReady = true;
+            updateDebugInfo("✅ Local data initialized!");
+            console.log("Initialized with user ID:", userId);
+
+            document.getElementById('carnival-name-display').textContent = 'Ready! Welcome to Carnival Manager (Local Mode)';
+
+            // Initialize local data instead of Firebase listeners
+            initializeLocalData();
+
+            // Initialize dashboard view
+            setTimeout(() => {
+                showView('dashboard');
+            }, 100);
+        }
+
+        function initializeLocalData() {
+            // Create sample carnival for demonstration
+            const sampleCarnival = {
+                id: 'carnival-001',
+                name: 'Christmas Carnival 2024',
+                createdAt: new Date().toISOString()
+            };
+
+            carnivalsList.push(sampleCarnival);
+
+            // Create sample club
+            const sampleClub = {
+                id: 'club-001',
+                name: 'Tech Club',
+                activity: 'Technology',
+                carnivalId: 'carnival-001'
+            };
+
+            clubList.push(sampleClub);
+            carnivalClubs['carnival-001'] = [sampleClub];
+
+            // Initialize empty tasks
+            clubTasks['club-001'] = [];
+            carnivalTasks['carnival-001'] = [];
+
+            console.log("Local data initialized with sample carnival and club");
+        }
+
+        // --- Local Data Functions (No Firebase) ---
+        function startListeners() {
+            updateDebugInfo("Starting local data setup...");
+
+            // Since we're using local data, just trigger the rendering functions
+            renderSetupView();
+            updateDashboard();
+        }
+
+                // Create sample carnival if none exist for testing
+                if (carnivalsList.length === 0) {
+                    updateDebugInfo("No carnivals found, creating test carnival...");
+                    createTestCarnival();
+                } else {
+                    updateDebugInfo(`Found ${carnivalsList.length} carnivals`);
+                }
+            }, (error) => {
+                console.error("Error listening to setup data:", error);
+            });
+
+            // 2. Listen for Carnivals List
+            onSnapshot(getCarnivalsCollectionRef(), (snapshot) => {
+                carnivalsList = [];
+                snapshot.forEach(doc => {
+                    carnivalsList.push({ id: doc.id, ...doc.data() });
+                });
+                carnivalsList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                console.log("Carnivals loaded:", carnivalsList.length, carnivalsList);
+                renderSetupView();
+                renderDashboardFilters();
+            }, (error) => {
+                console.error("Error listening to carnivals:", error);
+            });
+
+            // 3. Listen for Carnival-level tasks
+            carnivalTasks = {}; // Reset container
+            onSnapshot(getCarnivalsCollectionRef(), (carnivalsSnapshot) => {
+                carnivalsSnapshot.forEach(carnivalDoc => {
+                    const carnivalId = carnivalDoc.id;
+
+                    // Listen to carnival-level tasks
+                    const carnivalTasksRef = collection(db, "artifacts", appId, "users", userId, "carnivals", carnivalId, "carnival_tasks");
+                    onSnapshot(carnivalTasksRef, (tasksSnapshot) => {
+                        const tasks = [];
+                        tasksSnapshot.forEach(taskDoc => {
+                            tasks.push({
+                                id: taskDoc.id,
+                                ...taskDoc.data(),
+                                carnivalId: carnivalId,
+                                taskType: 'carnival'
+                            });
+                        });
+                        carnivalTasks[carnivalId] = tasks;
+
+                        updateDashboard(); // Update dashboard when carnival tasks change
+                    }, (error) => {
+                        console.error(`Error listening to carnival tasks for ${carnivalId}:`, error);
+                    });
+                });
+            }, (error) => {
+                console.error("Error listening to carnivals for tasks:", error);
+            });
+
+            // 4. Listen for Clubs in all Carnivals
+            carnivalClubs = {}; // Reset container
+            clubTasks = {}; // Reset tasks container
+
+            onSnapshot(getCarnivalsCollectionRef(), (carnivalsSnapshot) => {
+                carnivalsSnapshot.forEach(carnivalDoc => {
+                    const carnivalId = carnivalDoc.id;
+
+                    // Listen to clubs in this carnival
+                    onSnapshot(getClubsCollectionRef(carnivalId), (clubsSnapshot) => {
+                        const clubs = [];
+                        clubsSnapshot.forEach(clubDoc => {
+                            clubs.push({ id: clubDoc.id, ...clubDoc.data(), carnivalId: carnivalId });
+                        });
+                        carnivalClubs[carnivalId] = clubs;
+
+                        // Build flat club list for compatibility
+                        clubList = [];
+                        Object.values(carnivalClubs).forEach(carnivalClubList => {
+                            clubList = clubList.concat(carnivalClubList);
+                        });
+
+                        renderSetupView();
+                        renderClubSelector();
+                        renderCarnivalSelector();
+                        renderDashboardFilters(); // Ensure dashboard filters are populated with club data
+                        updateDashboard();
+
+                        // Listen to tasks for each club in this carnival
+                        clubs.forEach(club => {
+                            const tasksQuery = getTasksCollectionRef(carnivalId, club.id);
+                            onSnapshot(tasksQuery, (tasksSnapshot) => {
+                                const tasks = [];
+                                tasksSnapshot.forEach(taskDoc => {
+                                    tasks.push({
+                                        id: taskDoc.id,
+                                        ...taskDoc.data(),
+                                        clubId: club.id,
+                                        clubName: club.name,
+                                        carnivalId: carnivalId
+                                    });
+                                });
+                                clubTasks[club.id] = tasks;
+
+                                updateDashboard(); // Update dashboard immediately on change
+
+                                // If the current selected club is updated, re-render the task tracker view
+                                const selector = document.getElementById('club-selector');
+                                if (selector && selector.value === club.id) {
+                                    renderTaskTracker(club.id);
+                                }
+                            }, (error) => {
+                                console.error(`Error listening to tasks for club ${club.name}:`, error);
+                            });
+                        });
+
+                    }, (error) => {
+                        console.error(`Error listening to clubs in carnival ${carnivalId}:`, error);
+                    });
+                });
+            }, (error) => {
+                console.error("Error listening to carnivals for clubs:", error);
+            });
+        }
+
+
+        // --- Setup View Functions ---
+
+        window.addCarnival = async function() {
+            const name = document.getElementById('new-carnival-name-input').value.trim();
+            const announcementExpected = document.getElementById('announcement-expected-date').value;
+            const announcementActual = document.getElementById('announcement-actual-date').value;
+
+            if (!name) {
+                showMessage("Carnival name cannot be empty.", 'warning');
+                return;
+            }
+
+            // Check if carnival already exists
+            if (carnivalsList.some(carnival => carnival.name.toLowerCase() === name.toLowerCase())) {
+                showMessage("A carnival with this name already exists.", 'warning');
+                return;
+            }
+
+            try {
+                const carnivalId = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                const carnival = {
+                    id: carnivalId,
+                    name: name,
+                    announcementExpectedDate: announcementExpected || '',
+                    announcementActualDate: announcementActual || '',
+                    createdAt: new Date().toISOString(),
+                    status: 'active'
+                };
+
+                // Create carnival document
+                console.log("Creating carnival with data:", carnival);
+                await setDoc(getCarnivalDocRef(carnivalId), carnival);
+
+                // Create carnival-level tasks automatically
+                await createCarnivalTasks(carnivalId);
+
+                console.log("Carnival created successfully:", carnivalId);
+
+                // Manually add to local carnival list for immediate display
+                carnivalsList.push(carnival);
+                carnivalsList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                console.log("Added carnival to local list. New list:", carnivalsList);
+
+                // Force refresh carnival list immediately
+                console.log("Force refreshing carnival list...");
+                renderCarnivalsList();
+                renderCarnivalDropdown();
+
+                showMessage(`Carnival "${name}" created with carnival-level tasks!`);
+                document.getElementById('new-carnival-name-input').value = '';
+                document.getElementById('announcement-expected-date').value = '';
+                document.getElementById('announcement-actual-date').value = '';
+
+            } catch (error) {
+                console.error("Error creating carnival:", error);
+                showMessage("Error creating carnival.", 'error');
+            }
+        }
+
+        window.editCarnival = async function(carnivalId, currentName) {
+            const newName = prompt("Edit carnival name:", currentName);
+            if (!newName || newName.trim() === '') return;
+            if (newName.trim() === currentName) return;
+
+            try {
+                await updateDoc(getCarnivalDocRef(carnivalId), {
+                    name: newName.trim(),
+                    updatedAt: new Date().toISOString()
+                });
+                showMessage(`Carnival renamed to "${newName.trim()}"!`);
+            } catch (error) {
+                console.error("Error updating carnival:", error);
+                showMessage("Error updating carnival.", 'error');
+            }
+        }
+
+        window.deleteCarnival = async function(carnivalId, carnivalName) {
+            const clubsInCarnival = carnivalClubs[carnivalId] || [];
+            const clubCount = clubsInCarnival.length;
+
+            let confirmMessage = `Are you sure you want to delete carnival "${carnivalName}"?`;
+            if (clubCount > 0) {
+                confirmMessage += `\n\nWARNING: This will also delete ${clubCount} club(s) and ALL their tasks. This action cannot be undone.`;
+            }
+
+            if (!confirm(confirmMessage)) return;
+
+            try {
+                const batch = writeBatch(db);
+
+                // Delete all clubs and their tasks in this carnival
+                for (const club of clubsInCarnival) {
+                    // Delete all tasks for this club
+                    const tasksSnapshot = await getDocs(getTasksCollectionRef(carnivalId, club.id));
+                    tasksSnapshot.forEach(taskDoc => {
+                        batch.delete(taskDoc.ref);
+                    });
+
+                    // Delete the club
+                    batch.delete(doc(getClubsCollectionRef(carnivalId), club.id));
+                }
+
+                // Delete the carnival
+                batch.delete(getCarnivalDocRef(carnivalId));
+
+                await batch.commit();
+                showMessage(`Carnival "${carnivalName}" and all associated data deleted.`, 'success');
+
+            } catch (error) {
+                console.error("Error deleting carnival:", error);
+                showMessage("Error deleting carnival.", 'error');
+            }
+        }
+
+        function createTaskId(description) {
+            return description.toLowerCase().replace(/[^a-z0-9]+/g, '_').substring(0, 20) + '_' + Date.now();
+        }
+
+        window.addCustomTask = async function() {
+            const description = document.getElementById('new-task-description').value.trim();
+
+            // Get carnival and club selection
+            const carnivalId = document.getElementById('new-task-carnival-select').value;
+            const clubId = document.getElementById('new-task-club-select').value;
+
+            // Get team from either dropdown or input
+            const teamSelect = document.getElementById('new-task-team-select').value;
+            const teamInput = document.getElementById('new-task-team-input').value.trim();
+            const team = teamInput || teamSelect;
+
+            // Get owner from either dropdown or input
+            const ownerSelect = document.getElementById('new-task-owner-select').value;
+            const ownerInput = document.getElementById('new-task-owner-input').value.trim();
+            const owner = ownerInput || ownerSelect;
+
+            if (!description || !team) {
+                showMessage("Task description and Team cannot be empty.", 'warning');
+                return;
+            }
+
+            if (!carnivalId) {
+                showMessage("Please select a carnival for this task.", 'warning');
+                return;
+            }
+
+            try {
+                const taskId = createTaskId(description);
+                const newTask = {
+                    description,
+                    team: team,
+                    owner: owner || '',
+                    expectedDate: '',
+                    actualDate: '',
+                    notes: '',
+                    status: 'To Do',
+                    required: true,
+                    sequence: 999, // Custom tasks get high sequence number
+                    carnivalId: carnivalId,
+                    taskType: clubId ? 'club' : 'carnival' // Club task or carnival-level task
+                };
+
+                if (clubId) {
+                    // Create task for specific club
+                    const clubTasksRef = getTasksCollectionRef(carnivalId, clubId);
+                    await setDoc(doc(clubTasksRef, taskId), newTask);
+                    showMessage("Custom task added to specific club!", 'success');
+                } else {
+                    // Create carnival-level task
+                    const carnivalTasksRef = collection(db, "artifacts", appId, "users", userId, "carnivals", carnivalId, "carnival_tasks");
+                    await setDoc(doc(carnivalTasksRef, taskId), newTask);
+                    showMessage("Custom carnival-level task added!", 'success');
+                }
+
+                // Clear all form fields
+                document.getElementById('new-task-description').value = '';
+                document.getElementById('new-task-carnival-select').value = '';
+                document.getElementById('new-task-club-select').value = '';
+                document.getElementById('new-task-team-select').value = '';
+                document.getElementById('new-task-team-input').value = '';
+                document.getElementById('new-task-owner-select').value = '';
+                document.getElementById('new-task-owner-input').value = '';
+
+                // Reset assignment type to default
+                const assignToAll = document.getElementById('assign-to-all');
+                const specificClubSelector = document.getElementById('specific-club-selector');
+                if (assignToAll) assignToAll.checked = true;
+                if (specificClubSelector) specificClubSelector.classList.add('hidden');
+
+                // Refresh all filters since template data changed
+                renderTemplateFilters();
+                renderTaskTrackerFilters();
+                updateDashboard(); // This will refresh dashboard filters
+
+            } catch (error) {
+                console.error("Error adding custom task:", error);
+                showMessage("Error adding custom task.", 'error');
+            }
+        }
+
+        window.removeTemplateTask = async function(description) {
+            try {
+                 // Prevent removing initial mandatory tasks
+                if (isMandatoryTask(description)) {
+                    showMessage("Cannot remove mandatory template tasks.", 'warning');
+                    return;
+                }
+
+                // Find the full task object to remove from the array
+                const taskToRemove = taskTemplate.find(t => t.description === description);
+                if (taskToRemove) {
+                    await updateDoc(getSetupDocRef(), {
+                        taskTemplate: arrayRemove(taskToRemove)
+                    });
+                    showMessage("Task removed from template.", 'success');
+
+                    // Refresh all filters since template data changed
+                    renderTemplateFilters();
+                    renderTaskTrackerFilters();
+                    updateDashboard(); // This will refresh dashboard filters
+                } else {
+                    showMessage("Task not found in template.", 'error');
+                }
+            } catch (error) {
+                console.error("Error removing template task:", error);
+                showMessage("Error removing template task.", 'error');
+            }
+        }
+
+        window.removeTemplateTaskByIndex = async function(taskIndex) {
+            try {
+                const task = taskTemplate[taskIndex];
+                if (!task) {
+                    showMessage("Task not found.", 'error');
+                    return;
+                }
+
+                // Prevent removing initial mandatory tasks
+                if (isMandatoryTask(task.description)) {
+                    showMessage("Cannot remove mandatory template tasks.", 'warning');
+                    return;
+                }
+
+                await updateDoc(getSetupDocRef(), {
+                    taskTemplate: arrayRemove(task)
+                });
+                showMessage("Task removed from template.", 'success');
+
+                // Refresh all filters since template data changed
+                renderTemplateFilters();
+                renderTaskTrackerFilters();
+                updateDashboard(); // This will refresh dashboard filters
+            } catch (error) {
+                console.error("Error removing template task:", error);
+                showMessage("Error removing template task.", 'error');
+            }
+        }
+
+        window.debugTemplateRender = function() {
+            console.log("=== DEBUG TEMPLATE RENDER ===");
+            console.log("isAuthReady:", isAuthReady);
+            console.log("taskTemplate length:", taskTemplate.length);
+            console.log("taskTemplate content:", taskTemplate);
+            console.log("initialTemplate length:", initialTemplate.length);
+
+            const templateDiv = document.getElementById('task-template-list');
+            console.log("template-list div found:", !!templateDiv);
+
+            if (templateDiv) {
+                if (taskTemplate.length > 0) {
+                    console.log("Forcing render with taskTemplate");
+                    const testHtml = taskTemplate.map((task, index) => `
+                        <div class="p-3 bg-blue-100 border border-blue-300 rounded">
+                            <strong>Task ${index + 1}:</strong> ${task.description}<br>
+                            <small>Team: ${task.team || 'N/A'} | Owner: ${task.owner || 'N/A'}</small>
+                        </div>
+                    `).join('');
+                    templateDiv.innerHTML = testHtml;
+                } else if (initialTemplate.length > 0) {
+                    console.log("Forcing render with initialTemplate");
+                    const testHtml = initialTemplate.map((task, index) => `
+                        <div class="p-3 bg-green-100 border border-green-300 rounded">
+                            <strong>Initial Task ${index + 1}:</strong> ${task.description}<br>
+                            <small>Team: ${task.team || 'N/A'} | Owner: ${task.owner || 'N/A'}</small>
+                        </div>
+                    `).join('');
+                    templateDiv.innerHTML = testHtml;
+                } else {
+                    console.log("No templates available");
+                    templateDiv.innerHTML = '<div class="p-3 bg-red-100 border border-red-300 rounded">No templates found</div>';
+                }
+            }
+            console.log("=== END DEBUG ===");
+        }
+
+        window.emergencyShowTasks = function() {
+            console.log("🚨 EMERGENCY: Showing tasks directly");
+            const container = document.getElementById('emergency-task-display');
+
+            if (!container) {
+                alert('Container not found!');
+                return;
+            }
+
+            console.log('Initial template length:', initialTemplate.length);
+
+            if (initialTemplate.length === 0) {
+                container.innerHTML = '<div style="color: red; font-weight: bold;">❌ initialTemplate is empty!</div>';
+                return;
+            }
+
+            const tasksHtml = initialTemplate.map((task, index) => `
+                <div style="margin: 10px 0; padding: 15px; background: white; border: 2px solid #ccc; border-radius: 8px;">
+                    <div style="font-weight: bold; color: #333; margin-bottom: 8px;">
+                        Task ${index + 1}: ${task.description}
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <span style="background: #bfdbfe; color: #1e40af; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                            Team: ${task.team || 'N/A'}
+                        </span>
+                        <span style="background: #e0e7ff; color: #5b21b6; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                            Owner: ${task.owner || 'N/A'}
+                        </span>
+                        <span style="background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                            Mandatory
+                        </span>
+                        <button onclick="alert('Edit: ${task.description.substring(0, 50)}...')" style="background: #3b82f6; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">
+                            ✏️ Edit
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = `
+                <h3 style="color: green; font-weight: bold; margin: 15px 0;">
+                    ✅ SUCCESS: ${initialTemplate.length} Mandatory Tasks Loaded!
+                </h3>
+                ${tasksHtml}
+            `;
+        }
+
+        window.editTemplateTask = function(taskIndex) {
+            const task = taskTemplate[taskIndex];
+            if (!task) {
+                showMessage("Task not found.", 'error');
+                return;
+            }
+
+            // Store the task index for updating later
+            window.currentEditingTaskIndex = taskIndex;
+
+            // Populate the edit modal
+            document.getElementById('edit-task-description').value = task.description || '';
+
+            // Populate dropdowns with existing data
+            populateEditModalDropdowns();
+
+            // Set the dropdown selections if they exist
+            const teamSelect = document.getElementById('edit-task-team');
+            const ownerSelect = document.getElementById('edit-task-owner');
+
+            if (teamSelect && task.team) {
+                teamSelect.value = task.team;
+            }
+
+            if (ownerSelect && task.owner) {
+                ownerSelect.value = task.owner;
+            }
+
+            // Show the edit modal
+            document.getElementById('edit-task-modal').classList.remove('hidden');
+        }
+
+        function populateEditModalDropdowns() {
+            // Get all teams and owners from current template
+            const currentTemplate = taskTemplate.length > 0 ? taskTemplate : initialTemplate;
+            const allTeams = new Set();
+            const allOwners = new Set();
+
+            currentTemplate.forEach(task => {
+                if (task.team) allTeams.add(task.team);
+                if (task.owner) allOwners.add(task.owner);
+            });
+
+            // Populate Team Dropdown
+            const teamSelect = document.getElementById('edit-task-team');
+            if (teamSelect) {
+                const selectedTeam = teamSelect.value;
+                teamSelect.innerHTML = '<option value="">Select Team</option>';
+                Array.from(allTeams).sort().forEach(team => {
+                    const option = document.createElement('option');
+                    option.value = team;
+                    option.textContent = team;
+                    if (team === selectedTeam) option.selected = true;
+                    teamSelect.appendChild(option);
+                });
+            }
+
+            // Populate Owner Dropdown
+            const ownerSelect = document.getElementById('edit-task-owner');
+            if (ownerSelect) {
+                const selectedOwner = ownerSelect.value;
+                ownerSelect.innerHTML = '<option value="">Select Owner</option>';
+                Array.from(allOwners).sort().forEach(owner => {
+                    const option = document.createElement('option');
+                    option.value = owner;
+                    option.textContent = owner;
+                    if (owner === selectedOwner) option.selected = true;
+                    ownerSelect.appendChild(option);
+                });
+            }
+        }
+
+        window.editTemplateTask = function(taskIndex) {
+            console.log("Edit task called for index:", taskIndex);
+            // Use the same logic as renderTaskTemplateDisplay
+            const currentTemplate = taskTemplate.length > 0 ? taskTemplate : initialTemplate;
+            const task = currentTemplate[taskIndex];
+            console.log("Found task:", task);
+            if (!task) return;
+
+            // Populate dropdowns first
+            populateEditModalDropdowns();
+
+            // Show edit modal
+            document.getElementById('edit-task-modal').classList.remove('hidden');
+            document.getElementById('edit-task-description').value = task.description;
+            document.getElementById('edit-task-team').value = task.team || '';
+            document.getElementById('edit-task-owner').value = task.owner || '';
+
+            // Show/hide delete button based on whether it's a mandatory task
+            const deleteBtn = document.getElementById('delete-task-btn');
+            const isMandatory = isMandatoryTask(task.description);
+            if (deleteBtn) {
+                if (isMandatory) {
+                    deleteBtn.style.display = 'none';
+                } else {
+                    deleteBtn.style.display = 'block';
+                }
+            }
+
+            // Store current editing index
+            window.currentEditingTaskIndex = taskIndex;
+        }
+
+        window.saveTemplateTaskEdit = async function() {
+            const taskIndex = window.currentEditingTaskIndex;
+            if (taskIndex === undefined || taskIndex === null) return;
+
+            const description = document.getElementById('edit-task-description').value.trim();
+            const team = document.getElementById('edit-task-team').value.trim();
+            const owner = document.getElementById('edit-task-owner').value.trim();
+
+            if (!description) {
+                showMessage("Task description is required.", 'error');
+                return;
+            }
+
+            try {
+                // Use the same logic as in the display - if taskTemplate is empty, we're editing initialTemplate
+                const currentTemplate = taskTemplate.length > 0 ? taskTemplate : initialTemplate;
+                const updatedTemplate = [...currentTemplate];
+                updatedTemplate[taskIndex] = {
+                    description,
+                    team,
+                    owner
+                };
+
+                // Save to Firebase
+                await setDoc(getSetupDocRef(), { taskTemplate: updatedTemplate });
+
+                // Close modal
+                document.getElementById('edit-task-modal').classList.add('hidden');
+                window.currentEditingTaskIndex = null;
+
+                showMessage("Task updated successfully.", 'success');
+            } catch (error) {
+                console.error("Error updating template task:", error);
+                showMessage("Error updating template task.", 'error');
+            }
+        }
+
+        window.deleteTemplateTask = async function() {
+            const taskIndex = window.currentEditingTaskIndex;
+            if (taskIndex === undefined || taskIndex === null) return;
+
+            const currentTemplate = taskTemplate.length > 0 ? taskTemplate : initialTemplate;
+            const task = currentTemplate[taskIndex];
+
+            if (!task) return;
+
+            // Prevent deleting mandatory tasks
+            if (isMandatoryTask(task.description)) {
+                showMessage("Cannot delete mandatory template tasks.", 'warning');
+                return;
+            }
+
+            // Confirm deletion
+            if (!confirm(`Are you sure you want to delete this task?\n\n"${task.description}"\n\nNote: This will only affect new clubs registered after this change. Existing clubs will keep this task.`)) {
+                return;
+            }
+
+            try {
+                // Create new template without the deleted task
+                const updatedTemplate = [...currentTemplate];
+                updatedTemplate.splice(taskIndex, 1);
+
+                // Save to Firebase - this creates template versioning automatically:
+                // - Existing clubs: Already have tasks copied to their individual collections (unaffected)
+                // - New clubs: Will get the updated template when registered
+                await setDoc(getSetupDocRef(), { taskTemplate: updatedTemplate });
+
+                // Close modal
+                document.getElementById('edit-task-modal').classList.add('hidden');
+                window.currentEditingTaskIndex = null;
+
+                showMessage("Task deleted from template. New clubs will not receive this task.", 'success');
+
+                // Refresh all filters since template data changed
+                renderTemplateFilters();
+                renderTaskTrackerFilters();
+                updateDashboard();
+
+            } catch (error) {
+                console.error("Error deleting template task:", error);
+                showMessage("Error deleting template task.", 'error');
+            }
+        }
+
+        window.cancelTemplateTaskEdit = function() {
+            document.getElementById('edit-task-modal').classList.add('hidden');
+            window.currentEditingTaskIndex = null;
+        }
+
+        window.addClubToCarnival = async function() {
+            const selectedCarnivalId = document.getElementById('carnival-for-club').value;
+            const clubName = document.getElementById('new-club-name-input').value.trim();
+            const commission = parseFloat(document.getElementById('club-commission-input').value) || 0;
+            const commissionType = document.getElementById('commission-type-select').value;
+
+            if (!selectedCarnivalId) {
+                showMessage("Please select a carnival first.", 'warning');
+                return;
+            }
+
+            if (!clubName) {
+                showMessage("Club name cannot be empty.", 'warning');
+                return;
+            }
+
+            if (commission < 0 || commission > 100) {
+                showMessage("Commission percentage must be between 0 and 100.", 'warning');
+                return;
+            }
+
+            // Generate a simple ID
+            const clubId = clubName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+            // Check if club already exists in this carnival
+            const clubsInCarnival = carnivalClubs[selectedCarnivalId] || [];
+            if (clubsInCarnival.some(club => club.id === clubId)) {
+                showMessage("A club with this name already exists in this carnival.", 'warning');
+                return;
+            }
+
+            try {
+                const newClub = {
+                    id: clubId,
+                    name: clubName,
+                    commission: commission,
+                    commissionType: commissionType,
+                    registeredAt: new Date().toISOString(),
+                    carnivalId: selectedCarnivalId
+                };
+
+                const batch = writeBatch(db);
+
+                // 1. Add club to the carnival
+                batch.set(doc(getClubsCollectionRef(selectedCarnivalId), clubId), newClub);
+
+                // 2. Add all template tasks for the new club
+                const tasksRef = getTasksCollectionRef(selectedCarnivalId, clubId);
+                taskTemplate.forEach((templateTask, index) => {
+                    const taskId = createTaskId(templateTask.description);
+                    batch.set(doc(tasksRef, taskId), {
+                        description: templateTask.description,
+                        team: templateTask.team || '',
+                        owner: templateTask.owner || '',
+                        expectedDate: '',
+                        actualDate: '',
+                        notes: '',
+                        status: 'To Do',
+                        required: true, // Default all tasks to required
+                        sequence: index + 1,
+                        carnivalId: selectedCarnivalId,
+                        clubId: clubId,
+                        clubName: clubName
+                    });
+                });
+
+                await batch.commit();
+                showMessage(`Club "${clubName}" added to carnival with ${taskTemplate.length} tasks initialized!`, 'success');
+                document.getElementById('new-club-name-input').value = '';
+                document.getElementById('club-commission-input').value = '';
+                document.getElementById('commission-type-select').value = 'gross'; // Reset to default
+
+            } catch (error) {
+                console.error("Error adding club to carnival:", error);
+                showMessage("Error adding club to carnival.", 'error');
+            }
+        }
+
+        window.renderClubRegistration = function() {
+            const selectedCarnivalId = document.getElementById('carnival-for-club').value;
+            const registrationSection = document.getElementById('club-registration-section');
+            const selectedCarnivalName = document.getElementById('selected-carnival-name');
+
+            if (selectedCarnivalId) {
+                const carnival = carnivalsList.find(c => c.id === selectedCarnivalId);
+                if (carnival) {
+                    selectedCarnivalName.textContent = carnival.name;
+                    registrationSection.classList.remove('hidden');
+                    renderClubsInCarnival(selectedCarnivalId);
+                } else {
+                    registrationSection.classList.add('hidden');
+                }
+            } else {
+                registrationSection.classList.add('hidden');
+            }
+        }
+
+        window.deleteClubFromCarnival = async function(carnivalId, clubId, clubName) {
+            if (!confirm(`Are you sure you want to delete club "${clubName}" from this carnival?\n\nThis will also delete ALL tasks for this club. This action cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                const batch = writeBatch(db);
+
+                // Delete all tasks for this club
+                const tasksSnapshot = await getDocs(getTasksCollectionRef(carnivalId, clubId));
+                tasksSnapshot.forEach(taskDoc => {
+                    batch.delete(taskDoc.ref);
+                });
+
+                // Delete the club
+                batch.delete(doc(getClubsCollectionRef(carnivalId), clubId));
+
+                await batch.commit();
+                showMessage(`Club "${clubName}" and all its tasks deleted from carnival.`, 'success');
+
+            } catch (error) {
+                console.error("Error deleting club from carnival:", error);
+                showMessage("Error deleting club from carnival.", 'error');
+            }
+        }
+
+        window.renderSetupView = function() {
+            console.log("renderSetupView called - isAuthReady:", isAuthReady, "taskTemplate length:", taskTemplate.length);
+
+            // FORCE RENDER: Always render the task template, even if auth isn't ready
+            console.log("FORCING template render with initialTemplate");
+            const templateListDiv = document.getElementById('task-template-list');
+            if (templateListDiv && initialTemplate.length > 0) {
+                console.log("Force rendering", initialTemplate.length, "initial tasks");
+                const tasksHtml = initialTemplate.map((task, index) => {
+                    return `
+                        <div class="flex items-center justify-between p-3 bg-gray-50 border rounded-lg mb-2">
+                            <div class="flex-1">
+                                <p class="text-sm text-gray-800 font-medium">${task.description}</p>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="text-xs text-blue-700 bg-blue-100 px-2 py-1 rounded-full">${task.team || 'N/A'}</span>
+                                <span class="text-xs text-indigo-700 bg-indigo-100 px-2 py-1 rounded-full">${task.owner || 'N/A'}</span>
+                                <span class="text-xs text-green-700 bg-green-100 px-2 py-1 rounded-full">Mandatory</span>
+                                <button onclick="alert('Edit task: ${task.description.substring(0, 50)}...')" class="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-100" title="Edit task">
+                                    ✏️
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                templateListDiv.innerHTML = tasksHtml;
+            }
+
+            if (!isAuthReady) {
+                console.log("Setup view waiting for auth, but template rendered anyway...");
+                return;
+            }
+
+            console.log("Rendering setup view with carnivals:", carnivalsList.length);
+
+            // Render Carnival List
+            renderCarnivalsList();
+
+            // Populate carnival dropdown for task creation
+            populateTaskCarnivalDropdown();
+
+            // Render Carnival Dropdown for Club Registration
+            renderCarnivalDropdown();
+
+            // Render Task Template Display
+            renderTaskTemplateDisplay();
+
+            // Render Template Filters (for add task section)
+            renderTemplateFilters();
+
+            // Render Task Tracker Filters
+            renderTaskTrackerFilters();
+
+            // Render Task Template Editor
+            const templateListDiv = document.getElementById('task-template-list');
+            console.log("Rendering task template with", taskTemplate.length, "tasks");
+            console.log("Template list div found:", templateListDiv ? "YES" : "NO");
+
+            if (!templateListDiv) {
+                console.error("task-template-list element not found!");
+                return;
+            }
+
+            if (taskTemplate.length === 0) {
+                templateListDiv.innerHTML = '<div class="text-center py-4 text-gray-500">Loading task template... If this persists, please refresh the page.</div>';
+                return;
+            }
+
+            templateListDiv.innerHTML = taskTemplate.map((task, index) => {
+                const isMandatory = isMandatoryTask(task.description);
+                return `
+                <div class="flex items-center justify-between p-2 bg-gray-50 border rounded-lg">
+                    <p class="text-sm text-gray-800 font-medium">${task.description}</p>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-xs text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">${task.team || 'N/A'}</span>
+                        <span class="text-xs text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-full">${task.owner || 'N/A'}</span>
+                        <span class="text-xs ${isMandatory ? 'text-green-700 bg-green-100' : 'text-gray-700 bg-gray-100'} px-2 py-0.5 rounded-full">${isMandatory ? 'Mandatory' : 'Custom'}</span>
+                        <button onclick="editTemplateTask(${index})" class="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-100" title="Edit task">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.828-2.828z"></path></svg>
+                        </button>
+                        <button onclick="removeTemplateTaskByIndex(${index})" class="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100" ${isMandatory ? 'disabled' : ''} title="${isMandatory ? 'Cannot remove mandatory task' : 'Remove task'}">
+                            <svg class="w-4 h-4 ${isMandatory ? 'opacity-50 cursor-not-allowed' : ''}" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+            }).join('');
+
+        }
+
+        window.renderCarnivalsList = function() {
+            const carnivalListDiv = document.getElementById('carnival-list');
+            console.log("Rendering carnivals list:", carnivalsList);
+            if (carnivalsList.length === 0) {
+                carnivalListDiv.innerHTML = '<p class="text-gray-500">No carnivals created yet.</p>';
+                return;
+            }
+
+            carnivalListDiv.innerHTML = carnivalsList.map(carnival => `
+                <div class="flex items-center justify-between p-3 bg-white border rounded-lg">
+                    <div>
+                        <p class="text-sm font-medium text-gray-800">${carnival.name}</p>
+                        <p class="text-xs text-gray-400">Created: ${new Date(carnival.createdAt).toLocaleDateString()}</p>
+                        <p class="text-xs text-blue-600">${(carnivalClubs[carnival.id] || []).length} clubs registered</p>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="editCarnival('${carnival.id}', '${carnival.name.replace(/'/g, "\\'")}') " class="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-100">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg>
+                        </button>
+                        <button onclick="deleteCarnival('${carnival.id}', '${carnival.name.replace(/'/g, "\\'")}') " class="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.renderCarnivalDropdown = function() {
+            const carnivalDropdown = document.getElementById('carnival-for-club');
+            if (!carnivalDropdown) return;
+
+            const selectedValue = carnivalDropdown.value;
+            carnivalDropdown.innerHTML = '<option value="">Choose a carnival first</option>';
+
+            carnivalsList.forEach(carnival => {
+                const option = document.createElement('option');
+                option.value = carnival.id;
+                option.textContent = carnival.name;
+                if (carnival.id === selectedValue) {
+                    option.selected = true;
+                }
+                carnivalDropdown.appendChild(option);
+            });
+        }
+
+        window.renderTaskTemplateDisplay = function() {
+            const templateDisplay = document.getElementById('task-template-display');
+            if (!templateDisplay) {
+                return;
+            }
+
+            // If taskTemplate is not loaded yet, use initialTemplate as fallback
+            const currentTemplate = taskTemplate.length > 0 ? taskTemplate : initialTemplate;
+
+            if (!currentTemplate || currentTemplate.length === 0) {
+                templateDisplay.innerHTML = '<p class="text-gray-500">Loading tasks template...</p>';
+                return;
+            }
+
+            templateDisplay.innerHTML = currentTemplate.map((task, index) => {
+                const isMandatory = isMandatoryTask(task.description);
+                return `
+                    <div class="flex items-center justify-between py-2 px-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-sm font-medium text-gray-800">${index + 1}. ${task.description}</span>
+                                ${isMandatory ? '<span class="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">Required</span>' : ''}
+                            </div>
+                            <div class="flex space-x-2 mt-1">
+                                <span class="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">${task.team}</span>
+                                <span class="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">${task.owner}</span>
+                            </div>
+                        </div>
+                        <button onclick="editTemplateTask(${index})" class="text-indigo-600 hover:text-indigo-800 p-1 rounded-full hover:bg-indigo-100" title="Edit task">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderClubsInCarnival(carnivalId) {
+            const clubsContainer = document.getElementById('clubs-in-carnival');
+            if (!clubsContainer) return;
+
+            const clubs = carnivalClubs[carnivalId] || [];
+
+            if (clubs.length === 0) {
+                clubsContainer.innerHTML = '<p class="text-gray-500">No clubs registered in this carnival yet.</p>';
+                return;
+            }
+
+            clubsContainer.innerHTML = clubs.map(club => `
+                <div class="flex items-center justify-between p-2 bg-white border rounded-lg">
+                    <div>
+                        <p class="text-sm font-medium text-gray-800">${club.name}</p>
+                        <div class="flex items-center space-x-2">
+                            <p class="text-xs text-gray-400">Registered: ${new Date(club.registeredAt).toLocaleDateString()}</p>
+                            <span class="text-xs text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full">${club.commission || 0}% ${(club.commissionType === 'net') ? 'net' : 'gross'}</span>
+                        </div>
+                    </div>
+                    <button onclick="deleteClubFromCarnival('${carnivalId}', '${club.id}', '${club.name.replace(/'/g, "\\'")}') " class="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd"></path></svg>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function renderClubList() {
+            const clubListDiv = document.getElementById('club-list');
+            if (clubList.length === 0) {
+                 clubListDiv.innerHTML = '<p class="text-gray-500">No clubs registered yet.</p>';
+                 return;
+            }
+
+            clubListDiv.innerHTML = clubList.map(club => `
+                <div class="flex items-center justify-between p-2 bg-white border rounded-lg">
+                    <p class="text-sm font-medium text-gray-800">${club.name} <span class="text-xs text-gray-400">(${club.id})</span></p>
+                    <button onclick="removeClub('${club.id}', '${club.name}')" class="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd"></path></svg>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        window.removeClub = async function(clubId, clubName) {
+            // Note: Using window.confirm as per updated prompt instructions (using native UI elements is generally fine now)
+            if (!confirm(`Are you sure you want to remove club "${clubName}" and ALL its tasks? This action is irreversible.`)) return;
+
+            try {
+                // 1. Remove club from the list
+                const batch = writeBatch(db);
+                const clubToRemove = clubList.find(c => c.id === clubId);
+                if (clubToRemove) {
+                    batch.update(getClubsDocRef(), { clubs: arrayRemove(clubToRemove) });
+                }
+
+                // 2. Delete all tasks in the subcollection
+                const tasksSnapshot = await getDocs(getTasksCollectionRef(clubId));
+                tasksSnapshot.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+
+                await batch.commit();
+                showMessage(`Club "${clubName}" and all associated tasks removed.`, 'success');
+                startListeners(); // Refresh to ensure UI consistency
+            } catch (error) {
+                console.error("Error removing club and tasks:", error);
+                showMessage("Error removing club and tasks.", 'error');
+            }
+        }
+
+
+        // --- Task Tracker Functions ---
+
+        window.renderCarnivalSelector = function() {
+            const selector = document.getElementById('carnival-selector');
+            if (!selector) return;
+
+            const selectedCarnivalId = selector.value;
+            selector.innerHTML = '<option value="">All Carnivals</option>';
+
+            carnivalsList.forEach(carnival => {
+                const option = document.createElement('option');
+                option.value = carnival.id;
+                option.textContent = carnival.name;
+                if (carnival.id === selectedCarnivalId) {
+                    option.selected = true;
+                }
+                selector.appendChild(option);
+            });
+        }
+
+        window.renderClubSelector = function() {
+            const selector = document.getElementById('club-selector');
+            const carnivalSelector = document.getElementById('carnival-selector');
+            const selectedClubId = selector.value;
+            const selectedCarnivalId = carnivalSelector ? carnivalSelector.value : '';
+
+            // Clear existing options
+            selector.innerHTML = '<option value="">Select a Club to Track</option>';
+
+            // Add "All Clubs" option if a carnival is selected
+            if (selectedCarnivalId) {
+                const allOption = document.createElement('option');
+                allOption.value = 'all-clubs';
+                allOption.textContent = 'All Clubs (Selected Carnival)';
+                selector.appendChild(allOption);
+            }
+
+            // Filter clubs by selected carnival or show all
+            const filteredClubs = selectedCarnivalId
+                ? clubList.filter(club => club.carnivalId === selectedCarnivalId)
+                : clubList;
+
+            if (selectedCarnivalId) {
+                // Simple list if carnival is selected
+                filteredClubs.forEach(club => {
+                    const option = document.createElement('option');
+                    option.value = club.id;
+                    option.textContent = club.name;
+                    if (club.id === selectedClubId) {
+                        option.selected = true;
+                    }
+                    selector.appendChild(option);
+                });
+            } else {
+                // Group by carnival if no carnival filter
+                const clubsByCarnival = {};
+                filteredClubs.forEach(club => {
+                    const carnivalId = club.carnivalId || 'unknown';
+                    if (!clubsByCarnival[carnivalId]) {
+                        clubsByCarnival[carnivalId] = [];
+                    }
+                    clubsByCarnival[carnivalId].push(club);
+                });
+
+                Object.keys(clubsByCarnival).forEach(carnivalId => {
+                    const carnival = carnivalsList.find(c => c.id === carnivalId);
+                    const carnivalName = carnival ? carnival.name : 'Unknown Carnival';
+
+                    const optgroup = document.createElement('optgroup');
+                    optgroup.label = carnivalName;
+
+                    clubsByCarnival[carnivalId].forEach(club => {
+                        const option = document.createElement('option');
+                        option.value = club.id;
+                        option.textContent = club.name;
+                        if (club.id === selectedClubId) {
+                            option.selected = true;
+                        }
+                        optgroup.appendChild(option);
+                    });
+
+                    selector.appendChild(optgroup);
+                });
+            }
+        }
+
+        window.renderTaskTracker = function() {
+            if (!isAuthReady) {
+                console.log("Task tracker waiting for auth...");
+                const taskContainer = document.getElementById('task-list-container');
+                if (taskContainer) {
+                    taskContainer.innerHTML = '<div class="text-center py-12 text-gray-500">Loading task data...</div>';
+                }
+                return;
+            }
+
+            console.log("Rendering task tracker with carnivals:", carnivalsList.length);
+
+            // Always render team filters first to populate dropdowns
+            renderTaskTrackerFilters();
+
+            const carnivalId = document.getElementById('carnival-selector').value;
+            const clubId = document.getElementById('club-selector').value;
+            const taskType = document.getElementById('task-type-selector').value;
+            const teamFilter = document.getElementById('team-filter').value;
+            const ownerFilter = document.getElementById('owner-filter').value;
+            const teamSearch = document.getElementById('team-search').value.toLowerCase().trim();
+            const container = document.getElementById('task-list-container');
+
+            // Get all tasks based on filters
+            let allTasks = [];
+
+            if (taskType === 'carnival') {
+                // Show carnival-level tasks
+                if (carnivalId) {
+                    allTasks = carnivalTasks[carnivalId] || [];
+                } else {
+                    // Show all carnival tasks from all carnivals
+                    Object.values(carnivalTasks).forEach(tasks => {
+                        allTasks = allTasks.concat(tasks);
+                    });
+                }
+            } else if (taskType === 'club') {
+                // Show only club-level tasks (existing behavior)
+                if (clubId && clubId !== 'all-clubs') {
+                    // Single club selected
+                    allTasks = clubTasks[clubId] || [];
+                } else if (clubId === 'all-clubs' && carnivalId) {
+                    // All clubs in selected carnival
+                    const carnivalClubsList = clubList.filter(club => club.carnivalId === carnivalId);
+                    carnivalClubsList.forEach(club => {
+                        const tasks = clubTasks[club.id] || [];
+                        allTasks = allTasks.concat(tasks);
+                    });
+                } else if (carnivalId && !clubId) {
+                    // All clubs in selected carnival (when no club selected)
+                    const carnivalClubsList = clubList.filter(club => club.carnivalId === carnivalId);
+                    carnivalClubsList.forEach(club => {
+                        const tasks = clubTasks[club.id] || [];
+                        allTasks = allTasks.concat(tasks);
+                    });
+                }
+            } else if (taskType === 'all') {
+                // Show both carnival and club tasks
+                if (carnivalId) {
+                    // Add carnival tasks for selected carnival
+                    const cTasks = carnivalTasks[carnivalId] || [];
+                    allTasks = allTasks.concat(cTasks);
+
+                    // Add club tasks for selected carnival
+                    const carnivalClubsList = clubList.filter(club => club.carnivalId === carnivalId);
+                    carnivalClubsList.forEach(club => {
+                        const tasks = clubTasks[club.id] || [];
+                        allTasks = allTasks.concat(tasks);
+                    });
+                } else {
+                    // Add all carnival tasks
+                    Object.values(carnivalTasks).forEach(tasks => {
+                        allTasks = allTasks.concat(tasks);
+                    });
+                    // Add all club tasks
+                    Object.values(clubTasks).forEach(tasks => {
+                        allTasks = allTasks.concat(tasks);
+                    });
+                }
+            }
+
+            // Apply team filter dropdown
+            if (teamFilter) {
+                allTasks = allTasks.filter(task =>
+                    (task.team || '').toLowerCase() === teamFilter.toLowerCase()
+                );
+            }
+
+            // Apply owner filter dropdown
+            if (ownerFilter) {
+                allTasks = allTasks.filter(task =>
+                    (task.owner || '').toLowerCase() === ownerFilter.toLowerCase()
+                );
+            }
+
+            // Apply team search (searches both team and owner)
+            if (teamSearch) {
+                allTasks = allTasks.filter(task =>
+                    (task.team || '').toLowerCase().includes(teamSearch) ||
+                    (task.owner || '').toLowerCase().includes(teamSearch)
+                );
+            }
+
+            if (allTasks.length === 0) {
+                if (!clubId && !carnivalId) {
+                    container.innerHTML = '<p class="text-gray-500">Please select a carnival or club above to view and manage tasks.</p>';
+                } else {
+                    container.innerHTML = '<p class="text-gray-500">No tasks found with current filters.</p>';
+                }
+                return;
+            }
+
+            // Sort tasks by club name, then sequence
+            allTasks.sort((a, b) => {
+                if (a.clubName !== b.clubName) {
+                    return a.clubName.localeCompare(b.clubName);
+                }
+                return (a.sequence || 0) - (b.sequence || 0);
+            });
+
+            // Show tasks count and club info
+            const clubsCount = new Set(allTasks.map(t => t.clubId)).size;
+            const headerInfo = clubId === 'all-clubs' || (!clubId && carnivalId) ?
+                `${allTasks.length} tasks across ${clubsCount} club(s)` :
+                `${allTasks.length} tasks for ${allTasks[0]?.clubName || 'Selected Club'}`;
+
+            container.innerHTML = `
+                <div class="mb-4 p-3 bg-indigo-50 rounded-lg">
+                    <p class="text-sm text-indigo-700 font-medium">${headerInfo}</p>
+                    ${teamFilter ? `<p class="text-xs text-indigo-600">Team filter: ${teamFilter}</p>` : ''}
+                    ${ownerFilter ? `<p class="text-xs text-indigo-600">Owner filter: ${ownerFilter}</p>` : ''}
+                    ${teamSearch ? `<p class="text-xs text-indigo-600">Search: "${teamSearch}"</p>` : ''}
+                </div>
+                <div class="bg-white shadow-lg rounded-xl overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                ${clubsCount > 1 ? '<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">Club</th>' : ''}
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[${clubsCount > 1 ? '14%' : '16%'}]">Task</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[${clubsCount > 1 ? '12%' : '14%'}]">Details/Notes</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[7%]">Team</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[7%]">Owner</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[8%]">Required</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[9%]">Expected Date</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[9%]">Actual Date</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">Files</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            ${allTasks.map(task => createTaskRow(task, task.clubId || task.carnivalId, clubsCount > 1)).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        window.clearTaskFilters = function() {
+            document.getElementById('carnival-selector').value = '';
+            document.getElementById('task-type-selector').value = 'club';
+            document.getElementById('club-selector').value = '';
+            document.getElementById('team-filter').value = '';
+            document.getElementById('team-search').value = '';
+            renderClubSelector();
+            renderTaskTracker();
+        }
+
+        function getStatusColor(status) {
+            switch (status) {
+                case 'Done': return 'bg-green-100 text-green-800';
+                case 'In Progress': return 'bg-blue-100 text-blue-800';
+                case 'Blocked': return 'bg-red-100 text-red-800';
+                case 'To Do': return 'bg-yellow-100 text-yellow-800';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        function createTaskRow(task, clubId, showClubColumn = false) {
+            const isOverdue = task.status !== 'Done' && task.expectedDate && new Date(task.expectedDate) < new Date();
+            const isRequired = task.required !== false; // default to true if not set
+            const isDisabled = !isRequired;
+            const rowClass = isOverdue ? 'bg-red-50 hover:bg-red-100' : (isDisabled ? 'bg-gray-100 opacity-60' : 'hover:bg-gray-50');
+            const disabledClass = isDisabled ? 'disabled bg-gray-100 cursor-not-allowed' : '';
+
+            return `
+                <tr class="${rowClass}">
+                    ${showClubColumn ? `<td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-700 w-[10%]">${task.taskType === 'carnival' ? 'Carnival Level' : (task.clubName || 'Unknown Club')}</td>` : ''}
+                    <td class="px-4 py-2 whitespace-normal text-sm font-medium text-gray-900 w-[${showClubColumn ? '14%' : '16%'}]">
+                        ${task.description}
+                    </td>
+                    <td class="px-4 py-2 whitespace-normal text-sm text-gray-500 w-[${showClubColumn ? '12%' : '14%'}]">
+                        <textarea onchange="updateTask('${clubId}', '${task.id}', 'notes', this.value)" ${isDisabled ? 'disabled' : ''}
+                            class="w-full p-1 border border-gray-200 rounded-md focus:border-indigo-500 focus:ring-indigo-500 text-xs h-16 resize-none ${disabledClass}" placeholder="Add specific requirements...">
+${task.notes || ''}</textarea>
+                    </td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 w-[7%]">
+                        <input type="text" value="${task.team || ''}" onchange="updateTask('${clubId}', '${task.id}', 'team', this.value)" ${isDisabled ? 'disabled' : ''}
+                            class="w-full p-1 border border-gray-200 rounded-md focus:border-indigo-500 focus:ring-indigo-500 text-xs ${disabledClass}" placeholder="Team">
+                    </td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 w-[7%]">
+                        <input type="text" value="${task.owner || ''}" onchange="updateTask('${clubId}', '${task.id}', 'owner', this.value)" ${isDisabled ? 'disabled' : ''}
+                            class="w-full p-1 border border-gray-200 rounded-md focus:border-indigo-500 focus:ring-indigo-500 text-xs ${disabledClass}" placeholder="Owner">
+                    </td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 w-[8%]">
+                        <select onchange="updateTask('${clubId}', '${task.id}', 'required', this.value === 'true'); renderTaskTracker();"
+                                class="w-full p-1 border border-gray-200 rounded-md focus:border-indigo-500 focus:ring-indigo-500 text-xs">
+                            <option value="true" ${isRequired ? 'selected' : ''}>Yes</option>
+                            <option value="false" ${!isRequired ? 'selected' : ''}>No</option>
+                        </select>
+                    </td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 w-[9%]">
+                        <input type="date" value="${task.expectedDate || ''}" onchange="updateTask('${clubId}', '${task.id}', 'expectedDate', this.value)" ${isDisabled ? 'disabled' : ''}
+                            class="w-full p-1 border border-gray-200 rounded-md focus:border-indigo-500 focus:ring-indigo-500 text-xs ${disabledClass}">
+                        ${isOverdue && isRequired ? '<span class="text-red-500 text-xs font-semibold block"> (OVERDUE)</span>' : ''}
+                    </td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 w-[9%]">
+                        <input type="date" value="${task.actualDate || ''}" onchange="updateTask('${clubId}', '${task.id}', 'actualDate', this.value)" ${isDisabled ? 'disabled' : ''}
+                            class="w-full p-1 border border-gray-200 rounded-md focus:border-indigo-500 focus:ring-indigo-500 text-xs ${disabledClass}">
+                    </td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 w-[10%]">
+                        <div class="space-y-1">
+                            <input type="file" onchange="uploadFile('${clubId}', '${task.id}', this)" ${isDisabled ? 'disabled' : ''}
+                                class="w-full text-xs border border-gray-200 rounded-md focus:border-indigo-500 focus:ring-indigo-500 ${disabledClass}"
+                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt">
+                            <div class="text-xs text-gray-400" id="files-${task.id}">
+                                ${task.files ? task.files.map(f => `<a href="${f.url}" class="text-blue-500 hover:underline" target="_blank">${f.name}</a>`).join('<br>') : 'No files'}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm font-medium w-[10%]">
+                         <select onchange="updateTask('${clubId}', '${task.id}', 'status', this.value)" ${isDisabled ? 'disabled' : ''}
+                                class="w-full p-1 border border-gray-200 rounded-md text-xs ${getStatusColor(task.status)} ${disabledClass}">
+                            <option value="To Do" ${task.status === 'To Do' ? 'selected' : ''}>To Do</option>
+                            <option value="In Progress" ${task.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                            <option value="Done" ${task.status === 'Done' ? 'selected' : ''}>Done</option>
+                            <option value="Blocked" ${task.status === 'Blocked' ? 'selected' : ''}>Blocked</option>
+                        </select>
+                    </td>
+                </tr>
+            `;
+        }
+
+        window.updateTask = async function(clubId, taskId, field, value) {
+            // Check if this is a carnival task by checking if clubId is actually a carnivalId
+            // We can identify carnival tasks by checking the taskType in our data
+            let taskRef;
+            let isClubTask = true;
+
+            // Try to find if this is a carnival task
+            let foundCarnivalTask = false;
+            for (const carnivalId in carnivalTasks) {
+                const tasks = carnivalTasks[carnivalId] || [];
+                if (tasks.some(task => task.id === taskId)) {
+                    // This is a carnival task
+                    taskRef = doc(collection(db, "artifacts", appId, "users", userId, "carnivals", carnivalId, "carnival_tasks"), taskId);
+                    isClubTask = false;
+                    foundCarnivalTask = true;
+                    break;
+                }
+            }
+
+            if (!foundCarnivalTask) {
+                // This is a club task, use existing logic
+                const club = clubList.find(c => c.id === clubId);
+                if (!club || !club.carnivalId) {
+                    console.error("Could not find carnival for club:", clubId);
+                    showMessage("Error: Could not find carnival for this club.", 'error');
+                    return;
+                }
+                taskRef = doc(getTasksCollectionRef(club.carnivalId, clubId), taskId);
+            }
+            const updateData = {};
+            updateData[field] = value;
+
+            // Special handling for marking 'Done'
+            if (field === 'status' && value === 'Done') {
+                // Only set actual date if the status is changing to 'Done' and the actualDate field is empty
+                const task = clubTasks[clubId].find(t => t.id === taskId);
+                if (task && !task.actualDate) {
+                    updateData['actualDate'] = new Date().toISOString().substring(0, 10);
+                }
+            }
+
+            // Handle clearing actual date if status is set from 'Done' to something else
+            if (field === 'status' && value !== 'Done') {
+                 // updateData['actualDate'] = ''; // It's safer to let the user clear this manually if they need to revert
+            }
+
+            try {
+                await updateDoc(taskRef, updateData);
+                showMessage(`Task updated successfully!`, 'success');
+            } catch (error) {
+                console.error("Error updating task:", error);
+                showMessage("Error updating task.", 'error');
+            }
+        }
+
+        // File upload function
+        window.uploadFile = async function(clubId, taskId, fileInput) {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            // Find the carnival ID for this club
+            const club = clubList.find(c => c.id === clubId);
+            if (!club || !club.carnivalId) {
+                console.error("Could not find carnival for club:", clubId);
+                showMessage("Error: Could not find carnival for this club.", 'error');
+                return;
+            }
+
+            try {
+                // For now, we'll store file info in Firestore
+                // In a full implementation, you'd upload to Firebase Storage
+                const taskRef = doc(getTasksCollectionRef(club.carnivalId, clubId), taskId);
+                const fileInfo = {
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    uploadedAt: new Date().toISOString(),
+                    // For demo purposes, we'll just store file name
+                    // In production, upload to Firebase Storage and store the URL
+                    url: '#' // Placeholder
+                };
+
+                // Get current files array or initialize empty
+                const taskDoc = await getDoc(taskRef);
+                const currentFiles = taskDoc.data()?.files || [];
+
+                await updateDoc(taskRef, {
+                    files: arrayUnion(fileInfo)
+                });
+
+                showMessage(`File "${file.name}" uploaded successfully!`, 'success');
+
+                // Clear the input
+                fileInput.value = '';
+
+                // Re-render to show the new file
+                renderTaskTracker();
+
+            } catch (error) {
+                console.error("Error uploading file:", error);
+                showMessage("Error uploading file.", 'error');
+            }
+        }
+
+        // Update timeline club filter when carnival changes
+        window.updateTimelineClubs = function() {
+            const carnivalSelect = document.getElementById('timeline-carnival-filter');
+            const clubSelect = document.getElementById('timeline-club-filter');
+
+            if (!carnivalSelect || !clubSelect) return;
+
+            const selectedCarnivalId = carnivalSelect.value;
+            clubSelect.innerHTML = '<option value="all">All Clubs</option>';
+
+            if (selectedCarnivalId && selectedCarnivalId !== 'all' && carnivalClubs[selectedCarnivalId]) {
+                carnivalClubs[selectedCarnivalId].forEach(club => {
+                    const option = document.createElement('option');
+                    option.value = club.name;
+                    option.textContent = `${club.name} (${club.activity})`;
+                    clubSelect.appendChild(option);
+                });
+            }
+        }
+
+        // --- Timeline Functions ---
+
+        window.renderTimeline = function() {
+            if (!isAuthReady) {
+                console.log("Timeline waiting for auth...");
+                return;
+            }
+
+            // Get all filter values
+            const timelineCarnivalFilter = document.getElementById('timeline-carnival-filter')?.value || 'all';
+            const timelineClubFilter = document.getElementById('timeline-club-filter')?.value || 'all';
+            const timelineTeamFilter = document.getElementById('timeline-team-filter')?.value || 'all';
+            const timelineOwnerFilter = document.getElementById('timeline-owner-filter')?.value || 'all';
+            const periodFilter = document.getElementById('timeline-period-filter')?.value || 'upcoming';
+            const container = document.getElementById('timeline-container');
+
+            if (!container) return;
+
+            // Populate filter dropdowns
+            const carnivalSelect = document.getElementById('timeline-carnival-filter');
+            if (carnivalSelect) {
+                carnivalSelect.innerHTML = '<option value="all">All Carnivals</option>';
+                carnivalsList.forEach(carnival => {
+                    const option = document.createElement('option');
+                    option.value = carnival.id;
+                    option.textContent = carnival.name;
+                    if (carnival.id === carnivalFilter) option.selected = true;
+                    carnivalSelect.appendChild(option);
+                });
+            }
+
+            // Populate other filters (will be filled as we collect task data)
+            const allTeams = new Set();
+            const allOwners = new Set();
+            const allClubs = new Set();
+
+            // Collect all tasks from all carnivals and clubs
+            let allTasks = [];
+
+            // Carnival-level tasks
+            Object.entries(carnivalTasks).forEach(([carnivalId, tasks]) => {
+                if (timelineCarnivalFilter !== 'all' && carnivalId !== timelineCarnivalFilter) return;
+
+                const carnival = carnivalsList.find(c => c.id === carnivalId);
+                tasks.forEach(task => {
+                    // Collect filter data
+                    if (task.team) allTeams.add(task.team);
+                    if (task.owner) allOwners.add(task.owner);
+                    allClubs.add('Carnival-level Task');
+
+                    allTasks.push({
+                        ...task,
+                        carnivalId,
+                        carnivalName: carnival?.name || 'Unknown Carnival',
+                        clubName: 'Carnival-level Task',
+                        type: 'carnival'
+                    });
+                });
+            });
+
+            // Club-level tasks
+            Object.entries(carnivalClubTasks).forEach(([carnivalId, clubTasks]) => {
+                if (timelineCarnivalFilter !== 'all' && carnivalId !== timelineCarnivalFilter) return;
+
+                const carnival = carnivalsList.find(c => c.id === carnivalId);
+                Object.entries(clubTasks).forEach(([clubId, tasks]) => {
+                    const club = carnivalClubs[carnivalId]?.find(c => c.id === clubId);
+                    tasks.forEach(task => {
+                        // Collect filter data
+                        if (task.team) allTeams.add(task.team);
+                        if (task.owner) allOwners.add(task.owner);
+                        if (club?.name) allClubs.add(club.name);
+
+                        allTasks.push({
+                            ...task,
+                            carnivalId,
+                            carnivalName: carnival?.name || 'Unknown Carnival',
+                            clubName: club?.name || 'Unknown Club',
+                            clubActivity: club?.activity || '',
+                            type: 'club'
+                        });
+                    });
+                });
+            });
+
+            // Populate filter dropdowns with collected data
+            const teamSelect = document.getElementById('timeline-team-filter');
+            if (teamSelect) {
+                teamSelect.innerHTML = '<option value="all">All Teams</option>';
+                Array.from(allTeams).sort().forEach(team => {
+                    const option = document.createElement('option');
+                    option.value = team;
+                    option.textContent = team;
+                    if (team === teamFilter) option.selected = true;
+                    teamSelect.appendChild(option);
+                });
+            }
+
+            const ownerSelect = document.getElementById('timeline-owner-filter');
+            if (ownerSelect) {
+                ownerSelect.innerHTML = '<option value="all">All Owners</option>';
+                Array.from(allOwners).sort().forEach(owner => {
+                    const option = document.createElement('option');
+                    option.value = owner;
+                    option.textContent = owner;
+                    if (owner === timelineOwnerFilter) option.selected = true;
+                    ownerSelect.appendChild(option);
+                });
+            }
+
+            const clubSelect = document.getElementById('timeline-club-filter');
+            if (clubSelect) {
+                clubSelect.innerHTML = '<option value="all">All Clubs</option>';
+                Array.from(allClubs).sort().forEach(club => {
+                    const option = document.createElement('option');
+                    option.value = club;
+                    option.textContent = club;
+                    if (club === clubFilter) option.selected = true;
+                    clubSelect.appendChild(option);
+                });
+            }
+
+            // Apply additional filters
+            if (timelineClubFilter !== 'all') {
+                allTasks = allTasks.filter(task => task.clubName === timelineClubFilter);
+            }
+            if (timelineTeamFilter !== 'all') {
+                allTasks = allTasks.filter(task => task.team === timelineTeamFilter);
+            }
+            if (timelineOwnerFilter !== 'all') {
+                allTasks = allTasks.filter(task => task.owner === timelineOwnerFilter);
+            }
+
+            // Filter by period
+            const now = new Date();
+            const oneWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+            const oneMonth = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+            if (periodFilter !== 'all') {
+                allTasks = allTasks.filter(task => {
+                    if (!task.deadline) return false;
+                    const deadline = new Date(task.deadline);
+
+                    switch (periodFilter) {
+                        case 'overdue':
+                            return deadline < now && task.status !== 'completed';
+                        case 'this-week':
+                            return deadline >= now && deadline <= oneWeek;
+                        case 'this-month':
+                            return deadline >= now && deadline <= oneMonth;
+                        case 'upcoming':
+                            return deadline >= now && task.status !== 'completed';
+                        default:
+                            return true;
+                    }
+                });
+            }
+
+            // Sort by deadline
+            allTasks.sort((a, b) => {
+                if (!a.deadline && !b.deadline) return 0;
+                if (!a.deadline) return 1;
+                if (!b.deadline) return -1;
+                return new Date(a.deadline) - new Date(b.deadline);
+            });
+
+            // Render timeline
+            if (allTasks.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12">
+                        <div class="text-gray-400 text-lg">No tasks found for the selected filters</div>
+                        <p class="text-gray-500 text-sm mt-2">Try adjusting your filters or create some tasks</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let currentDate = '';
+            let timelineHTML = '';
+
+            allTasks.forEach(task => {
+                const deadline = task.deadline ? new Date(task.deadline) : null;
+                const dateStr = deadline ? deadline.toDateString() : 'No Deadline';
+
+                if (dateStr !== currentDate) {
+                    currentDate = dateStr;
+                    const isOverdue = deadline && deadline < now && task.status !== 'completed';
+                    const dateClass = isOverdue ? 'text-red-600' : deadline && deadline < oneWeek ? 'text-yellow-600' : 'text-gray-700';
+
+                    timelineHTML += `
+                        <div class="border-l-4 ${isOverdue ? 'border-red-500' : deadline && deadline < oneWeek ? 'border-yellow-500' : 'border-blue-500'} pl-4 ml-2">
+                            <div class="font-semibold ${dateClass} text-lg mb-3">${dateStr}</div>
+                        </div>
+                    `;
+                }
+
+                const statusIcon = task.status === 'completed' ? '✅' :
+                                 (deadline && deadline < now) ? '🔴' :
+                                 (deadline && deadline < oneWeek) ? '🟡' : '⚪';
+
+                const priorityColor = task.status === 'completed' ? 'bg-green-50 border-green-200' :
+                                    (deadline && deadline < now) ? 'bg-red-50 border-red-200' :
+                                    (deadline && deadline < oneWeek) ? 'bg-yellow-50 border-yellow-200' : 'bg-white border-gray-200';
+
+                timelineHTML += `
+                    <div class="ml-8 mb-4 p-4 rounded-lg border ${priorityColor}">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <span class="text-lg">${statusIcon}</span>
+                                    <h3 class="font-medium text-gray-900">${task.description}</h3>
+                                </div>
+                                <div class="text-sm text-gray-600 space-y-1">
+                                    <div><strong>Carnival:</strong> ${task.carnivalName}</div>
+                                    <div><strong>Club:</strong> ${task.clubName} ${task.clubActivity ? `(${task.clubActivity})` : ''}</div>
+                                    <div><strong>Team:</strong> ${task.team || 'Not assigned'}</div>
+                                    <div><strong>Owner:</strong> ${task.owner || 'Not assigned'}</div>
+                                    ${task.notes ? `<div><strong>Notes:</strong> ${task.notes}</div>` : ''}
+                                </div>
+                            </div>
+                            <div class="text-right text-sm">
+                                <div class="font-medium ${task.status === 'completed' ? 'text-green-600' : 'text-gray-600'}">
+                                    ${task.status || 'pending'}
+                                </div>
+                                ${deadline ? `<div class="text-xs text-gray-500 mt-1">Due: ${deadline.toLocaleDateString()}</div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = timelineHTML;
+        }
+
+        // --- Dashboard Functions ---
+
+        window.updateDashboard = function() {
+            if (!isAuthReady) {
+                console.log("Dashboard waiting for auth...");
+                return;
+            }
+
+            // Dashboard filters are populated by carnival listener, no need to override here
+            let totalTasks = 0;
+            let completedTasks = 0;
+            let overdueTasks = [];
+            let upcomingTasks = [];
+            const now = new Date();
+            const oneWeekLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+            // Get selected filters
+            const taskTrackerOwnerFilterElement = document.getElementById('owner-filter');
+            const selectedOwner = taskTrackerOwnerFilterElement ? taskTrackerOwnerFilterElement.value : 'all';
+
+            const carnivalFilterElement = document.getElementById('dashboard-carnival-filter');
+            const selectedCarnival = carnivalFilterElement ? carnivalFilterElement.value : 'all';
+
+            const clubFilterElement = document.getElementById('dashboard-club-filter');
+            const selectedClub = clubFilterElement ? clubFilterElement.value : 'all';
+
+            const teamFilterElement = document.getElementById('dashboard-team-filter');
+            const selectedTeam = teamFilterElement ? teamFilterElement.value : 'all';
+
+            const dashboardOwnerFilterElement = document.getElementById('dashboard-owner-filter');
+            const selectedOwnerMain = dashboardOwnerFilterElement ? dashboardOwnerFilterElement.value : 'all';
+
+            // Get both club and carnival tasks
+            let clubTasksList = Object.values(clubTasks).flat();
+            let carnivalTasksList = Object.values(carnivalTasks).flat();
+
+            // Combine all tasks
+            let filteredTasks = [...clubTasksList, ...carnivalTasksList];
+
+            // Only include required tasks in dashboard statistics
+            filteredTasks = filteredTasks.filter(task => task.required !== false);
+
+            // Apply carnival filter
+            if (selectedCarnival !== 'all') {
+                filteredTasks = filteredTasks.filter(task => {
+                    if (task.taskType === 'carnival') {
+                        // For carnival tasks, check carnivalId directly
+                        return task.carnivalId === selectedCarnival;
+                    } else {
+                        // For club tasks, check via club association
+                        const club = clubList.find(c => c.id === task.clubId);
+                        return club && club.carnivalId === selectedCarnival;
+                    }
+                });
+            }
+
+            // Apply club filter
+            if (selectedClub !== 'all') {
+                filteredTasks = filteredTasks.filter(task => task.clubId === selectedClub);
+            }
+
+            // Apply team filter
+            if (selectedTeam !== 'all') {
+                filteredTasks = filteredTasks.filter(task => task.team === selectedTeam);
+            }
+
+            // Apply main dashboard owner filter
+            if (selectedOwnerMain !== 'all') {
+                filteredTasks = filteredTasks.filter(task => task.owner === selectedOwnerMain);
+            }
+
+            const allTasks = filteredTasks;
+            totalTasks = allTasks.length;
+
+            const allOwners = new Set();
+            const pendingByOwner = {};
+
+            // Always include owners and teams from task template, even if no tasks exist yet
+            const allTeams = new Set();
+            const currentTemplate = taskTemplate.length > 0 ? taskTemplate : initialTemplate;
+            currentTemplate.forEach(templateTask => {
+                if (templateTask.owner) {
+                    allOwners.add(templateTask.owner);
+                }
+                if (templateTask.team) {
+                    allTeams.add(templateTask.team);
+                }
+            });
+
+            allTasks.forEach(task => {
+                const owner = task.owner || 'Unassigned';
+                allOwners.add(owner);
+
+                const team = task.team;
+                if (team) {
+                    allTeams.add(team);
+                }
+
+                if (!pendingByOwner[owner]) {
+                    pendingByOwner[owner] = { total: 0, todo: 0, inProgress: 0, overdue: 0 };
+                }
+
+                if (task.status === 'Done') {
+                    completedTasks++;
+                } else {
+                    // Task is NOT Done, so it is pending work
+                    pendingByOwner[owner].total++;
+
+                    if (task.status === 'To Do') {
+                         pendingByOwner[owner].todo++;
+                    } else if (task.status === 'In Progress') {
+                         pendingByOwner[owner].inProgress++;
+                    }
+
+                    if (task.expectedDate) {
+                        const expectedDate = new Date(task.expectedDate);
+
+                        if (expectedDate < now) {
+                            // Overdue
+                            overdueTasks.push(task);
+                            pendingByOwner[owner].overdue++;
+                        } else if (expectedDate <= oneWeekLater) {
+                            // Upcoming
+                            upcomingTasks.push(task);
+                        }
+                    }
+                }
+            });
+
+
+            renderOwnerFilter(Array.from(allOwners), selectedOwner);
+            renderPendingByOwnerSummary(pendingByOwner, selectedOwner);
+            renderDashboardFilters(Array.from(allTeams));
+
+
+            // Update stats
+            document.getElementById('total-carnivals-stat').textContent = carnivalsList.length;
+
+            // Calculate clubs breakdown per carnival with commission types
+            const totalClubs = clubList.length;
+            const grossClubs = clubList.filter(club => club.commissionType === 'gross' || !club.commissionType).length;
+            const netClubs = clubList.filter(club => club.commissionType === 'net').length;
+
+            const clubsBreakdown = carnivalsList.map(carnival => {
+                const carnivalClubList = carnivalClubs[carnival.id] || [];
+                const carnivalClubCount = carnivalClubList.length;
+                if (carnivalClubCount > 0) {
+                    const grossCount = carnivalClubList.filter(club => club.commissionType === 'gross' || !club.commissionType).length;
+                    const netCount = carnivalClubList.filter(club => club.commissionType === 'net').length;
+                    const breakdown = [];
+                    if (grossCount > 0) breakdown.push(`${grossCount} gross`);
+                    if (netCount > 0) breakdown.push(`${netCount} net`);
+                    return `${carnival.name}: ${carnivalClubCount} (${breakdown.join(', ')})`;
+                }
+                return null;
+            }).filter(Boolean);
+
+            if (clubsBreakdown.length > 0) {
+                document.getElementById('clubs-breakdown').textContent = `${totalClubs} clubs total: ${grossClubs} gross, ${netClubs} net | ${clubsBreakdown.join(' | ')}`;
+            } else {
+                document.getElementById('clubs-breakdown').textContent = `${totalClubs} clubs total: ${grossClubs} gross, ${netClubs} net`;
+            }
+
+            document.getElementById('overdue-tasks-stat').textContent = overdueTasks.length;
+            const completionPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+            document.getElementById('completion-stat').textContent = `${completionPercentage}%`;
+
+            // Render Overdue List
+            const overdueListDiv = document.getElementById('overdue-list');
+            overdueTasks.sort((a, b) => new Date(a.expectedDate) - new Date(b.expectedDate));
+            if (overdueTasks.length === 0) {
+                 overdueListDiv.innerHTML = '<p class="text-gray-500">No overdue tasks. Great work!</p>';
+            } else {
+                overdueListDiv.innerHTML = overdueTasks.slice(0, 5).map(task => {
+                    const taskLocation = task.taskType === 'carnival' ? 'Carnival Level' : (task.clubName || 'Unknown Club');
+                    return `
+                        <div class="p-3 border border-red-200 rounded-lg bg-red-50">
+                            <p class="text-sm font-semibold text-red-700">${taskLocation} (${task.team || 'N/A'}): ${task.description}</p>
+                            <p class="text-xs text-red-600">Due: ${task.expectedDate} (Owner: ${task.owner || 'N/A'})</p>
+                        </div>
+                    `;
+                }).join('');
+                if (overdueTasks.length > 5) {
+                    overdueListDiv.innerHTML += `<p class="text-xs text-red-500 mt-2">...and ${overdueTasks.length - 5} more overdue tasks. Check the Task Tracker view!</p>`;
+                }
+            }
+
+            // Render Upcoming List
+            const upcomingListDiv = document.getElementById('upcoming-list');
+            upcomingTasks.sort((a, b) => new Date(a.expectedDate) - new Date(b.expectedDate));
+            if (upcomingTasks.length === 0) {
+                 upcomingListDiv.innerHTML = '<p class="text-gray-500">No deadlines in the next week.</p>';
+            } else {
+                upcomingListDiv.innerHTML = upcomingTasks.slice(0, 5).map(task => {
+                    const taskLocation = task.taskType === 'carnival' ? 'Carnival Level' : (task.clubName || 'Unknown Club');
+                    return `
+                        <div class="p-3 border border-indigo-200 rounded-lg bg-indigo-50">
+                            <p class="text-sm font-semibold text-indigo-700">${taskLocation} (${task.team || 'N/A'}): ${task.description}</p>
+                            <p class="text-xs text-indigo-600">Due: ${task.expectedDate} (Owner: ${task.owner || 'N/A'})</p>
+                        </div>
+                    `;
+                }).join('');
+                 if (upcomingTasks.length > 5) {
+                    upcomingListDiv.innerHTML += `<p class="text-xs text-indigo-500 mt-2">...and ${upcomingTasks.length - 5} more upcoming tasks.</p>`;
+                }
+            }
+        }
+
+        function renderOwnerFilter(owners, selectedOwner) {
+            const selector = document.getElementById('owner-filter');
+
+            if (!selector) {
+                return;
+            }
+
+            selector.innerHTML = '<option value="all">All Owners</option>';
+
+            // Sort owners alphabetically, putting Unassigned last
+            const sortedOwners = owners.sort((a, b) => {
+                if (a === 'Unassigned') return 1;
+                if (b === 'Unassigned') return -1;
+                return a.localeCompare(b);
+            });
+
+            sortedOwners.forEach(owner => {
+                if (owner) {
+                    const option = document.createElement('option');
+                    option.value = owner;
+                    option.textContent = owner;
+                    if (owner === selectedOwner) {
+                        option.selected = true;
+                    }
+                    selector.appendChild(option);
+                }
+            });
+        }
+
+        function renderPendingByOwnerSummary(pendingByOwner, selectedOwner) {
+            const container = document.getElementById('pending-by-owner-summary');
+            let ownersToShow = [];
+
+            if (selectedOwner === 'all') {
+                ownersToShow = Object.keys(pendingByOwner);
+            } else if (pendingByOwner[selectedOwner]) {
+                ownersToShow = [selectedOwner];
+            }
+
+            if (ownersToShow.length === 0) {
+                 container.innerHTML = '<p class="col-span-4 text-gray-500">No pending tasks for this filter.</p>';
+                 return;
+            }
+
+            container.innerHTML = ownersToShow.map(owner => {
+                const data = pendingByOwner[owner];
+                if (!data || data.total === 0) return '';
+
+                return `
+                    <div class="bg-gray-50 p-4 rounded-lg border-t-4 ${data.overdue > 0 ? 'border-red-500' : 'border-indigo-500'} shadow-sm">
+                        <p class="text-lg font-semibold text-gray-800 truncate">${owner}</p>
+                        <div class="mt-2 space-y-1">
+                            <p class="text-sm text-gray-600">Pending: <span class="font-bold text-base text-indigo-600">${data.total}</span></p>
+                            <p class="text-xs text-yellow-600">To Do: ${data.todo}</p>
+                            <p class="text-xs text-blue-600">In Progress: ${data.inProgress}</p>
+                            <p class="text-xs ${data.overdue > 0 ? 'text-red-600 font-semibold' : 'text-gray-500'}">Overdue: ${data.overdue}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            if (!container.innerHTML.trim()) {
+                 container.innerHTML = '<p class="col-span-4 text-gray-500">No pending tasks for this filter.</p>';
+            }
+        }
+
+        window.renderTaskTrackerFilters = function() {
+            // Get all teams and owners from current template
+            const currentTemplate = taskTemplate.length > 0 ? taskTemplate : initialTemplate;
+            const allTeams = new Set();
+            const allOwners = new Set();
+
+            currentTemplate.forEach(task => {
+                if (task.team) allTeams.add(task.team);
+                if (task.owner) allOwners.add(task.owner);
+            });
+
+            // Render Task Tracker Team Filter
+            const teamFilter = document.getElementById('team-filter');
+            if (teamFilter) {
+                const selectedTeam = teamFilter.value;
+                teamFilter.innerHTML = '<option value="">All Teams</option>';
+                Array.from(allTeams).sort().forEach(team => {
+                    const option = document.createElement('option');
+                    option.value = team;
+                    option.textContent = team;
+                    if (team === selectedTeam) option.selected = true;
+                    teamFilter.appendChild(option);
+                });
+            }
+
+            // Render Task Tracker Owner Filter
+            const taskTrackerOwnerFilter = document.getElementById('owner-filter');
+            if (taskTrackerOwnerFilter) {
+                const selectedOwner = taskTrackerOwnerFilter.value;
+                taskTrackerOwnerFilter.innerHTML = '<option value="">All Owners</option>';
+                Array.from(allOwners).sort().forEach(owner => {
+                    const option = document.createElement('option');
+                    option.value = owner;
+                    option.textContent = owner;
+                    if (owner === selectedOwner) option.selected = true;
+                    taskTrackerOwnerFilter.appendChild(option);
+                });
+            }
+        }
+
+        window.renderTemplateFilters = function() {
+            // Get all teams and owners from current template
+            const currentTemplate = taskTemplate.length > 0 ? taskTemplate : initialTemplate;
+            const allTeams = new Set();
+            const allOwners = new Set();
+
+            currentTemplate.forEach(task => {
+                if (task.team) allTeams.add(task.team);
+                if (task.owner) allOwners.add(task.owner);
+            });
+
+            // Render Team Dropdown
+            const teamSelect = document.getElementById('new-task-team-select');
+            if (teamSelect) {
+                const selectedTeam = teamSelect.value;
+                teamSelect.innerHTML = '<option value="">Choose existing team</option>';
+                Array.from(allTeams).sort().forEach(team => {
+                    const option = document.createElement('option');
+                    option.value = team;
+                    option.textContent = team;
+                    if (team === selectedTeam) option.selected = true;
+                    teamSelect.appendChild(option);
+                });
+            }
+
+            // Render Owner Dropdown
+            const ownerSelect = document.getElementById('new-task-owner-select');
+            if (ownerSelect) {
+                const selectedOwner = ownerSelect.value;
+                ownerSelect.innerHTML = '<option value="">Choose existing owner</option>';
+                Array.from(allOwners).sort().forEach(owner => {
+                    const option = document.createElement('option');
+                    option.value = owner;
+                    option.textContent = owner;
+                    if (owner === selectedOwner) option.selected = true;
+                    ownerSelect.appendChild(option);
+                });
+            }
+
+            // Auto-sync dropdown selection to input field
+            if (teamSelect) {
+                teamSelect.onchange = function() {
+                    if (this.value) {
+                        document.getElementById('new-task-team-input').value = this.value;
+                    }
+                };
+            }
+
+            if (ownerSelect) {
+                ownerSelect.onchange = function() {
+                    if (this.value) {
+                        document.getElementById('new-task-owner-input').value = this.value;
+                    }
+                };
+            }
+        }
+
+        function renderDashboardFilters(teams = []) {
+            // Render Carnival Filter
+            const carnivalSelector = document.getElementById('dashboard-carnival-filter');
+            if (carnivalSelector) {
+                const selectedCarnival = carnivalSelector.value;
+                carnivalSelector.innerHTML = '<option value="all">All Carnivals</option>';
+
+                // Add all carnivals from the list
+                carnivalsList.forEach(carnival => {
+                    const option = document.createElement('option');
+                    option.value = carnival.id;
+                    option.textContent = carnival.name;
+                    if (carnival.id === selectedCarnival) {
+                        option.selected = true;
+                    }
+                    carnivalSelector.appendChild(option);
+                });
+            }
+
+            // Render Club Filter
+            const clubSelector = document.getElementById('dashboard-club-filter');
+            if (clubSelector) {
+                const selectedClub = clubSelector.value;
+                clubSelector.innerHTML = '<option value="all">All Clubs</option>';
+
+                clubList.forEach(club => {
+                    const option = document.createElement('option');
+                    option.value = club.id;
+                    option.textContent = club.name;
+                    if (club.id === selectedClub) {
+                        option.selected = true;
+                    }
+                    clubSelector.appendChild(option);
+                });
+            }
+
+            // Render Team Filter
+            const teamSelector = document.getElementById('dashboard-team-filter');
+
+            if (teamSelector) {
+                const selectedTeam = teamSelector.value;
+                teamSelector.innerHTML = '<option value="all">All Teams</option>';
+
+                // Sort teams alphabetically - add fallback if no teams
+                let sortedTeams = Array.from(teams).sort();
+
+                // Fallback: if no teams from data, add some default teams
+                if (sortedTeams.length === 0) {
+                    sortedTeams = ['Operations', 'Marketing', 'Finance', 'Tech', 'Design'];
+                }
+                sortedTeams.forEach(team => {
+                    const option = document.createElement('option');
+                    option.value = team;
+                    option.textContent = team;
+                    if (team === selectedTeam) {
+                        option.selected = true;
+                    }
+                    teamSelector.appendChild(option);
+                });
+            }
+
+            // Render Main Dashboard Owner Filter
+            const ownerSelector = document.getElementById('dashboard-owner-filter');
+            if (ownerSelector) {
+                const selectedOwner = ownerSelector.value;
+                ownerSelector.innerHTML = '<option value="all">All Owners</option>';
+
+                // Get owners from template for main dashboard filter
+                const currentTemplate = taskTemplate.length > 0 ? taskTemplate : initialTemplate;
+                const dashboardOwners = new Set();
+                currentTemplate.forEach(task => {
+                    if (task.owner) dashboardOwners.add(task.owner);
+                });
+
+                let sortedOwners = Array.from(dashboardOwners).sort();
+
+                // Fallback: if no owners from data, add some default owners
+                if (sortedOwners.length === 0) {
+                    sortedOwners = ['Joy', 'Ayushi', 'Tauheed', 'Team Lead'];
+                }
+                sortedOwners.forEach(owner => {
+                    const option = document.createElement('option');
+                    option.value = owner;
+                    option.textContent = owner;
+                    if (owner === selectedOwner) {
+                        option.selected = true;
+                    }
+                    ownerSelector.appendChild(option);
+                });
+            }
+        }
+    </script>
+
+    <!-- Navigation Script (Global Scope) -->
+    <script>
+        // Global navigation function - must be outside module scope for onclick handlers
+        window.showView = function(viewId) {
+            console.log('🔥 showView called with:', viewId);
+
+            // Hide all views - use CSS class manipulation to work with !important rules
+            const views = ['dashboard-view', 'task-tracker-view', 'timeline-view', 'setup-view'];
+            views.forEach(function(view) {
+                const element = document.getElementById(view);
+                if (element) {
+                    element.classList.add('hidden');
+                    element.style.display = 'none';
+                }
+            });
+
+            // Show the target view
+            const targetView = document.getElementById(viewId + '-view');
+            if (targetView) {
+                targetView.classList.remove('hidden');
+                targetView.style.display = 'block';
+                console.log('Showing view:', viewId + '-view');
+            } else {
+                console.error('View not found:', viewId + '-view');
+            }
+
+            // Simple tab styling
+            const tabs = ['tab-dashboard', 'tab-task-tracker', 'tab-timeline', 'tab-setup'];
+            tabs.forEach(function(tabId) {
+                const tab = document.getElementById(tabId);
+                if (tab) {
+                    tab.className = 'py-2 px-4 text-sm font-medium rounded-t-lg transition-colors duration-200 text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300';
+                }
+            });
+
+            // Activate current tab
+            const activeTab = document.getElementById('tab-' + viewId);
+            if (activeTab) {
+                activeTab.className = 'py-2 px-4 text-sm font-medium rounded-t-lg transition-colors duration-200 text-indigo-600 border-b-2 border-indigo-600 hover:text-indigo-800';
+            }
+
+            // Load view specific content
+            if (viewId === 'task-tracker') {
+                // Always ensure selectors are properly initialized
+                setTimeout(() => {
+                    if (window.renderCarnivalSelector) window.renderCarnivalSelector();
+                    if (window.renderClubSelector) window.renderClubSelector();
+                    if (window.renderTaskTrackerFilters) window.renderTaskTrackerFilters();
+                    if (window.renderTaskTracker) window.renderTaskTracker();
+                }, 50);
+            } else if (viewId === 'timeline') {
+                setTimeout(() => {
+                    if (window.renderTimeline) window.renderTimeline();
+                }, 50);
+            } else if (viewId === 'dashboard') {
+                setTimeout(() => {
+                    if (window.updateDashboard) window.updateDashboard();
+                }, 50);
+            } else if (viewId === 'setup') {
+                setTimeout(() => {
+                    if (window.renderSetupView) window.renderSetupView();
+                }, 50);
+            }
+        }
+
+        // Initialize dashboard view AFTER Firebase is ready
+        // Dashboard will be shown after authentication completes
+
+        // Handle task assignment radio button changes
+        document.addEventListener('change', function(e) {
+            if (e.target.name === 'task-assignment') {
+                const specificSelector = document.getElementById('specific-club-selector');
+                if (e.target.value === 'specific') {
+                    specificSelector.classList.remove('hidden');
+                    // Populate club dropdown
+                    populateSpecificClubDropdown();
+                } else {
+                    specificSelector.classList.add('hidden');
+                }
+            }
+        });
+
+        function populateSpecificClubDropdown() {
+            const clubSelect = document.getElementById('specific-club-select');
+            if (!clubSelect) return;
+
+            clubSelect.innerHTML = '<option value="">Choose a club...</option>';
+
+            // Get all clubs from all carnivals
+            Object.values(carnivalClubs).flat().forEach(club => {
+                if (club && club.name) {
+                    const option = document.createElement('option');
+                    option.value = club.id;
+                    option.textContent = `${club.name} (${club.activity})`;
+                    clubSelect.appendChild(option);
+                }
+            });
+        }
+
+        // Update clubs dropdown when carnival is selected in task creation
+        window.updateClubsForTask = function() {
+            const carnivalSelect = document.getElementById('new-task-carnival-select');
+            const clubSelect = document.getElementById('new-task-club-select');
+
+            if (!carnivalSelect || !clubSelect) return;
+
+            const selectedCarnivalId = carnivalSelect.value;
+            clubSelect.innerHTML = '<option value="">All clubs in carnival</option>';
+
+            if (selectedCarnivalId && carnivalClubs[selectedCarnivalId]) {
+                carnivalClubs[selectedCarnivalId].forEach(club => {
+                    const option = document.createElement('option');
+                    option.value = club.id;
+                    option.textContent = `${club.name} (${club.activity})`;
+                    clubSelect.appendChild(option);
+                });
+            }
+        }
+
+        // Populate carnivals dropdown for task creation
+        function populateTaskCarnivalDropdown() {
+            const carnivalSelect = document.getElementById('new-task-carnival-select');
+            if (!carnivalSelect) return;
+
+            carnivalSelect.innerHTML = '<option value="">Choose carnival...</option>';
+
+            carnivalsList.forEach(carnival => {
+                const option = document.createElement('option');
+                option.value = carnival.id;
+                option.textContent = carnival.name;
+                carnivalSelect.appendChild(option);
+            });
+        }
+    </script>
+
+    <!-- Edit Task Modal -->
+    <div id="edit-task-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+            <div class="flex items-center justify-between p-4 border-b">
+                <h3 class="text-lg font-semibold text-gray-800">Edit Template Task</h3>
+                <button onclick="cancelTemplateTaskEdit()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-4 space-y-4">
+                <div>
+                    <label for="edit-task-description" class="block text-sm font-medium text-gray-700 mb-1">Task Description</label>
+                    <textarea id="edit-task-description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter task description..."></textarea>
+                </div>
+                <div>
+                    <label for="edit-task-team" class="block text-sm font-medium text-gray-700 mb-1">Team</label>
+                    <select id="edit-task-team" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">Select Team</option>
+                        <!-- Teams populated dynamically -->
+                    </select>
+                </div>
+                <div>
+                    <label for="edit-task-owner" class="block text-sm font-medium text-gray-700 mb-1">Owner</label>
+                    <select id="edit-task-owner" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">Select Owner</option>
+                        <!-- Owners populated dynamically -->
+                    </select>
+                </div>
+            </div>
+            <div class="flex items-center justify-between p-4 border-t bg-gray-50">
+                <button id="delete-task-btn" onclick="deleteTemplateTask()" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:ring-2 focus:ring-red-500">
+                    <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd"></path></svg>
+                    Delete Task
+                </button>
+                <div class="flex items-center space-x-3">
+                    <button onclick="cancelTemplateTaskEdit()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-indigo-500">
+                        Cancel
+                    </button>
+                    <button onclick="saveTemplateTaskEdit()" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500">
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

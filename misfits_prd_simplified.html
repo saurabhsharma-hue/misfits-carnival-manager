@@ -1,0 +1,1743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Misfits Operations Platform - Simplified Bottom-Up PRD</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.2em;
+        }
+        
+        section {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        h2 {
+            color: #764ba2;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #f0f0f0;
+        }
+        
+        h3 {
+            color: #667eea;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        
+        .philosophy-box {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        
+        .level-box {
+            background: #f8f9fa;
+            border-left: 5px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .screen {
+            background: #ffffff;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 30px 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .screen-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 20px;
+            font-weight: 600;
+        }
+        
+        .screen-content {
+            padding: 20px;
+            background: #fafafa;
+        }
+        
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .metric-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+        }
+        
+        .pattern-box {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .action-box {
+            background: #d1ecf1;
+            border: 2px solid #17a2b8;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .status-green { color: #10b981; }
+        .status-yellow { color: #f59e0b; }
+        .status-red { color: #ef4444; }
+        
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .flow-diagram {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .priority-label {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        
+        .p0 { background: #ef4444; color: white; }
+        .p1 { background: #f59e0b; color: white; }
+        .p2 { background: #10b981; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Misfits Operations Platform</h1>
+            <div class="subtitle">Bottom-Up System Design: From Data to Decisions to Revenue</div>
+        </header>
+
+        <!-- Core Philosophy -->
+        <section>
+            <h2>🎯 Core Philosophy & Success Metrics</h2>
+            
+            <div class="philosophy-box">
+                <h3 style="color: white;">The Recipe Strategy</h3>
+                <ol style="line-height: 2;">
+                    <li>Find existing successful recipes from the world</li>
+                    <li>Give them to top performers to validate</li>
+                    <li>If validated → Create templates for others</li>
+                    <li>New clubs get: Community principles + Basic proven recipes</li>
+                    <li>Let them evolve the recipe over time with their local flavor</li>
+                </ol>
+            </div>
+            
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="priority-label p0">P0</div>
+                    <div>Revenue Impact</div>
+                    <div class="metric-value">₹75L</div>
+                    <div style="font-size: 0.9em;">Monthly Target</div>
+                </div>
+                <div class="metric-card">
+                    <div class="priority-label p1">P1</div>
+                    <div>Club Health</div>
+                    <div class="metric-value">80%</div>
+                    <div style="font-size: 0.9em;">Clubs in Green</div>
+                </div>
+                <div class="metric-card">
+                    <div class="priority-label p2">P2</div>
+                    <div>Recipe Success</div>
+                    <div class="metric-value">60%</div>
+                    <div style="font-size: 0.9em;">Replication Rate</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bottom-Up Architecture -->
+        <section>
+            <h2>🏗️ Bottom-Up System Architecture</h2>
+            
+            <div class="flow-diagram">
+                <h3>The 4-Layer Intelligence Stack</h3>
+                <div style="margin: 30px 0;">
+                    <div style="font-size: 1.2em; margin: 10px;">
+                        <strong>Layer 4: Founder Dashboard</strong> (Top)<br>
+                        ↑<br>
+                        <strong>Layer 3: Team Actions</strong> (Middle)<br>
+                        ↑<br>
+                        <strong>Layer 2: Pattern Detection</strong> (Intelligence)<br>
+                        ↑<br>
+                        <strong>Layer 1: Data Points</strong> (Foundation)
+                    </div>
+                </div>
+            </div>
+
+            <div class="level-box">
+                <h3>Layer 1: Data Points (Foundation)</h3>
+                <p>Raw signals from clubs - automatically collected from DB and manual inputs</p>
+                <ul style="margin-top: 10px; list-style-position: inside;">
+                    <li>Revenue per meetup trends</li>
+                    <li>Booking velocity (how fast slots fill)</li>
+                    <li>Attendance patterns</li>
+                    <li>Member feedback themes</li>
+                    <li>Leader response times</li>
+                    <li>Cancellation rates</li>
+                    <li>Repeat member percentage</li>
+                </ul>
+            </div>
+
+            <div class="level-box">
+                <h3>Layer 2: Pattern Detection (Intelligence)</h3>
+                <p>System detects patterns that predict future problems or success</p>
+                <div class="pattern-box">
+                    <strong>Examples of Detected Patterns:</strong>
+                    <ul style="margin-top: 10px;">
+                        <li>📉 "Expensive" feedback (3+ mentions) + Slow booking → Revenue drops 30% in 2 weeks</li>
+                        <li>⏰ Leader response >24 hours + Low engagement → Club failure in 4 weeks</li>
+                        <li>✅ Friday evening + IT area + ₹300 price → 90% capacity achieved</li>
+                        <li>🌅 Weekend morning + Photography + Heritage sites → High satisfaction</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="level-box">
+                <h3>Layer 3: Team Actions (Execution)</h3>
+                <p>Each team sees their specific view with actionable intelligence</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;">
+                    <div>
+                        <strong>Sustainment Team:</strong>
+                        <ul>
+                            <li>Their 30 clubs' health</li>
+                            <li>Leading indicators for each</li>
+                            <li>Pattern matches: "Like Delhi Books issue"</li>
+                            <li>Recipe suggestions to try</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <strong>Launch Team:</strong>
+                        <ul>
+                            <li>New leader pipeline</li>
+                            <li>Basic recipes to share</li>
+                            <li>Community principles training</li>
+                            <li>Success tracking (2 meetups in 4 weeks)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="level-box">
+                <h3>Layer 4: Founder Dashboard (Strategic)</h3>
+                <p>Complete visibility with drill-down capability</p>
+                <ul style="margin-top: 10px;">
+                    <li>Total revenue vs target</li>
+                    <li>Revenue at risk with reasons</li>
+                    <li>Systematic patterns affecting multiple clubs</li>
+                    <li>Recipe performance across cities</li>
+                    <li>Click any metric → Drill down to team → to club → to root cause</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Core Screens -->
+        <section>
+            <h2>🖥️ Core System Screens (Only 7 Essential Views)</h2>
+            
+            <!-- Screen 1: Founder Dashboard -->
+            <div class="screen">
+                <div class="screen-header">
+                    Screen 1: Founder Dashboard - Strategic Overview with WoW Tracking
+                </div>
+                <div class="screen-content">
+                    <div class="metric-grid">
+                        <div class="metric-card">
+                            <div>Revenue</div>
+                            <div class="metric-value">₹62L</div>
+                            <div>Target: ₹75L</div>
+                        </div>
+                        <div class="metric-card">
+                            <div>At Risk</div>
+                            <div class="metric-value status-red">₹8L</div>
+                            <div>11 clubs</div>
+                        </div>
+                        <div class="metric-card">
+                            <div>Scale Ready</div>
+                            <div class="metric-value status-green">₹5L</div>
+                            <div>8 clubs</div>
+                        </div>
+                        <div class="metric-card">
+                            <div>Patterns</div>
+                            <div class="metric-value status-yellow">3</div>
+                            <div>Systematic issues</div>
+                        </div>
+                    </div>
+                    
+                    <h4 style="margin-top: 20px;">📊 Week-over-Week Health Movement</h4>
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Week</th>
+                                    <th>🟢 Green</th>
+                                    <th>🟡 Yellow</th>
+                                    <th>🔴 Red</th>
+                                    <th>Movement</th>
+                                    <th>Key Changes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="background: white;">
+                                    <td><strong>This Week</strong><br>(Nov 11-17)</td>
+                                    <td>105 (70%)</td>
+                                    <td>30 (20%)</td>
+                                    <td>15 (10%)</td>
+                                    <td>
+                                        <span class="status-green">↑3</span> Green<br>
+                                        <span class="status-yellow">↓2</span> Yellow<br>
+                                        <span class="status-red">↓1</span> Red
+                                    </td>
+                                    <td>
+                                        • Mumbai Chess recovered<br>
+                                        • Delhi Books turned red<br>
+                                        • 3 new launches green
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Last Week<br>(Nov 4-10)</td>
+                                    <td>102 (68%)</td>
+                                    <td>32 (21%)</td>
+                                    <td>16 (11%)</td>
+                                    <td>
+                                        <span class="status-red">↓5</span> Green<br>
+                                        <span class="status-yellow">↑3</span> Yellow<br>
+                                        <span class="status-red">↑2</span> Red
+                                    </td>
+                                    <td>
+                                        • Pricing issues in Mumbai<br>
+                                        • 2 leader exits
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>2 Weeks Ago<br>(Oct 28-Nov 3)</td>
+                                    <td>107 (71%)</td>
+                                    <td>29 (19%)</td>
+                                    <td>14 (9%)</td>
+                                    <td>-</td>
+                                    <td>Baseline week</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div style="margin-top: 15px; padding: 15px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 5px;">
+                            <strong>📈 Trend Analysis:</strong> Green % improving (+2% in 2 weeks), Red reducing (-1%), Watch yellow clubs - 5 likely to turn red next week
+                        </div>
+                    </div>
+                    
+                    <h4 style="margin-top: 20px;">🚀 Scale Opportunities Detected</h4>
+                    <div style="background: #f0fdf4; border: 2px solid #10b981; padding: 20px; border-radius: 8px;">
+                        <strong>Clubs Ready for Scaling (Strong Leading Indicators):</strong>
+                        <table style="margin-top: 15px;">
+                            <thead>
+                                <tr>
+                                    <th>Club</th>
+                                    <th>Scale Signals</th>
+                                    <th>Current</th>
+                                    <th>Potential</th>
+                                    <th>Recipe</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Mumbai Photography</strong></td>
+                                    <td>
+                                        ✅ Waitlist every meetup<br>
+                                        ✅ 95% capacity for 8 weeks<br>
+                                        ✅ Members asking for more slots<br>
+                                        ✅ NPS: 72
+                                    </td>
+                                    <td>4 meetups<br>₹48K</td>
+                                    <td>8 meetups<br>₹96K</td>
+                                    <td>Morning heritage walks</td>
+                                    <td><button class="btn">Scale Now</button></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Delhi Books</strong></td>
+                                    <td>
+                                        ✅ Turning away 10+ people<br>
+                                        ✅ 4.8 rating sustained<br>
+                                        ✅ Repeat rate: 85%<br>
+                                        ⚠️ Venue constraint only
+                                    </td>
+                                    <td>2 meetups<br>₹20K</td>
+                                    <td>4 meetups<br>₹40K</td>
+                                    <td>Cafe discussions</td>
+                                    <td><button class="btn">Find Venue</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <h4 style="margin-top: 20px;">Systematic Issues Detected</h4>
+                    <div class="pattern-box">
+                        <strong>Pattern: "Pricing Resistance in Mumbai"</strong>
+                        <div>Affecting: 5 clubs | Impact: ₹3L | Detection: "Expensive" feedback increasing</div>
+                        <button class="btn" style="margin-top: 10px;">Drill Down →</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen 2: Pattern Intelligence -->
+            <div class="screen">
+                <div class="screen-header">
+                    Screen 2: Pattern Intelligence Dashboard
+                </div>
+                <div class="screen-content">
+                    <h4>Leading Indicators Alert</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Club</th>
+                                <th>Pattern Detected</th>
+                                <th>Confidence</th>
+                                <th>Predicted Impact</th>
+                                <th>Time to Impact</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Mumbai Photography</td>
+                                <td>Pricing resistance + Slow booking</td>
+                                <td><span class="status-red">85%</span></td>
+                                <td>-₹15K revenue</td>
+                                <td>2 weeks</td>
+                            </tr>
+                            <tr>
+                                <td>Delhi Books</td>
+                                <td>Leader disengagement pattern</td>
+                                <td><span class="status-yellow">70%</span></td>
+                                <td>Club inactive</td>
+                                <td>4 weeks</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <h4 style="margin-top: 20px;">Successful Patterns to Replicate</h4>
+                    <div class="action-box">
+                        <strong>Pattern: "Morning Photography Success"</strong>
+                        <ul style="margin-top: 10px;">
+                            <li>Time: Weekend 7-9 AM</li>
+                            <li>Price: ₹300/session</li>
+                            <li>Format: Heritage walks + Technical tips</li>
+                            <li>Success rate: 85% capacity, 4.7 rating</li>
+                        </ul>
+                        <div style="margin-top: 10px;">
+                            <strong>Apply to:</strong> Struggling photography clubs in Pune, Bangalore
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen 3: Sustainment Team View -->
+            <div class="screen">
+                <div class="screen-header">
+                    Screen 3: Sustainment Team - Operational View
+                </div>
+                <div class="screen-content">
+                    <h4>My Clubs Needing Attention (Priya - Mumbai & Pune)</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Priority</th>
+                                <th>Club</th>
+                                <th>Health</th>
+                                <th>Issue</th>
+                                <th>Pattern Match</th>
+                                <th>Suggested Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="background: #fef2f2;">
+                                <td>1</td>
+                                <td><strong>Mumbai Chess</strong></td>
+                                <td><span class="status-red">Red</span></td>
+                                <td>Revenue -40%</td>
+                                <td>Like "Delhi Chess timing issue"</td>
+                                <td>Change to evening slot</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td><strong>Pune Photography</strong></td>
+                                <td><span class="status-yellow">Yellow</span></td>
+                                <td>Booking slow</td>
+                                <td>Pricing resistance pattern</td>
+                                <td>Test ₹300 price point</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <h4 style="margin-top: 20px;">Leading Indicators for My Clubs</h4>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                        <div class="metric-card">
+                            <div>Booking Velocity</div>
+                            <div>3 clubs slowing</div>
+                        </div>
+                        <div class="metric-card">
+                            <div>Feedback Sentiment</div>
+                            <div>2 clubs declining</div>
+                        </div>
+                        <div class="metric-card">
+                            <div>Leader Response</div>
+                            <div>1 delayed >48hr</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen 4: Recipe Management -->
+            <div class="screen">
+                <div class="screen-header">
+                    Screen 4: Recipe Discovery & Management
+                </div>
+                <div class="screen-content">
+                    <h4>Recipe Performance Tracking</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Activity-City</th>
+                                <th>Recipe Name</th>
+                                <th>Testing Clubs</th>
+                                <th>Success Rate</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="background: #f0fdf4;">
+                                <td>Photography-Mumbai</td>
+                                <td>Morning Heritage Walks</td>
+                                <td>3</td>
+                                <td>85%</td>
+                                <td><span class="status-green">Proven</span></td>
+                                <td><button class="btn">Replicate</button></td>
+                            </tr>
+                            <tr>
+                                <td>Books-Delhi</td>
+                                <td>Cafe Discussions</td>
+                                <td>2</td>
+                                <td>60%</td>
+                                <td><span class="status-yellow">Testing</span></td>
+                                <td><button class="btn">Monitor</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <h4 style="margin-top: 20px;">New Club Starter Recipes</h4>
+                    <div class="action-box">
+                        <strong>For: New Photography Club in Bangalore</strong>
+                        <div style="margin-top: 10px;">
+                            <strong>Ingredients (Community Principles):</strong>
+                            <ul>
+                                <li>Small groups (15-20 people)</li>
+                                <li>Consistent timing</li>
+                                <li>WhatsApp community engagement</li>
+                            </ul>
+                            <strong>Basic Recipe Options:</strong>
+                            <ol>
+                                <li>Morning walks (proven in Mumbai)</li>
+                                <li>Weekend workshops (proven in Delhi)</li>
+                                <li>Evening street photography (testing)</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen 5: Launch Team -->
+            <div class="screen">
+                <div class="screen-header">
+                    Screen 5: Launch Team - Pipeline & Success Tracking
+                </div>
+                <div class="screen-content">
+                    <h4>This Week's Launch Pipeline</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Leader</th>
+                                <th>Activity</th>
+                                <th>City-Area</th>
+                                <th>Recipe Given</th>
+                                <th>Launch Date</th>
+                                <th>Week 2 Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Rahul</td>
+                                <td>Photography</td>
+                                <td>Mumbai-Andheri</td>
+                                <td>Morning Heritage</td>
+                                <td>Nov 1</td>
+                                <td><span class="status-green">✓ 2 meetups done</span></td>
+                            </tr>
+                            <tr>
+                                <td>Priya</td>
+                                <td>Books</td>
+                                <td>Delhi-CP</td>
+                                <td>Cafe Discussion</td>
+                                <td>Nov 5</td>
+                                <td><span class="status-yellow">1/2 meetups</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Screen 6: Health Monitor -->
+            <div class="screen">
+                <div class="screen-header">
+                    Screen 6: Real-time Health Monitor with WoW Tracking
+                </div>
+                <div class="screen-content">
+                    <h4>Club Health Distribution - Current Week</h4>
+                    <div class="metric-grid">
+                        <div class="metric-card">
+                            <div>Total Active</div>
+                            <div class="metric-value">150</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="status-green">Green</div>
+                            <div class="metric-value">105</div>
+                            <div>70% <span style="font-size: 0.8em;">(↑2%)</span></div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="status-yellow">Yellow</div>
+                            <div class="metric-value">30</div>
+                            <div>20% <span style="font-size: 0.8em;">(↓1%)</span></div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="status-red">Red</div>
+                            <div class="metric-value">15</div>
+                            <div>10% <span style="font-size: 0.8em;">(↓1%)</span></div>
+                        </div>
+                    </div>
+                    
+                    <h4 style="margin-top: 20px;">📈 Week-over-Week Health Movement Details</h4>
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                            <div style="background: white; padding: 15px; border-radius: 8px;">
+                                <strong class="status-green">Improved to Green (5)</strong>
+                                <ul style="margin-top: 10px; font-size: 0.9em;">
+                                    <li>Mumbai Chess - Pricing fixed</li>
+                                    <li>Delhi Dance - New venue</li>
+                                    <li>Pune Photography - Leader engaged</li>
+                                    <li>+ 2 new launches</li>
+                                </ul>
+                            </div>
+                            <div style="background: white; padding: 15px; border-radius: 8px;">
+                                <strong class="status-yellow">Degraded to Yellow (3)</strong>
+                                <ul style="margin-top: 10px; font-size: 0.9em;">
+                                    <li>Mumbai Books - Attendance dropping</li>
+                                    <li>Bangalore Trek - Venue issues</li>
+                                    <li>Delhi Art - Leader slow</li>
+                                </ul>
+                            </div>
+                            <div style="background: white; padding: 15px; border-radius: 8px;">
+                                <strong class="status-red">Degraded to Red (2)</strong>
+                                <ul style="margin-top: 10px; font-size: 0.9em;">
+                                    <li>Delhi Books - Multiple issues</li>
+                                    <li>Pune Pottery - Leader quit</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h4 style="margin-top: 20px;">🔄 Health Velocity Tracking</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>4 Weeks Ago</th>
+                                <th>3 Weeks Ago</th>
+                                <th>2 Weeks Ago</th>
+                                <th>Last Week</th>
+                                <th>This Week</th>
+                                <th>Trend</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Green %</strong></td>
+                                <td>65%</td>
+                                <td>67%</td>
+                                <td>71%</td>
+                                <td>68%</td>
+                                <td>70%</td>
+                                <td><span class="status-green">↑ Improving</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Red Count</strong></td>
+                                <td>18</td>
+                                <td>17</td>
+                                <td>14</td>
+                                <td>16</td>
+                                <td>15</td>
+                                <td><span class="status-green">↓ Reducing</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Recovery Rate</strong></td>
+                                <td>40%</td>
+                                <td>45%</td>
+                                <td>60%</td>
+                                <td>55%</td>
+                                <td>62%</td>
+                                <td><span class="status-green">↑ Better</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <h4 style="margin-top: 20px;">Leading Indicator Warnings</h4>
+                    <div class="pattern-box">
+                        <strong>Next Week Predictions:</strong>
+                        <ul style="margin-top: 10px;">
+                            <li>🔴 <strong>8 clubs likely to turn Yellow</strong> (booking velocity dropping)</li>
+                            <li>🔴 <strong>3 yellows likely to turn Red</strong> (multiple negative signals)</li>
+                            <li>🟢 <strong>4 yellows likely to recover</strong> (interventions showing results)</li>
+                        </ul>
+                    </div>
+                    
+                    <h4 style="margin-top: 20px;">🚀 Scale Opportunities This Week</h4>
+                    <div style="background: #f0fdf4; border: 2px solid #10b981; padding: 15px; border-radius: 8px;">
+                        <strong>Top 3 Scale Ready Clubs:</strong>
+                        <ol style="margin-top: 10px;">
+                            <li><strong>Mumbai Photography:</strong> Waitlist 20+ people every week → Add 2nd batch</li>
+                            <li><strong>Delhi Books:</strong> 95% capacity for 2 months → Launch 2nd location</li>
+                            <li><strong>Bangalore Running:</strong> Members asking daily slots → Increase frequency</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen 7: Action Queue -->
+            <div class="screen">
+                <div class="screen-header">
+                    Screen 7: Daily Action Queue (All Teams)
+                </div>
+                <div class="screen-content">
+                    <h4>Today's Priorities (Ranked by Revenue Impact)</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Priority</th>
+                                <th>Club</th>
+                                <th>Issue</th>
+                                <th>Impact</th>
+                                <th>Owner</th>
+                                <th>Action</th>
+                                <th>Data Support</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="background: #fef2f2;">
+                                <td>🔴 1</td>
+                                <td>Mumbai Chess</td>
+                                <td>Revenue drop</td>
+                                <td>₹25K</td>
+                                <td>Priya</td>
+                                <td>Call leader, review pricing</td>
+                                <td><button class="btn">View Data</button></td>
+                            </tr>
+                            <tr style="background: #fefce8;">
+                                <td>🟡 2</td>
+                                <td>Delhi Books</td>
+                                <td>Leader slow</td>
+                                <td>₹18K risk</td>
+                                <td>Rahul</td>
+                                <td>Visit, check burnout</td>
+                                <td><button class="btn">View Data</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Data Flow -->
+        <section>
+            <h2>🔄 Data Flow & Decision Support</h2>
+            
+            <div class="flow-diagram">
+                <h3>How Intelligence Flows Bottom-Up</h3>
+                <div style="text-align: left; max-width: 800px; margin: 30px auto;">
+                    <strong>Example: Mumbai Photography Club</strong>
+                    <ol style="line-height: 2;">
+                        <li><strong>Data Point:</strong> Booking velocity drops 50%, "expensive" mentioned 5 times</li>
+                        <li><strong>Pattern Detected:</strong> System recognizes "pricing resistance pattern"</li>
+                        <li><strong>Team Alert:</strong> Sustainment team sees: "Try ₹300 price (worked for Delhi Photography)"</li>
+                        <li><strong>Founder View:</strong> "₹15K at risk, pricing issue in Mumbai, pattern affecting 3 clubs"</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="level-box">
+                <h3>Decision Support Tools Provided</h3>
+                <ul>
+                    <li><strong>Historical Data:</strong> What happened to similar clubs with this pattern?</li>
+                    <li><strong>Recipe Library:</strong> What recipes worked for this activity-city?</li>
+                    <li><strong>Impact Prediction:</strong> What happens if we don't act? (revenue loss, timeline)</li>
+                    <li><strong>Success Probability:</strong> How likely is this intervention to work?</li>
+                    <li><strong>Resource ROI:</strong> Is it worth spending time/money on this club?</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Data Management -->
+        <section>
+            <h2>📤 Data Input & Management</h2>
+            
+            <div class="level-box">
+                <h3>CSV Upload for Bulk Planning</h3>
+                <p>Quick bulk upload for launch requirements and scale planning</p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px;">
+                    <div>
+                        <h4>Launch Requirements CSV Format:</h4>
+                        <code style="display: block; padding: 15px; background: #f8f9fa;">
+                            Activity,City,Area,Number_Required<br>
+                            Photography,Mumbai,Andheri,2<br>
+                            Books,Delhi,CP,3<br>
+                            Trek,Pune,Koregaon,1<br>
+                            Dance,Bangalore,Indiranagar,2
+                        </code>
+                        <button class="btn" style="margin-top: 10px;">Upload Launch CSV</button>
+                    </div>
+                    <div>
+                        <h4>Scale Planning CSV Format:</h4>
+                        <code style="display: block; padding: 15px; background: #f8f9fa;">
+                            Activity,City,Area,Club_Name,Current_Meetups,Current_Attendance,Current_Revenue,Target_Meetups,Target_Revenue<br>
+                            Photography,Mumbai,Bandra,MUM_PHOTO_01,4,120,48000,6,72000<br>
+                            Books,Delhi,CP,DEL_BOOK_02,2,30,15000,4,30000
+                        </code>
+                        <button class="btn" style="margin-top: 10px;">Upload Scale CSV</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="level-box">
+                <h3>Data Points We Actually Have</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <h4>✅ Available Now:</h4>
+                        <ul>
+                            <li>Revenue per meetup</li>
+                            <li>Attendance numbers</li>
+                            <li>Booking fill rate</li>
+                            <li>Member ratings (1-5)</li>
+                            <li>Member text feedback</li>
+                            <li>Cancellation rates</li>
+                            <li>Repeat member %</li>
+                            <li>Meetup frequency</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>❌ Not Available Yet:</h4>
+                        <ul>
+                            <li><s>Leader response time</s> (no tracking)</li>
+                            <li><s>Leader engagement score</s> (no data)</li>
+                            <li>Competition data</li>
+                            <li>Member demographics</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Resource Management -->
+        <section>
+            <h2>👥 Resource Management & Override Logic</h2>
+            
+            <div class="level-box">
+                <h3>Smart Capacity Management (Not Just Revenue)</h3>
+                <p>Each sustainment team member handles 5 clubs maximum, with intelligent override rules</p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px;">
+                    <div>
+                        <h4>Normal Capacity Rules:</h4>
+                        <ul>
+                            <li><strong>5 clubs max</strong> per person</li>
+                            <li>Mix of red/yellow/green for balance</li>
+                            <li>Geographic clustering when possible</li>
+                            <li>New clubs added only when slot opens</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>When to Override (6th Club):</h4>
+                        <ul>
+                            <li>🔴 <strong>Pattern Detection:</strong> System detects critical pattern</li>
+                            <li>📉 <strong>Leading Indicators:</strong> >80% failure confidence</li>
+                            <li>🔗 <strong>Cascade Risk:</strong> Will affect multiple clubs</li>
+                            <li>⏰ <strong>Time Critical:</strong> <1 week to prevent</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="pattern-box" style="margin-top: 20px;">
+                    <strong>Override Decision Tree:</strong>
+                    <div style="margin-top: 15px; font-family: monospace; background: white; padding: 15px; border-radius: 5px;">
+                        IF (pattern == "leader_quitting" OR "venue_loss_imminent") AND<br>
+                        &nbsp;&nbsp;&nbsp;(confidence > 80%) AND<br>
+                        &nbsp;&nbsp;&nbsp;(time_to_impact < 7 days) AND<br>
+                        &nbsp;&nbsp;&nbsp;(affects_similar_clubs >= 3 OR revenue_impact > 25K)<br>
+                        THEN<br>
+                        &nbsp;&nbsp;&nbsp;ALLOW 6th club addition<br>
+                        &nbsp;&nbsp;&nbsp;FLAG as "Emergency Intervention"<br>
+                        &nbsp;&nbsp;&nbsp;SET review_date = 2 weeks<br>
+                        ELSE<br>
+                        &nbsp;&nbsp;&nbsp;ADD to escalation_queue<br>
+                        &nbsp;&nbsp;&nbsp;WAIT for capacity
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 30px;">Examples of Valid Overrides</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Scenario</th>
+                            <th>Pattern</th>
+                            <th>Evidence</th>
+                            <th>Impact</th>
+                            <th>Override?</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="background: #f0fdf4;">
+                            <td>Leader ghosting</td>
+                            <td>No response 72hr + cancelled meetups</td>
+                            <td>Member feedback: "leader absent"</td>
+                            <td>Club death + 3 clubs lose confidence</td>
+                            <td>✅ YES</td>
+                        </tr>
+                        <tr style="background: #f0fdf4;">
+                            <td>Mass feedback crisis</td>
+                            <td>10+ members: "too expensive"</td>
+                            <td>Booking at 20%, competitors opened</td>
+                            <td>₹40K revenue, sets bad precedent</td>
+                            <td>✅ YES</td>
+                        </tr>
+                        <tr style="background: #fef2f2;">
+                            <td>Normal yellow club</td>
+                            <td>Capacity dropping slowly</td>
+                            <td>Rating still 4.2</td>
+                            <td>₹12K revenue risk</td>
+                            <td>❌ NO - Wait</td>
+                        </tr>
+                        <tr style="background: #fef2f2;">
+                            <td>Seasonal drop</td>
+                            <td>Trek club in monsoon</td>
+                            <td>Expected pattern</td>
+                            <td>Temporary</td>
+                            <td>❌ NO - Expected</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Scale Detection System -->
+        <section>
+            <h2>🚀 Scale Opportunity Detection System</h2>
+            
+            <div class="level-box">
+                <h3>Automatic Scale Signal Detection</h3>
+                <p>System identifies clubs ready for scaling based on leading indicators, not just current performance</p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px;">
+                    <div>
+                        <h4>Scale Readiness Signals:</h4>
+                        <ul>
+                            <li>📈 <strong>Demand Overflow:</strong> Waitlist for 3+ consecutive meetups</li>
+                            <li>💯 <strong>Sustained Capacity:</strong> >90% for 6+ weeks</li>
+                            <li>💬 <strong>Member Requests:</strong> "More slots" feedback pattern</li>
+                            <li>🔄 <strong>High Repeat:</strong> >70% members returning</li>
+                            <li>⭐ <strong>Quality Maintained:</strong> Rating >4.5 sustained</li>
+                            <li>💰 <strong>Revenue Ceiling Hit:</strong> Can't grow without more capacity</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Scale Confidence Score:</h4>
+                        <code style="display: block; padding: 15px; background: #f8f9fa;">
+                            scale_score = <br>
+                            &nbsp;&nbsp;(waitlist_frequency * 0.3) +<br>
+                            &nbsp;&nbsp;(capacity_sustained * 0.2) +<br>
+                            &nbsp;&nbsp;(member_demand * 0.2) +<br>
+                            &nbsp;&nbsp;(repeat_rate * 0.15) +<br>
+                            &nbsp;&nbsp;(quality_rating * 0.15)<br><br>
+                            
+                            IF scale_score > 0.75:<br>
+                            &nbsp;&nbsp;"Ready to scale now"<br>
+                            IF scale_score > 0.60:<br>
+                            &nbsp;&nbsp;"Prepare for scale"<br>
+                            IF scale_score < 0.60:<br>
+                            &nbsp;&nbsp;"Focus on quality first"
+                        </code>
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 30px;">Scale Action Recommendations</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Scale Type</th>
+                            <th>When to Use</th>
+                            <th>Action</th>
+                            <th>Expected Impact</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Frequency Scale</strong></td>
+                            <td>Waitlist every meetup + venue available</td>
+                            <td>Add more meetups same format</td>
+                            <td>2x revenue, same costs</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Capacity Scale</strong></td>
+                            <td>Venue allows + demand exists</td>
+                            <td>Increase slots per meetup</td>
+                            <td>1.5x revenue, marginal cost</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Geographic Scale</strong></td>
+                            <td>Recipe proven + nearby demand</td>
+                            <td>Launch sister club nearby</td>
+                            <td>New revenue stream</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Premium Tier</strong></td>
+                            <td>Members asking for advanced</td>
+                            <td>Add premium offering</td>
+                            <td>Higher margin revenue</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="screen">
+                <div class="screen-header">
+                    Scale Opportunity Dashboard
+                </div>
+                <div class="screen-content">
+                    <h4>🎯 This Week's Scale Opportunities</h4>
+                    <div class="metric-grid">
+                        <div class="metric-card">
+                            <div>Ready Now</div>
+                            <div class="metric-value status-green">8</div>
+                            <div>Score >75%</div>
+                        </div>
+                        <div class="metric-card">
+                            <div>Preparing</div>
+                            <div class="metric-value status-yellow">12</div>
+                            <div>Score 60-75%</div>
+                        </div>
+                        <div class="metric-card">
+                            <div>Revenue Potential</div>
+                            <div class="metric-value">₹12L</div>
+                            <div>If all scale</div>
+                        </div>
+                        <div class="metric-card">
+                            <div>Success Rate</div>
+                            <div class="metric-value">68%</div>
+                            <div>Past scales</div>
+                        </div>
+                    </div>
+                    
+                    <h4 style="margin-top: 20px;">Week-over-Week Scale Pipeline</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Week</th>
+                                <th>Identified</th>
+                                <th>Actioned</th>
+                                <th>Successful</th>
+                                <th>Revenue Added</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>This Week</td>
+                                <td>8</td>
+                                <td>3</td>
+                                <td>TBD</td>
+                                <td>₹2.4L projected</td>
+                            </tr>
+                            <tr>
+                                <td>Last Week</td>
+                                <td>6</td>
+                                <td>2</td>
+                                <td>2</td>
+                                <td>₹1.8L achieved</td>
+                            </tr>
+                            <tr>
+                                <td>2 Weeks Ago</td>
+                                <td>5</td>
+                                <td>3</td>
+                                <td>2</td>
+                                <td>₹2.1L achieved</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Enhanced Sustainment Team View -->
+        <section>
+            <h2>🔧 Sustainment Team - Enhanced Health Dashboard</h2>
+            
+            <div class="screen">
+                <div class="screen-header">
+                    Enhanced Sustainment View - Health Breakdown & Leading Indicators
+                </div>
+                <div class="screen-content">
+                    <h4>Team Capacity Management (3 People)</h4>
+                    <div class="pattern-box">
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                            <div>
+                                <strong>Priya (Mumbai/Pune)</strong>
+                                <div>Active Focus: 5 clubs</div>
+                                <div>Capacity: <span class="status-red">Full</span></div>
+                                <div style="font-size: 0.9em; margin-top: 5px;">
+                                    • Mumbai Chess (Red)<br>
+                                    • Mumbai Photo (Yellow)<br>
+                                    • Pune Trek (Yellow)<br>
+                                    • Mumbai Dance (Green - watching)<br>
+                                    • Pune Books (Green - watching)
+                                </div>
+                            </div>
+                            <div>
+                                <strong>Rahul (Delhi/NCR)</strong>
+                                <div>Active Focus: 4 clubs</div>
+                                <div>Capacity: <span class="status-yellow">1 slot</span></div>
+                            </div>
+                            <div>
+                                <strong>Amit (Bangalore)</strong>
+                                <div>Active Focus: 3 clubs</div>
+                                <div>Capacity: <span class="status-green">2 slots</span></div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
+                            <strong>🚨 Override Rule for 6th Club:</strong>
+                            <div style="margin-top: 10px; font-size: 0.95em;">
+                                Can exceed 5-club limit ONLY if:
+                                <ul style="margin: 10px 0 0 20px;">
+                                    <li><strong>Critical Pattern:</strong> "Leader quitting" signal detected</li>
+                                    <li><strong>Cascade Risk:</strong> Failure affects 3+ similar clubs</li>
+                                    <li><strong>High Confidence:</strong> Leading indicators show >80% failure probability</li>
+                                    <li><strong>Time Sensitive:</strong> <1 week to prevent failure</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 style="margin-top: 30px;">Health Breakdown - Top Down Drill</h4>
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                        <div style="font-size: 1.2em; margin-bottom: 15px;">
+                            <strong>Mumbai (45 clubs) - Priya's Territory</strong>
+                        </div>
+                        
+                        <div style="margin-left: 20px;">
+                            <div style="margin-bottom: 20px;">
+                                <strong>Level 1: Overall Health</strong>
+                                <div class="metric-grid" style="grid-template-columns: repeat(4, 1fr); margin-top: 10px;">
+                                    <div class="metric-card">
+                                        <div class="status-green">Green</div>
+                                        <div class="metric-value">28</div>
+                                        <div>62%</div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="status-yellow">Yellow</div>
+                                        <div class="metric-value">12</div>
+                                        <div>27%</div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="status-red">Red</div>
+                                        <div class="metric-value">5</div>
+                                        <div>11%</div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div>Revenue</div>
+                                        <div class="metric-value">₹18L</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-bottom: 20px;">
+                                <strong>Level 2: By Activity</strong>
+                                <table style="margin-top: 10px;">
+                                    <thead>
+                                        <tr>
+                                            <th>Activity</th>
+                                            <th>Total</th>
+                                            <th>Green</th>
+                                            <th>Yellow</th>
+                                            <th>Red</th>
+                                            <th>Revenue</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr onclick="drillDown('photography')" style="cursor: pointer;">
+                                            <td>Photography →</td>
+                                            <td>12</td>
+                                            <td class="status-green">8</td>
+                                            <td class="status-yellow">3</td>
+                                            <td class="status-red">1</td>
+                                            <td>₹6L</td>
+                                        </tr>
+                                        <tr onclick="drillDown('books')" style="cursor: pointer;">
+                                            <td>Books →</td>
+                                            <td>8</td>
+                                            <td class="status-green">5</td>
+                                            <td class="status-yellow">2</td>
+                                            <td class="status-red">1</td>
+                                            <td>₹3L</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div>
+                                <strong>Level 3: Specific Clubs (Photography Drilldown)</strong>
+                                <table style="margin-top: 10px;">
+                                    <thead>
+                                        <tr>
+                                            <th>Club</th>
+                                            <th>Health</th>
+                                            <th>Current Metrics</th>
+                                            <th>Leading Indicators</th>
+                                            <th>Action Needed</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>MUM_PHOTO_01</td>
+                                            <td><span class="status-red">Red</span></td>
+                                            <td>
+                                                Rating: 3.8<br>
+                                                Capacity: 45%<br>
+                                                Revenue: -30%
+                                            </td>
+                                            <td>
+                                                📉 Booking: Slow<br>
+                                                💬 Feedback: "Expensive"<br>
+                                                ⚠️ Trend: 3 weeks ↓
+                                            </td>
+                                            <td>Urgent pricing review</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 style="margin-top: 30px;">🔮 Leading Indicator System - Act Before Red</h4>
+                    <div class="action-box">
+                        <strong>Clubs Likely to Turn Red in Next 2 Weeks:</strong>
+                        <table style="margin-top: 15px;">
+                            <thead>
+                                <tr>
+                                    <th>Club</th>
+                                    <th>Current</th>
+                                    <th>Warning Signal</th>
+                                    <th>Confidence</th>
+                                    <th>Preventive Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Mumbai Dance</td>
+                                    <td><span class="status-green">Green</span></td>
+                                    <td>Booking velocity -40%</td>
+                                    <td>75%</td>
+                                    <td>Check competition/timing</td>
+                                </tr>
+                                <tr>
+                                    <td>Pune Books</td>
+                                    <td><span class="status-yellow">Yellow</span></td>
+                                    <td>3 cancellations last meetup</td>
+                                    <td>60%</td>
+                                    <td>Call leader, check issues</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen">
+                <div class="screen-header">
+                    Sprint Planning with Resource Constraints
+                </div>
+                <div class="screen-content">
+                    <h4>This Sprint's Focus Clubs (Resource Limited)</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Owner</th>
+                                <th>Committed Clubs</th>
+                                <th>Status</th>
+                                <th>Can Add More?</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Priya</td>
+                                <td>
+                                    1. Mumbai Chess (Red - ₹25K)<br>
+                                    2. Mumbai Photo (Yellow - ₹15K)<br>
+                                    3. Pune Trek (Yellow - ₹12K)<br>
+                                    4. Mumbai Dance (Green watch)<br>
+                                    5. Pune Books (Green watch)
+                                </td>
+                                <td><span class="status-red">At Capacity</span></td>
+                                <td>Only if >₹30K emergency</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <h4 style="margin-top: 20px;">Escalation Queue (Waiting for Capacity)</h4>
+                    <div class="pattern-box">
+                        <strong>Clubs needing attention but no capacity:</strong>
+                        <ul style="margin-top: 10px;">
+                            <li>Delhi Poetry (Yellow - ₹8K) - Waiting for Rahul's capacity</li>
+                            <li>Bangalore Art (Yellow - ₹6K) - Waiting for Amit's capacity</li>
+                        </ul>
+                    </div>
+                    
+                    <h4 style="margin-top: 20px;">🔴 Override Alerts - Requires 6th Club Addition</h4>
+                    <div style="background: #fef2f2; border: 2px solid #ef4444; padding: 15px; border-radius: 8px;">
+                        <strong>Critical Intervention Required:</strong>
+                        <div style="margin-top: 15px;">
+                            <div style="padding: 10px; background: white; border-radius: 5px; margin-bottom: 10px;">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <div>
+                                        <strong>Delhi Badminton</strong><br>
+                                        <span style="color: #666;">Currently: Green | Prediction: Red in 5 days</span>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="color: #ef4444; font-weight: bold;">85% Confidence</div>
+                                        <div style="font-size: 0.9em;">Pattern: Leader resignation signals</div>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee;">
+                                    <strong>Evidence:</strong>
+                                    • Leader not responding 72 hours<br>
+                                    • Last 2 meetups cancelled<br>
+                                    • Member feedback: "Leader seems disinterested"<br>
+                                    <strong>Impact if fails:</strong> ₹22K revenue + likely cascade to 3 other badminton clubs
+                                </div>
+                                <button class="btn" style="margin-top: 10px;">Override: Assign to Rahul as 6th Club</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Daily Operations -->
+        <section>
+            <h2>📋 Daily Operations Queue</h2>
+            
+            <div class="screen">
+                <div class="screen-header">
+                    Unified Daily Action Queue - All Operations
+                </div>
+                <div class="screen-content">
+                    <h4>Today's Priorities (All Teams)</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Priority</th>
+                                <th>Type</th>
+                                <th>Item</th>
+                                <th>Impact</th>
+                                <th>Owner</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="background: #fef2f2;">
+                                <td>🔴 1</td>
+                                <td><strong>Club Health</strong></td>
+                                <td>Mumbai Chess dying</td>
+                                <td>₹25K revenue</td>
+                                <td>Priya</td>
+                                <td>In Progress</td>
+                                <td><button class="btn">View Details</button></td>
+                            </tr>
+                            <tr style="background: #fefce8;">
+                                <td>🟡 2</td>
+                                <td><strong>Venue</strong></td>
+                                <td>Delhi Books needs venue</td>
+                                <td>₹18K blocked</td>
+                                <td>Venue Team</td>
+                                <td>Pending</td>
+                                <td><button class="btn">Assign</button></td>
+                            </tr>
+                            <tr style="background: #fefce8;">
+                                <td>🟡 3</td>
+                                <td><strong>Launch</strong></td>
+                                <td>Bangalore Photo leader ready</td>
+                                <td>₹20K potential</td>
+                                <td>Launch Team</td>
+                                <td>Today</td>
+                                <td><button class="btn">Start Onboarding</button></td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td><strong>Customer Query</strong></td>
+                                <td>Refund request - MUM_DANCE_03</td>
+                                <td>₹500</td>
+                                <td>Support</td>
+                                <td>2 hrs old</td>
+                                <td><button class="btn">Respond</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4 style="margin-top: 30px;">Venue Requirements Queue</h4>
+                    <div class="action-box">
+                        <strong>Active Venue Requirements (Sorted by Revenue Impact):</strong>
+                        <table style="margin-top: 15px;">
+                            <thead>
+                                <tr>
+                                    <th>Priority</th>
+                                    <th>Club</th>
+                                    <th>Type</th>
+                                    <th>Area</th>
+                                    <th>Requirements</th>
+                                    <th>Revenue Blocked</th>
+                                    <th>Age</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>Delhi Books</td>
+                                    <td>Replacement</td>
+                                    <td>CP</td>
+                                    <td>Cafe, 20 people, WiFi</td>
+                                    <td>₹18K</td>
+                                    <td>2 days</td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>Mumbai Photo (New)</td>
+                                    <td>Launch</td>
+                                    <td>Andheri</td>
+                                    <td>Open space, morning</td>
+                                    <td>₹15K potential</td>
+                                    <td>5 days</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Health Calculation -->
+        <section>
+            <h2>📊 Health Calculation System</h2>
+            
+            <div class="level-box">
+                <h3>Your Health Document + Leading Indicators</h3>
+                <p>Combining your existing health calculation with predictive indicators</p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px;">
+                    <div>
+                        <h4>Current Metrics (40% weight):</h4>
+                        <code style="display: block; padding: 15px; background: #f8f9fa;">
+                            From Your Document:<br>
+                            - Rating (weighted by recency)<br>
+                            - Capacity utilization<br>
+                            - Repeat rate (after 1.5 months)<br>
+                            - Revenue trend<br>
+                            - Meetup consistency
+                        </code>
+                    </div>
+                    <div>
+                        <h4>Leading Indicators (60% weight):</h4>
+                        <code style="display: block; padding: 15px; background: #f8f9fa;">
+                            New Predictive Signals:<br>
+                            - Booking velocity change<br>
+                            - Feedback sentiment trend<br>
+                            - Cancellation rate increase<br>
+                            - "Expensive" mention frequency<br>
+                            - New vs repeat member ratio
+                        </code>
+                    </div>
+                </div>
+                
+                <div class="pattern-box" style="margin-top: 20px;">
+                    <strong>Formula:</strong><br>
+                    <code>
+                        health_score = (your_calculation * 0.4) + (leading_indicators * 0.6)<br><br>
+                        if leading_indicators < 0.3: alert "Likely to fail in 2 weeks"<br>
+                        if trend_3_weeks = negative: alert "Intervention needed"
+                    </code>
+                </div>
+            </div>
+        </section>
+            
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                <div class="level-box">
+                    <h3>Day 1: Foundation</h3>
+                    <strong>Build the Data Layer</strong>
+                    <ul style="margin-top: 10px;">
+                        <li>Connect to DB for metrics</li>
+                        <li>Calculate health scores</li>
+                        <li>Track leading indicators</li>
+                        <li>Basic pattern detection</li>
+                    </ul>
+                    <strong>Deliverable:</strong> Health Monitor Screen
+                </div>
+                
+                <div class="level-box">
+                    <h3>Day 2: Intelligence</h3>
+                    <strong>Add Pattern Detection</strong>
+                    <ul style="margin-top: 10px;">
+                        <li>Pattern matching engine</li>
+                        <li>Impact prediction</li>
+                        <li>Recipe performance tracking</li>
+                        <li>Team action queues</li>
+                    </ul>
+                    <strong>Deliverable:</strong> Team Dashboards
+                </div>
+                
+                <div class="level-box">
+                    <h3>Day 3: Execution</h3>
+                    <strong>Complete the System</strong>
+                    <ul style="margin-top: 10px;">
+                        <li>Founder dashboard</li>
+                        <li>Drill-down navigation</li>
+                        <li>Recipe library</li>
+                        <li>Decision support tools</li>
+                    </ul>
+                    <strong>Deliverable:</strong> Full System
+                </div>
+            </div>
+        </section>
+
+        <!-- Technical Architecture -->
+        <section>
+            <h2>⚙️ Technical Architecture</h2>
+            
+            <h3>Core Services</h3>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px;">
+                <div>
+                    <h4>Data Service</h4>
+                    <code style="display: block; padding: 15px; background: #f8f9fa;">
+                        - Connects to club DB<br>
+                        - Calculates metrics<br>
+                        - Tracks trends<br>
+                        - Stores patterns
+                    </code>
+                </div>
+                <div>
+                    <h4>Pattern Service</h4>
+                    <code style="display: block; padding: 15px; background: #f8f9fa;">
+                        - Detects patterns<br>
+                        - Predicts impact<br>
+                        - Suggests recipes<br>
+                        - Calculates confidence
+                    </code>
+                </div>
+                <div>
+                    <h4>Recipe Service</h4>
+                    <code style="display: block; padding: 15px; background: #f8f9fa;">
+                        - Stores recipes<br>
+                        - Tracks performance<br>
+                        - Suggests matches<br>
+                        - Documents learnings
+                    </code>
+                </div>
+                <div>
+                    <h4>Action Service</h4>
+                    <code style="display: block; padding: 15px; background: #f8f9fa;">
+                        - Prioritizes actions<br>
+                        - Assigns to teams<br>
+                        - Tracks completion<br>
+                        - Measures impact
+                    </code>
+                </div>
+            </div>
+
+            <h3>Key Algorithms</h3>
+            <div class="level-box">
+                <h4>Health Calculation</h4>
+                <code style="display: block; padding: 10px;">
+                    health = (leading_indicators * 0.6) + (current_metrics * 0.4)<br>
+                    where:<br>
+                    - leading_indicators = avg(booking_velocity, feedback_sentiment, leader_engagement)<br>
+                    - current_metrics = avg(revenue_trend, capacity, repeat_rate)
+                </code>
+            </div>
+            
+            <div class="level-box">
+                <h4>Pattern Confidence</h4>
+                <code style="display: block; padding: 10px;">
+                    confidence = (historical_accuracy * 0.5) + (signal_strength * 0.3) + (sample_size * 0.2)<br>
+                    where:<br>
+                    - historical_accuracy = times_correct / total_predictions<br>
+                    - signal_strength = correlation_coefficient<br>
+                    - sample_size = min(1, affected_clubs / 10)
+                </code>
+            </div>
+        </section>
+
+        <!-- Success Metrics -->
+        <section>
+            <h2>📊 Success Metrics for the System</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Current</th>
+                        <th>Target (3 months)</th>
+                        <th>Measurement</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Revenue</strong></td>
+                        <td>₹62L</td>
+                        <td>₹75L</td>
+                        <td>Monthly total from active clubs</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Club Health</strong></td>
+                        <td>70% green</td>
+                        <td>80% green</td>
+                        <td>Active clubs in green status</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Pattern Accuracy</strong></td>
+                        <td>Unknown</td>
+                        <td>75%</td>
+                        <td>Correct predictions / Total predictions</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Recipe Success</strong></td>
+                        <td>Unknown</td>
+                        <td>60%</td>
+                        <td>Successful replications / Attempts</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Response Time</strong></td>
+                        <td>3 days</td>
+                        <td>1 day</td>
+                        <td>Alert to action completion</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Prevention Rate</strong></td>
+                        <td>Unknown</td>
+                        <td>70%</td>
+                        <td>Clubs saved from red status</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+</body>
+</html>

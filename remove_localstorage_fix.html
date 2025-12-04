@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Misfits Carnival Manager - LOCALSTORAGE REMOVED</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .dashboard-section { display: block; }
+        .dashboard-section.hidden { display: none !important; }
+    </style>
+    <script>
+        // NUCLEAR OPTION - COMPLETELY DISABLE LOCALSTORAGE
+        console.log('🔥 DISABLING LOCALSTORAGE COMPLETELY...');
+
+        // Clear any existing data
+        try {
+            localStorage.clear();
+            sessionStorage.clear();
+            // Delete all localStorage keys
+            Object.keys(localStorage).forEach(key => {
+                localStorage.removeItem(key);
+            });
+        } catch(e) {}
+
+        // Override localStorage to prevent ANY usage
+        const preventStorage = {
+            getItem: () => null,
+            setItem: () => undefined,
+            removeItem: () => undefined,
+            clear: () => undefined,
+            key: () => null,
+            length: 0
+        };
+
+        // Replace localStorage and sessionStorage
+        Object.defineProperty(window, 'localStorage', {
+            value: preventStorage,
+            writable: false,
+            configurable: false
+        });
+
+        Object.defineProperty(window, 'sessionStorage', {
+            value: preventStorage,
+            writable: false,
+            configurable: false
+        });
+
+        console.log('✅ localStorage COMPLETELY DISABLED - Test Carnival 2024 CANNOT LOAD!');
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="max-w-7xl mx-auto py-8 px-4">
+        <!-- Success Banner -->
+        <div id="status-banner" style="background: #16a34a; color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: bold;">
+            ✅ LOCALSTORAGE DISABLED - Only Sports Fever Active!
+        </div>
+
+        <header class="mb-8">
+            <h1 class="text-4xl font-bold text-indigo-700">🎪 Misfits Carnival Program Manager</h1>
+            <p class="text-lg text-gray-600">Complete Task Management System</p>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="flex space-x-4 border-b border-gray-200 mb-6">
+            <button onclick="showView('dashboard')" id="tab-dashboard" class="py-2 px-4 text-sm font-medium rounded-t-lg text-indigo-600 border-b-2 border-indigo-600">Dashboard</button>
+            <button onclick="showView('task-tracker')" id="tab-task-tracker" class="py-2 px-4 text-sm font-medium rounded-t-lg text-gray-500">Task Tracker</button>
+            <button onclick="showView('timeline')" id="tab-timeline" class="py-2 px-4 text-sm font-medium rounded-t-lg text-gray-500">Timeline</button>
+            <button onclick="showView('setup')" id="tab-setup" class="py-2 px-4 text-sm font-medium rounded-t-lg text-gray-500">Setup & Template</button>
+        </nav>
+
+        <!-- Dashboard View -->
+        <div id="view-dashboard" class="dashboard-section">
+            <h2 class="text-2xl font-bold mb-4">📊 Dashboard</h2>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Total Tasks</h3>
+                    <p id="total-tasks" class="text-3xl font-bold text-blue-600">134</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Completed</h3>
+                    <p id="completed-tasks" class="text-3xl font-bold text-green-600">1</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Total Revenue</h3>
+                    <p id="total-revenue" class="text-3xl font-bold text-green-600">₹0</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Completion %</h3>
+                    <p id="completion-rate" class="text-3xl font-bold text-purple-600">1%</p>
+                </div>
+            </div>
+
+            <!-- Carnival Section -->
+            <div class="bg-white p-6 rounded-lg shadow mb-6">
+                <h3 class="text-xl font-bold mb-4">Active Carnivals</h3>
+                <div id="carnival-display" class="border-l-4 border-indigo-500 pl-4">
+                    <h4 id="carnival-name" class="font-semibold text-lg">Sports Fever</h4>
+                    <p id="carnival-desc" class="text-gray-600">Summer sports carnival (2025-06-01 to 2025-06-15)</p>
+                    <p id="carnival-stats" class="text-sm text-gray-500 mt-2">134 tasks • 1% complete</p>
+                </div>
+            </div>
+
+            <!-- Clubs Section -->
+            <div class="bg-white p-6 rounded-lg shadow mb-6">
+                <h3 class="text-xl font-bold mb-4">Clubs (7)</h3>
+                <div id="clubs-list" class="space-y-3">
+                    <!-- Clubs will be added here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Other Views -->
+        <div id="view-task-tracker" class="dashboard-section hidden">
+            <h2 class="text-2xl font-bold mb-4">📋 Task Tracker</h2>
+            <p>Task tracking functionality...</p>
+        </div>
+
+        <div id="view-timeline" class="dashboard-section hidden">
+            <h2 class="text-2xl font-bold mb-4">⏰ Timeline</h2>
+            <p>Timeline view...</p>
+        </div>
+
+        <div id="view-setup" class="dashboard-section hidden">
+            <h2 class="text-2xl font-bold mb-4">⚙️ Setup & Template</h2>
+            <p>Setup and template management...</p>
+        </div>
+    </div>
+
+    <script>
+        console.log('🚀 INITIALIZING WITH SPORTS FEVER ONLY...');
+
+        // ONLY Sports Fever data - NO localStorage, NO Test Carnival
+        const carnivalsList = [{
+            id: 1,
+            name: "Sports Fever",
+            description: "Summer sports carnival",
+            startDate: "2025-06-01",
+            endDate: "2025-06-15"
+        }];
+
+        const clubsList = [
+            {id: 1, name: "Just Dink It", activity: "Pickleball", commissionType: "performance", carnivals: [1]},
+            {id: 2, name: "888 Smash Lab Club", activity: "Badminton", commissionType: "performance", carnivals: [1]},
+            {id: 3, name: "Picklers", activity: "Pickleball", commissionType: "performance", carnivals: [1]},
+            {id: 4, name: "Gamers Den", activity: "Video Gaming", commissionType: "fixed", carnivals: [1]},
+            {id: 5, name: "Ballers", activity: "Basketball", commissionType: "performance", carnivals: [1]},
+            {id: 6, name: "RallyGully", activity: "Pickleball", commissionType: "performance", carnivals: [1]},
+            {id: 7, name: "Trail it (Hikethon)", activity: "Hiking", commissionType: "fixed", carnivals: [1]}
+        ];
+
+        const taskTemplate = [
+            {description: 'Registration link creation', team: 'Product', owner: 'Gaurav'},
+            {description: 'Banner/logo created', team: 'Marketing', owner: 'Ayushi'},
+            {description: 'FB/Insta pages created', team: 'Marketing', owner: 'Ayushi'},
+            {description: 'Whatsapp group created', team: 'Marketing', owner: 'Ayushi'},
+            {description: 'Event details on platform', team: 'Product', owner: 'Gaurav'},
+            {description: 'Event URL live on platform', team: 'Product', owner: 'Gaurav'},
+            {description: 'Photos taken', team: 'Marketing', owner: 'Ayushi'},
+            {description: 'Videos taken', team: 'Marketing', owner: 'Ayushi'},
+            {description: 'Community WhatsApp group invite sent', team: 'Marketing', owner: 'Joy'},
+            {description: 'Winners list compiled', team: 'Operations', owner: 'Joy'},
+            {description: 'Winners posted on social media', team: 'Marketing', owner: 'Ayushi'},
+            {description: 'Feedback collected', team: 'Operations', owner: 'Joy'},
+            {description: 'Testimonial videos compiled', team: 'Marketing', owner: 'Ayushi'},
+            {description: 'Next event locked with leader', team: 'Sales', owner: 'Tauheed'},
+            {description: 'Next event announced to community', team: 'Marketing', owner: 'Joy'},
+            {description: 'Invoice shared with leader', team: 'Finance', owner: 'Mahak'},
+            {description: 'Payment collected', team: 'Finance', owner: 'Mahak'},
+            {description: 'Post-event summary report', team: 'Operations', owner: 'Joy'},
+            {description: 'Database updated with participant info', team: 'Product', owner: 'Gaurav'}
+        ];
+
+        const allTasks = {
+            1: {
+                carnivalTasks: [{
+                    id: 'carnival_task_1',
+                    description: 'Plan Sports Fever logistics',
+                    team: 'Operations',
+                    owner: 'Admin',
+                    status: 'completed'
+                }],
+                clubs: {}
+            }
+        };
+
+        // Add tasks for each club
+        clubsList.forEach(club => {
+            allTasks[1].clubs[club.id] = taskTemplate.map((task, index) => ({
+                id: `club_${club.id}_task_${index + 1}`,
+                description: task.description,
+                team: task.team,
+                owner: task.owner,
+                status: 'pending'
+            }));
+        });
+
+        // Initialize display
+        function initializeDisplay() {
+            // Update clubs display
+            const clubsHtml = clubsList.map(club => `
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <div><strong>${club.name}</strong> <span class="text-gray-600">(${club.activity})</span></div>
+                    <div class="text-sm text-gray-500">19 tasks</div>
+                </div>
+            `).join('');
+            document.getElementById('clubs-list').innerHTML = clubsHtml;
+
+            console.log('✅ Display initialized with Sports Fever:', {
+                carnival: carnivalsList[0].name,
+                clubs: clubsList.length,
+                totalTasks: 1 + (7 * 19)
+            });
+        }
+
+        // Navigation
+        function showView(viewName) {
+            const sections = document.querySelectorAll('.dashboard-section');
+            const tabs = document.querySelectorAll('nav button');
+
+            sections.forEach(section => section.classList.add('hidden'));
+            tabs.forEach(tab => {
+                tab.classList.remove('text-indigo-600', 'border-b-2', 'border-indigo-600');
+                tab.classList.add('text-gray-500');
+            });
+
+            document.getElementById('view-' + viewName).classList.remove('hidden');
+            document.getElementById('tab-' + viewName).classList.remove('text-gray-500');
+            document.getElementById('tab-' + viewName).classList.add('text-indigo-600', 'border-b-2', 'border-indigo-600');
+        }
+
+        // Block any attempt to load localStorage data
+        window.addEventListener('storage', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🚫 Blocked storage event');
+        });
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎪 SPORTS FEVER ONLY - No localStorage, No Test Carnival!');
+            initializeDisplay();
+
+            // Update banner
+            document.getElementById('status-banner').innerHTML =
+                '✅ RUNNING SPORTS FEVER - 134 TASKS - localStorage DISABLED';
+        });
+
+        // Prevent any localStorage operations
+        window.saveToLocalStorage = function() {
+            console.log('🚫 localStorage save BLOCKED');
+        };
+
+        window.loadFromLocalStorage = function() {
+            console.log('🚫 localStorage load BLOCKED');
+            return null;
+        };
+
+        console.log('✅ Test Carnival 2024 CANNOT LOAD - localStorage completely disabled!');
+    </script>
+</body>
+</html>

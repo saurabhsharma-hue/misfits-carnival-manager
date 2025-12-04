@@ -3,20 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Misfits Carnival Program Manager v2.3.18</title>
-    <!-- Version: 2.1.18 - Fixed timeline club segregation + revenue isolation -->
+    <title>Misfits Carnival Program Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- CSS Fix for Dropdown Interaction Issues -->
     <style>
-        /* Dashboard sections */
-        .dashboard-section {
-            display: block;
-        }
-        .dashboard-section.hidden {
-            display: none !important;
-        }
-
         /* Force dropdown interactivity */
         select {
             pointer-events: auto !important;
@@ -46,42 +37,38 @@
         }
     </style>
 
-    <!-- Firebase SDK - Enabled for all environments -->
+    <!-- Firebase SDK -->
     <script type="module">
-        // Enable Firebase for all environments (including localhost)
-        if (true) {
-            // Load Firebase only for production
-            import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-            import { getDatabase, ref, set, get, onValue, push, update, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, set, get, onValue, push, update, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
-            // Firebase configuration - Real project for team collaboration
-            const firebaseConfig = {
-                apiKey: "AIzaSyCweHkt882pn_1A-KkEqisYU_YlwOsfFxQ",
-                authDomain: "event-management-app-fbbae.firebaseapp.com",
-                databaseURL: "https://event-management-app-fbbae-default-rtdb.asia-southeast1.firebasedatabase.app/",
-                projectId: "event-management-app-fbbae",
-                storageBucket: "event-management-app-fbbae.firebasestorage.app",
-                messagingSenderId: "924131616519",
-                appId: "1:924131616519:web:ad5105519c72963d5ac7a2",
-                measurementId: "G-RGBYH07B4G"
-            };
+        // Firebase configuration - Real project for team collaboration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCweHkt882pn_1A-KkEqisYU_YlwOsfFxQ",
+            authDomain: "event-management-app-fbbae.firebaseapp.com",
+            databaseURL: "https://event-management-app-fbbae-default-rtdb.asia-southeast1.firebasedatabase.app/",
+            projectId: "event-management-app-fbbae",
+            storageBucket: "event-management-app-fbbae.firebasestorage.app",
+            messagingSenderId: "924131616519",
+            appId: "1:924131616519:web:ad5105519c72963d5ac7a2",
+            measurementId: "G-RGBYH07B4G"
+        };
 
-            // Initialize Firebase
-            const app = initializeApp(firebaseConfig);
-            const database = getDatabase(app);
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
 
-            // Make Firebase functions available globally
-            window.firebase = {
-                database,
-                ref,
-                set,
-                get,
-                onValue,
-                push,
-                update,
-                remove
-            };
-        }
+        // Make Firebase functions available globally
+        window.firebase = {
+            database,
+            ref,
+            set,
+            get,
+            onValue,
+            push,
+            update,
+            remove
+        };
     </script>
 
     <style>
@@ -102,6 +89,16 @@
             </p>
         </header>
 
+        <!-- Collaboration Status Banner -->
+        <div id="collaboration-status" class="mb-6 p-4 rounded-lg border-2 border-blue-200 bg-blue-50">
+            <div class="flex items-center">
+                <div id="status-icon" class="text-2xl mr-3">🔄</div>
+                <div>
+                    <h3 class="font-semibold text-blue-800">Initializing Real-Time Collaboration...</h3>
+                    <p id="status-text" class="text-sm text-blue-600">Setting up multi-user synchronization...</p>
+                </div>
+            </div>
+        </div>
 
         <!-- Navigation Tabs -->
         <nav class="flex space-x-4 border-b border-gray-200 mb-6">
@@ -145,223 +142,25 @@
                 </div>
             </div>
 
-            <!-- Basic Stats Cards -->
+            <!-- Stats Cards -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
                 <div class="bg-white p-6 rounded-lg shadow">
                     <h3 class="text-lg font-medium text-gray-900 mb-2">Total Tasks</h3>
-                    <p id="total-tasks-stat" class="text-3xl font-bold text-blue-600">0</p>
+                    <p id="total-tasks-stat" class="text-3xl font-bold text-blue-600">21</p>
                 </div>
                 <div class="bg-white p-6 rounded-lg shadow">
                     <h3 class="text-lg font-medium text-gray-900 mb-2">Completed</h3>
                     <p id="completed-tasks-stat" class="text-3xl font-bold text-green-600">0</p>
                 </div>
                 <div class="bg-white p-6 rounded-lg shadow">
-                    <h3 class="text-lg font-medium text-gray-900 mb-2">Total Revenue</h3>
-                    <p id="total-revenue-stat" class="text-3xl font-bold text-green-600">₹0</p>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">In Progress</h3>
+                    <p id="progress-tasks-stat" class="text-3xl font-bold text-yellow-600">0</p>
                 </div>
                 <div class="bg-white p-6 rounded-lg shadow">
                     <h3 class="text-lg font-medium text-gray-900 mb-2">Completion %</h3>
                     <p id="completion-stat" class="text-3xl font-bold text-indigo-600">0%</p>
                 </div>
             </div>
-
-            <!-- Dashboard Sections Navigation -->
-            <div class="bg-white rounded-lg shadow mb-6">
-                <div class="border-b border-gray-200">
-                    <nav class="flex space-x-8 px-6" aria-label="Dashboard sections">
-                        <button onclick="showDashboardSection('overview')" id="section-overview" class="py-4 px-1 border-b-2 border-indigo-500 text-indigo-600 font-medium text-sm whitespace-nowrap">
-                            📊 Overall View
-                        </button>
-                        <button onclick="showDashboardSection('carnivals')" id="section-carnivals" class="py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm whitespace-nowrap">
-                            🎪 Carnival Management
-                        </button>
-                        <button onclick="showDashboardSection('revenue')" id="section-revenue" class="py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm whitespace-nowrap">
-                            💰 Revenue Tracking
-                        </button>
-                        <button onclick="showDashboardSection('alerts')" id="section-alerts" class="py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm whitespace-nowrap">
-                            🚨 Alerts & Actions
-                        </button>
-                    </nav>
-                </div>
-            </div>
-
-            <!-- Overall View Section -->
-            <div id="dashboard-section-overview" class="dashboard-section">
-                <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-4">📊 Overall Program Status</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="space-y-4">
-                            <h4 class="font-medium text-gray-700">Active Carnivals</h4>
-                            <div id="overview-carnivals" class="space-y-2">
-                                <!-- Carnival overview items -->
-                            </div>
-                        </div>
-                        <div class="space-y-4">
-                            <h4 class="font-medium text-gray-700">Key Metrics</h4>
-                            <div class="space-y-3">
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Total Tasks:</span>
-                                    <span id="overview-total-tasks" class="font-medium">0</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Completion Rate:</span>
-                                    <span id="overview-completion" class="font-medium">0%</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Total Revenue:</span>
-                                    <span id="overview-revenue" class="font-medium">₹0</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Urgent Tasks:</span>
-                                    <span id="overview-urgent" class="font-medium text-red-600">0</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Carnival Management Section -->
-            <div id="dashboard-section-carnivals" class="dashboard-section hidden">
-                <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-xl font-semibold text-gray-800">🎪 Carnival Management</h3>
-                        <button onclick="toggleAllCarnivals()" class="text-indigo-600 hover:text-indigo-800 text-sm">
-                            <span id="toggle-all-text">Expand All</span>
-                        </button>
-                    </div>
-                    <div id="carnival-matrix" class="space-y-4">
-                        <!-- Carnival boxes will be dynamically generated here -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Revenue Tracking Section -->
-            <div id="dashboard-section-revenue" class="dashboard-section hidden">
-                <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-4">💰 Revenue Tracking</h3>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <!-- Revenue by Carnival -->
-                        <div>
-                            <h4 class="font-medium text-gray-700 mb-3">Revenue by Carnival</h4>
-                            <div id="revenue-by-carnival" class="space-y-3">
-                                <!-- Revenue items -->
-                            </div>
-                        </div>
-                        <!-- Quick Add Revenue -->
-                        <div>
-                            <h4 class="font-medium text-gray-700 mb-3">Quick Add Revenue</h4>
-                            <div class="space-y-3">
-                                <select id="quick-revenue-carnival" class="w-full px-3 py-2 border rounded-lg" onchange="updateClubDropdown()">
-                                    <option value="">Select Carnival</option>
-                                </select>
-                                <select id="quick-revenue-club" class="w-full px-3 py-2 border rounded-lg">
-                                    <option value="">Select Club</option>
-                                </select>
-                                <input type="number" id="quick-revenue-amount" class="w-full px-3 py-2 border rounded-lg" placeholder="Amount (₹)">
-                                <button onclick="quickAddRevenue()" class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
-                                    Add Revenue
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Revenue Management -->
-                        <div>
-                            <h4 class="font-medium text-gray-700 mb-3">Manage Revenue Entries</h4>
-                            <div class="space-y-3">
-                                <select id="manage-revenue-carnival" class="w-full px-3 py-2 border rounded-lg" onchange="loadRevenueEntries()">
-                                    <option value="">Select Carnival</option>
-                                </select>
-                                <div id="revenue-entries-list" class="max-h-64 overflow-y-auto space-y-2">
-                                    <p class="text-sm text-gray-500">Select a carnival to view revenue entries</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Alerts & Actions Section -->
-            <div id="dashboard-section-alerts" class="dashboard-section hidden">
-                <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-4">🚨 Alerts & Priority Actions</h3>
-                    <div id="alerts-container" class="space-y-4">
-                        <!-- Alerts will be populated here -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Revenue Input Modal -->
-            <div id="revenue-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-                <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">💰 Add Revenue</h3>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Carnival</label>
-                            <input type="text" id="revenue-carnival" class="w-full px-3 py-2 border rounded-lg" readonly>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Club</label>
-                            <input type="text" id="revenue-club" class="w-full px-3 py-2 border rounded-lg" readonly>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Revenue Amount (₹)</label>
-                            <input type="number" id="revenue-amount" class="w-full px-3 py-2 border rounded-lg" placeholder="Enter amount in rupees" min="0">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
-                            <input type="date" id="revenue-date" class="w-full px-3 py-2 border rounded-lg">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Description (Optional)</label>
-                            <input type="text" id="revenue-description" class="w-full px-3 py-2 border rounded-lg" placeholder="e.g., Event revenue, Membership fees">
-                        </div>
-                    </div>
-                    <div class="flex gap-3 mt-6">
-                        <button onclick="closeRevenueModal()" class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400">
-                            Cancel
-                        </button>
-                        <button onclick="addRevenue()" class="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
-                            Add Revenue
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Edit Revenue Modal -->
-            <div id="edit-revenue-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-                <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">✏️ Edit Revenue Entry</h3>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Amount (₹)</label>
-                            <input type="number" id="edit-revenue-amount" class="w-full px-3 py-2 border rounded-lg" placeholder="Amount">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                            <input type="text" id="edit-revenue-description" class="w-full px-3 py-2 border rounded-lg" placeholder="Description">
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-600">
-                                <strong>Club:</strong> <span id="edit-revenue-club-name"></span><br>
-                                <strong>Added:</strong> <span id="edit-revenue-timestamp"></span>
-                            </p>
-                        </div>
-                    </div>
-                    <div class="flex gap-3 mt-6">
-                        <button onclick="deleteRevenueEntry()" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
-                            Delete
-                        </button>
-                        <button onclick="closeEditRevenueModal()" class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400">
-                            Cancel
-                        </button>
-                        <button onclick="saveRevenueEdit()" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                            Save Changes
-                        </button>
-                    </div>
-                </div>
-            </div>
-
         </div>
 
         <!-- Task Tracker View -->
@@ -696,13 +495,11 @@
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Expected Date</label>
-                                    <input type="date" id="task-detail-expected-date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" onchange="validateTaskDate('expected')">
-                                    <div id="expected-date-error" class="text-red-600 text-xs mt-1 hidden">Expected date cannot be before task creation date</div>
+                                    <input type="date" id="task-detail-expected-date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Actual Date</label>
-                                    <input type="date" id="task-detail-actual-date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" onchange="validateTaskDate('actual')">
-                                    <div id="actual-date-error" class="text-red-600 text-xs mt-1 hidden">Actual date cannot be before task creation date</div>
+                                    <input type="date" id="task-detail-actual-date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
                                 </div>
                             </div>
                         </div>
@@ -827,19 +624,6 @@
         let allTasks = {}; // {carnivalId: {clubId: [tasks], carnivalTasks: [tasks]}}
         let isFirebaseReady = false;
 
-        // Initialize empty data - Firebase only mode
-        function initializeSampleData() {
-            carnivalsList = [];
-
-            clubsList = [];
-            allTasks = {};
-
-            // Initialize revenue data properly - avoid window references
-            revenueData = revenueData || {};
-
-            console.log('✅ Sample data initialized:', { carnivals: carnivalsList.length, tasks: Object.keys(allTasks).length });
-        }
-
         // Real-time collaboration setup (BroadcastChannel for multi-tab sync + Firebase fallback)
         let broadcastChannel;
 
@@ -904,13 +688,6 @@
                         console.log('🔄 Tasks synced from another tab');
                         showSyncNotification('Tasks synced from team member');
                         break;
-                    case 'revenue-updated':
-                        revenueData = data;
-                        renderDashboard();
-                        renderRevenueSection();
-                        console.log('🔄 Revenue synced from another tab');
-                        showSyncNotification('Revenue synced from team member');
-                        break;
                 }
             };
 
@@ -924,8 +701,34 @@
         }
 
         function updateCollaborationStatus(status, message, icon = '🔄') {
-            // Banner removed for production - no action needed
-            return;
+            const statusEl = document.getElementById('collaboration-status');
+            const iconEl = document.getElementById('status-icon');
+            const textEl = document.getElementById('status-text');
+
+            if (statusEl) {
+                iconEl.textContent = icon;
+                textEl.textContent = message;
+
+                // Update banner color based on status
+                statusEl.className = statusEl.className.replace(/border-\w+-\d+|bg-\w+-\d+/g, '');
+
+                if (status === 'success') {
+                    statusEl.classList.add('border-green-200', 'bg-green-50');
+                    textEl.classList.remove('text-blue-600');
+                    textEl.classList.add('text-green-600');
+                } else if (status === 'warning') {
+                    statusEl.classList.add('border-yellow-200', 'bg-yellow-50');
+                    textEl.classList.remove('text-blue-600', 'text-green-600');
+                    textEl.classList.add('text-yellow-600');
+                } else if (status === 'error') {
+                    statusEl.classList.add('border-red-200', 'bg-red-50');
+                    textEl.classList.remove('text-blue-600', 'text-green-600', 'text-yellow-600');
+                    textEl.classList.add('text-red-600');
+                } else {
+                    statusEl.classList.add('border-blue-200', 'bg-blue-50');
+                    textEl.classList.add('text-blue-600');
+                }
+            }
         }
 
         function showSyncNotification(message) {
@@ -1036,7 +839,6 @@
             localStorage.setItem('carnivalsList', JSON.stringify(carnivalsList));
             localStorage.setItem('clubsList', JSON.stringify(clubsList));
             localStorage.setItem('allTasks', JSON.stringify(allTasks));
-            localStorage.setItem('revenueData', JSON.stringify(revenueData));
         }
 
         function loadFromLocalStorage() {
@@ -1045,17 +847,41 @@
                 const savedCarnivals = localStorage.getItem('carnivalsList');
                 const savedClubs = localStorage.getItem('clubsList');
                 const savedTasks = localStorage.getItem('allTasks');
-                const savedRevenue = localStorage.getItem('revenueData');
 
                 if (savedCarnivals) carnivalsList = JSON.parse(savedCarnivals);
                 if (savedClubs) clubsList = JSON.parse(savedClubs);
                 if (savedTasks) allTasks = JSON.parse(savedTasks);
-                if (savedRevenue) {
-                    revenueData = JSON.parse(savedRevenue);
-                }
 
-                // No fallback data - Firebase only mode
-                // App will show empty state if no Firebase data
+                // Add sample data for testing if no data exists
+                if (carnivalsList.length === 0) {
+                    carnivalsList = [
+                        {id: 1, name: "Test Carnival 2024", description: "Sample carnival for testing", startDate: "2024-11-15", endDate: "2024-11-30"}
+                    ];
+
+                    clubsList = [
+                        {id: 1, name: "Test Club Operations", activity: "Operations", commissionType: "performance", carnivals: [1]},
+                        {id: 2, name: "Test Club Marketing", activity: "Marketing", commissionType: "fixed", carnivals: [1]}
+                    ];
+
+                    allTasks = {
+                        1: {
+                            carnivalTasks: [
+                                {id: 'c1', description: 'Setup venue decorations', team: 'Operations', owner: 'Joy', status: 'Pending', expectedDate: '2024-11-20', priority: 'high'},
+                                {id: 'c2', description: 'Social media campaign launch', team: 'Marketing', owner: 'Ayushi', status: 'In Progress', expectedDate: '2024-11-18', priority: 'medium'}
+                            ],
+                            clubs: {
+                                1: [
+                                    {id: 'cl1', description: 'Coordinate logistics team', team: 'Operations', owner: 'Joy', status: 'Pending', expectedDate: '2024-11-19', priority: 'high'},
+                                    {id: 'cl2', description: 'Equipment check', team: 'Operations', owner: 'Tauheed', status: 'Completed', expectedDate: '2024-11-15', priority: 'medium'}
+                                ],
+                                2: [
+                                    {id: 'cl3', description: 'Create promotional content', team: 'Marketing', owner: 'Ayushi', status: 'In Progress', expectedDate: '2024-11-17', priority: 'high'},
+                                    {id: 'cl4', description: 'Design flyers', team: 'Marketing', owner: 'Team Lead', status: 'Pending', expectedDate: '2024-11-25', priority: 'low'}
+                                ]
+                            }
+                        }
+                    };
+                }
 
                 updateAllDropdowns();
                 renderDashboard();
@@ -1248,18 +1074,11 @@
                 if (!allTasks[carnivalId]) {
                     allTasks[carnivalId] = { carnivalTasks: [], clubs: {} };
                 }
-                // Create deep copies of tasks with unique IDs for this specific club
-                allTasks[carnivalId].clubs[club.id] = taskTemplate.map((task, index) => ({
+                allTasks[carnivalId].clubs[club.id] = taskTemplate.map(task => ({
                     ...task,
-                    id: `club_${club.id}_carnival_${carnivalId}_task_${Date.now()}_${index}_${Math.random().toString(36).substr(2, 9)}`,
+                    id: Date.now() + Math.random(),
                     clubId: club.id,
-                    carnivalId: carnivalId,
-                    // Ensure all properties are copied as new values, not references
-                    description: task.description,
-                    team: task.team,
-                    owner: task.owner,
-                    status: task.status,
-                    createdAt: task.createdAt || new Date().toISOString().split('T')[0]
+                    carnivalId: carnivalId
                 }));
             });
 
@@ -1379,9 +1198,6 @@
             updateCarnivalCheckboxes();
             updateTeamOwnerSuggestions();
             updateTemplateCount();
-
-            // Update revenue management dropdowns
-            updateRevenueDropdowns();
         }
 
         function updateCarnivalDropdown(selectId) {
@@ -1475,8 +1291,7 @@
         }
 
         function updateTemplateCount() {
-            const templateCountEl = document.getElementById('template-count');
-            if (templateCountEl) templateCountEl.textContent = taskTemplate.length;
+            document.getElementById('template-count').textContent = taskTemplate.length;
         }
 
         function getAllTasksFlat() {
@@ -1566,7 +1381,6 @@
                 // Use same data approach as Timeline (working approach)
                 const teams = new Set(['Operations', 'Marketing', 'Finance', 'Tech']);
                 const owners = new Set(['Joy', 'Ayushi', 'Tauheed', 'Team Lead']);
-                const statuses = new Set(['Pending', 'In Progress', 'Completed', 'Done', 'Blocked']);
 
                 // Collect teams and owners from actual task data
                 carnivalsList.forEach(carnival => {
@@ -1766,10 +1580,7 @@
                     dueDate.setHours(0, 0, 0, 0);
                     const daysDiff = Math.floor((dueDate - today) / (1000 * 60 * 60 * 24));
 
-                    // Check if task is completed (status OR has actual completion date)
-                    const isCompleted = task.status === 'Completed' || task.status === 'completed' || task.actualDate;
-                    if (isCompleted) return { status: 'completed', urgency: 1000, color: 'green', daysDiff };
-
+                    if (task.status === 'Completed') return { status: 'completed', urgency: 1000, color: 'green', daysDiff };
                     if (daysDiff < 0) return { status: 'overdue', urgency: Math.abs(daysDiff), color: 'red', daysDiff };
                     if (daysDiff === 0) return { status: 'due-today', urgency: 10, color: 'red', daysDiff };
                     if (daysDiff <= 2) return { status: 'due-soon', urgency: 50 - daysDiff, color: 'orange', daysDiff };
@@ -2338,21 +2149,10 @@
             const completed = filteredTasks.filter(t => t.status === 'Completed').length;
             const completionRate = totalFiltered > 0 ? Math.round((completed / totalFiltered) * 100) : 0;
 
-            const timelineTotalEl = document.getElementById('timeline-total-filtered');
-            const timelineUpcomingEl = document.getElementById('timeline-upcoming-week');
-            const timelineOverdueEl = document.getElementById('timeline-overdue');
-            const timelineCompletionEl = document.getElementById('timeline-completion-rate');
-
-            if (timelineTotalEl) timelineTotalEl.textContent = totalFiltered;
-            if (timelineUpcomingEl) timelineUpcomingEl.textContent = filteredTasks.filter(t => t.status === 'pending').length;
-            if (timelineOverdueEl) {
-                timelineOverdueEl.textContent = filteredTasks.filter(t => {
-                    const isCompleted = t.status === 'completed' || t.status === 'Completed' || t.status === 'Done' || t.actualDate;
-                    const isOverdue = t.expectedDate && new Date(t.expectedDate) < new Date();
-                    return isOverdue && !isCompleted;
-                }).length;
-            }
-            if (timelineCompletionEl) timelineCompletionEl.textContent = completionRate + '%';
+            document.getElementById('timeline-total-filtered').textContent = totalFiltered;
+            document.getElementById('timeline-upcoming-week').textContent = filteredTasks.filter(t => t.status === 'pending').length;
+            document.getElementById('timeline-overdue').textContent = filteredTasks.filter(t => t.status === 'pending').length; // Simplified for now
+            document.getElementById('timeline-completion-rate').textContent = completionRate + '%';
 
             if (totalFiltered === 0) {
                 // TEMP DEBUG: Show raw data even if filtered result is empty
@@ -2373,8 +2173,8 @@
                 return;
             }
 
-            // Use club-segregated list view for better organization
-            renderTimelineListView(filteredTasks, container);
+            // Always use hierarchical list view
+            renderTimelineHierarchicalView(filteredTasks, container);
         }
 
         function renderTimelineHierarchicalView(tasks, container) {
@@ -2395,10 +2195,7 @@
                 if (expectedDate) {
                     const daysUntilDue = Math.ceil((expectedDate - today) / (1000 * 60 * 60 * 24));
 
-                    // Check if task is completed (status OR has actual completion date)
-                    const isCompleted = task.status === 'Completed' || task.status === 'Done' || task.status === 'completed' || actualDate;
-
-                    if (isCompleted) {
+                    if (task.status === 'Completed' || task.status === 'Done') {
                         if (actualDate && actualDate <= expectedDate) {
                             timelineStatus = '✅ Completed on time';
                             timelineColor = 'green';
@@ -2692,11 +2489,7 @@
             // Filter and categorize tasks
             const pending = tasks.filter(t => t.status === 'pending');
             const inProgress = tasks.filter(t => t.status === 'in-progress');
-            const overdue = tasks.filter(t => {
-                const isCompleted = t.status === 'completed' || t.status === 'Completed' || t.status === 'Done' || t.actualDate;
-                const isOverdue = t.expectedDate && new Date(t.expectedDate) < new Date();
-                return isOverdue && !isCompleted;
-            });
+            const overdue = tasks.filter(t => t.expectedDate && new Date(t.expectedDate) < new Date() && t.status !== 'completed');
             const completed = tasks.filter(t => t.status === 'completed');
 
             let html = `<div class="bg-white rounded-xl shadow-lg p-6 mb-6">
@@ -2818,19 +2611,6 @@
             // Update dashboard dropdowns with current data
             updateDashboardDropdowns();
 
-            // Initialize dashboard sections if not already done
-            if (!document.querySelector('#section-overview.border-indigo-500')) {
-                showDashboardSection('overview');
-            }
-
-            // Render dashboard sections
-            renderOverviewSection();
-            renderCarnivalMatrix();
-            renderAlertsSection();
-            updateBasicStats();
-
-            // Continue with existing dashboard logic for backwards compatibility
-
             // Get filter values
             const carnivalFilter = document.getElementById('dashboard-carnival-filter').value;
             const clubFilter = document.getElementById('dashboard-club-filter').value;
@@ -2891,15 +2671,10 @@
             const inProgressTasks = filteredTasks.filter(task => task.status === 'In Progress').length; // Fixed: proper case
             const completionPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-            const totalTasksEl = document.getElementById('total-tasks-stat');
-            const completedTasksEl = document.getElementById('completed-tasks-stat');
-            const progressTasksEl = document.getElementById('progress-tasks-stat');
-            const completionEl = document.getElementById('completion-stat');
-
-            if (totalTasksEl) totalTasksEl.textContent = totalTasks;
-            if (completedTasksEl) completedTasksEl.textContent = completedTasks;
-            if (progressTasksEl) progressTasksEl.textContent = inProgressTasks;
-            if (completionEl) completionEl.textContent = completionPercentage + '%';
+            document.getElementById('total-tasks-stat').textContent = totalTasks;
+            document.getElementById('completed-tasks-stat').textContent = completedTasks;
+            document.getElementById('progress-tasks-stat').textContent = inProgressTasks;
+            document.getElementById('completion-stat').textContent = completionPercentage + '%';
 
             updateAllDropdowns();
         }
@@ -2980,11 +2755,8 @@
         let currentTaskDetails = null;
 
         function updateProgressDisplay() {
-            const progressInput = document.getElementById('task-detail-progress');
-            const progressDisplay = document.getElementById('progress-display');
-            if (progressInput && progressDisplay) {
-                progressDisplay.textContent = progressInput.value + '%';
-            }
+            const progress = document.getElementById('task-detail-progress').value;
+            document.getElementById('progress-display').textContent = progress + '%';
         }
 
         function openTaskDetails(taskId, carnivalId, clubId) {
@@ -3031,15 +2803,10 @@
             updateProgressDisplay();
 
             // Update context information
-            const contextCarnivalEl = document.getElementById('task-context-carnival');
-            const contextClubEl = document.getElementById('task-context-club');
-            const contextTypeEl = document.getElementById('task-context-type');
-            const contextCreatedEl = document.getElementById('task-context-created');
-
-            if (contextCarnivalEl) contextCarnivalEl.textContent = carnival?.name || 'Template Task';
-            if (contextClubEl) contextClubEl.textContent = club?.name || (currentTaskDetails.location === 'carnival' ? 'Carnival Level' : '-');
-            if (contextTypeEl) contextTypeEl.textContent = currentTaskDetails.location.charAt(0).toUpperCase() + currentTaskDetails.location.slice(1);
-            if (contextCreatedEl) contextCreatedEl.textContent = task.createdAt || 'Unknown';
+            document.getElementById('task-context-carnival').textContent = carnival?.name || 'Template Task';
+            document.getElementById('task-context-club').textContent = club?.name || (currentTaskDetails.location === 'carnival' ? 'Carnival Level' : '-');
+            document.getElementById('task-context-type').textContent = currentTaskDetails.location.charAt(0).toUpperCase() + currentTaskDetails.location.slice(1);
+            document.getElementById('task-context-created').textContent = task.createdAt || 'Unknown';
 
             // Show modal
             document.getElementById('task-details-modal').classList.remove('hidden');
@@ -3310,57 +3077,22 @@
         function saveTaskDetails() {
             if (!currentTaskDetails) return;
 
-            const taskId = currentTaskDetails.task.id;
-            const carnivalId = currentTaskDetails.carnivalId;
-            const clubId = currentTaskDetails.clubId;
+            const task = currentTaskDetails.task;
 
-            // Get the new date values
-            const newExpectedDate = document.getElementById('task-detail-expected-date').value;
-            const newActualDate = document.getElementById('task-detail-actual-date').value;
-
-            // Create updated task object with new values
-            const updatedTaskData = {
-                description: document.getElementById('task-detail-description').value,
-                team: document.getElementById('task-detail-team').value,
-                owner: document.getElementById('task-detail-owner').value,
-                status: document.getElementById('task-detail-status').value,
-                expectedDate: newExpectedDate,
-                actualDate: newActualDate,
-                notes: document.getElementById('task-detail-notes').value,
-                link1: document.getElementById('task-detail-link1').value,
-                link2: document.getElementById('task-detail-link2').value,
-                link3: document.getElementById('task-detail-link3').value,
-                priority: document.getElementById('task-detail-priority').value,
-                progress: parseInt(document.getElementById('task-detail-progress').value),
-                updatedAt: new Date().toLocaleDateString()
-            };
-
-            // Find and update the specific task in the correct location
-            if (currentTaskDetails.location === 'template') {
-                // Update template task
-                const taskIndex = taskTemplate.findIndex(t => t.id == taskId);
-                if (taskIndex !== -1) {
-                    Object.assign(taskTemplate[taskIndex], updatedTaskData);
-                }
-            } else if (currentTaskDetails.location === 'carnival') {
-                // Update carnival task
-                const carnivalTasks = allTasks[carnivalId]?.carnivalTasks;
-                if (carnivalTasks) {
-                    const taskIndex = carnivalTasks.findIndex(t => t.id == taskId);
-                    if (taskIndex !== -1) {
-                        Object.assign(carnivalTasks[taskIndex], updatedTaskData);
-                    }
-                }
-            } else if (currentTaskDetails.location === 'club') {
-                // Update club task - IMPORTANT: Only update the specific club's task
-                const clubTasks = allTasks[carnivalId]?.clubs?.[clubId];
-                if (clubTasks) {
-                    const taskIndex = clubTasks.findIndex(t => t.id == taskId);
-                    if (taskIndex !== -1) {
-                        Object.assign(clubTasks[taskIndex], updatedTaskData);
-                    }
-                }
-            }
+            // Update task properties
+            task.description = document.getElementById('task-detail-description').value;
+            task.team = document.getElementById('task-detail-team').value;
+            task.owner = document.getElementById('task-detail-owner').value;
+            task.status = document.getElementById('task-detail-status').value;
+            task.expectedDate = document.getElementById('task-detail-expected-date').value;
+            task.actualDate = document.getElementById('task-detail-actual-date').value;
+            task.notes = document.getElementById('task-detail-notes').value;
+            task.link1 = document.getElementById('task-detail-link1').value;
+            task.link2 = document.getElementById('task-detail-link2').value;
+            task.link3 = document.getElementById('task-detail-link3').value;
+            task.priority = document.getElementById('task-detail-priority').value;
+            task.progress = parseInt(document.getElementById('task-detail-progress').value);
+            task.updatedAt = new Date().toLocaleDateString();
 
             // Save to Firebase
             saveToFirebase('tasks', allTasks);
@@ -3374,1816 +3106,6 @@
 
             closeTaskDetailsModal();
             alert('Task details saved successfully!');
-        }
-
-
-        // Function to completely reset and rebuild data with proper IDs
-        function resetAndFixData() {
-            console.log('🔄 COMPLETELY RESETTING AND FIXING DATA');
-            console.log('=========================================');
-
-            // Step 1: Clear all corrupted revenue data
-            revenueData = {};
-            console.log('✅ Revenue data cleared');
-
-            // Step 2: Reassign club IDs to ensure uniqueness
-            console.log('\n🔧 Reassigning club IDs...');
-            clubsList.forEach((club, index) => {
-                const oldId = club.id;
-                const newId = index + 1; // 1, 2, 3, 4, 5, 6, 7
-                club.id = newId;
-                console.log(`Club "${club.name}": ${oldId} → ${newId}`);
-            });
-
-            // Step 3: Update all task references
-            console.log('\n📋 Updating task references...');
-            Object.entries(allTasks).forEach(([carnivalId, carnival]) => {
-                if (carnival.clubs) {
-                    const newClubTasks = {};
-                    Object.entries(carnival.clubs).forEach(([oldClubId, tasks]) => {
-                        // Find which club this belongs to by matching tasks or use index
-                        const club = clubsList.find(c => c.id <= clubsList.length); // Get by new ID
-                        if (club && Array.isArray(tasks)) {
-                            tasks.forEach(task => {
-                                task.clubId = club.id;
-                            });
-                            newClubTasks[club.id] = tasks;
-                        }
-                    });
-                    carnival.clubs = newClubTasks;
-                }
-            });
-
-            // Step 4: Set proper nextClubId
-            nextClubId = clubsList.length + 1;
-            console.log(`\n📊 Set nextClubId to ${nextClubId}`);
-
-            // Step 5: Save everything
-            saveToLocalStorage();
-
-            // Step 6: Refresh all views
-            renderCarnivalMatrix();
-            renderRevenueSection();
-            updateBasicStats();
-            updateAllDropdowns();
-
-            console.log('\n✅ Data reset complete! All club IDs are now unique.');
-            console.log('Final club list:', clubsList.map(club => ({id: club.id, name: club.name})));
-
-            alert('Data has been completely reset with proper club IDs. Revenue data cleared. Please re-add revenue to test.');
-        }
-
-        // Function to fix duplicate club IDs
-        function fixClubIDs() {
-            console.log('🔧 FIXING DUPLICATE CLUB IDs');
-            console.log('==============================');
-
-            // Check current club IDs
-            console.log('Before fix - clubsList:', clubsList.map(club => ({id: club.id, name: club.name})));
-
-            // Create a map to track used IDs and fix duplicates
-            const usedIds = new Set();
-            let maxId = 0;
-
-            clubsList.forEach((club, index) => {
-                maxId = Math.max(maxId, club.id || 0);
-
-                if (usedIds.has(club.id) || club.id === undefined) {
-                    const oldId = club.id;
-                    const newId = ++maxId;
-                    console.log(`🔄 Fixing club "${club.name}": ${oldId} → ${newId}`);
-
-                    // Update the club ID
-                    club.id = newId;
-
-                    // Update all references in tasks and revenue data
-                    Object.entries(allTasks).forEach(([carnivalId, carnival]) => {
-                        if (carnival.clubs && carnival.clubs[oldId]) {
-                            carnival.clubs[newId] = carnival.clubs[oldId];
-                            delete carnival.clubs[oldId];
-
-                            // Update clubId in tasks
-                            carnival.clubs[newId].forEach(task => {
-                                task.clubId = newId;
-                            });
-                        }
-                    });
-
-                    // Update revenue data
-                    Object.entries(revenueData).forEach(([carnivalId, carnival]) => {
-                        if (carnival[oldId]) {
-                            carnival[newId] = carnival[oldId];
-                            delete carnival[oldId];
-                        }
-                    });
-                } else {
-                    console.log(`✅ Club "${club.name}" ID ${club.id} is unique`);
-                }
-
-                usedIds.add(club.id);
-            });
-
-            // Update nextClubId
-            nextClubId = maxId + 1;
-            console.log(`📊 Set nextClubId to ${nextClubId}`);
-
-            // Save the fixed data
-            saveToLocalStorage();
-
-            console.log('After fix - clubsList:', clubsList.map(club => ({id: club.id, name: club.name})));
-
-            // Refresh views
-            renderCarnivalMatrix();
-            renderRevenueSection();
-            updateBasicStats();
-            updateAllDropdowns();
-
-            alert('Club IDs have been fixed! Please test revenue addition now.');
-        }
-
-        // Function to clear corrupted data
-        function clearCorruptedData() {
-            console.log('🧹 CLEARING CORRUPTED DATA');
-            console.log('==========================');
-
-            // Clear only revenue data (keep tasks and carnivals)
-            revenueData = {};
-            localStorage.setItem('revenueData', JSON.stringify(revenueData));
-
-            console.log('✅ Revenue data cleared');
-            console.log('📊 Refreshing views...');
-
-            renderCarnivalMatrix();
-            renderRevenueSection();
-            updateBasicStats();
-
-            alert('Revenue data has been cleared. Please re-enter revenue data.');
-        }
-
-        // Function to examine localStorage data directly
-        function examineStorageData() {
-            console.log('🔍 EXAMINING STORAGE DATA DIRECTLY v2.1.11');
-            console.log('============================================');
-
-            try {
-                const rawRevenue = localStorage.getItem('revenueData');
-                const rawTasks = localStorage.getItem('allTasks');
-
-                if (rawRevenue) {
-                    const parsed = JSON.parse(rawRevenue);
-                    console.log('\n📦 RAW REVENUE DATA:');
-                    console.log(JSON.stringify(parsed, null, 2));
-
-                    // Check for identical entries
-                    const entriesMap = new Map();
-                    Object.entries(parsed).forEach(([carnivalId, carnival]) => {
-                        Object.entries(carnival || {}).forEach(([clubId, club]) => {
-                            if (club && club.entries) {
-                                club.entries.forEach(entry => {
-                                    const key = JSON.stringify(entry);
-                                    if (entriesMap.has(key)) {
-                                        console.log(`🚨 IDENTICAL ENTRY in multiple clubs!`);
-                                        console.log(`  First: Carnival ${entriesMap.get(key).carnival} Club ${entriesMap.get(key).club}`);
-                                        console.log(`  Second: Carnival ${carnivalId} Club ${clubId}`);
-                                        console.log(`  Entry:`, entry);
-                                    } else {
-                                        entriesMap.set(key, {carnival: carnivalId, club: clubId});
-                                    }
-                                });
-                            }
-                        });
-                    });
-                }
-
-                if (rawTasks) {
-                    const parsed = JSON.parse(rawTasks);
-                    console.log('\n📦 TASK COUNT BY CARNIVAL/CLUB:');
-                    let totalTasks = 0;
-                    Object.entries(parsed).forEach(([carnivalId, carnival]) => {
-                        let carnivalTotalTasks = 0;
-                        if (carnival.carnivalTasks) {
-                            carnivalTotalTasks += carnival.carnivalTasks.length;
-                        }
-                        if (carnival.clubs) {
-                            Object.entries(carnival.clubs).forEach(([clubId, tasks]) => {
-                                if (Array.isArray(tasks)) {
-                                    carnivalTotalTasks += tasks.length;
-                                    console.log(`  Carnival ${carnivalId} Club ${clubId}: ${tasks.length} tasks`);
-                                }
-                            });
-                        }
-                        console.log(`Carnival ${carnivalId} total: ${carnivalTotalTasks} tasks`);
-                        totalTasks += carnivalTotalTasks;
-                    });
-                    console.log(`\nGRAND TOTAL: ${totalTasks} tasks`);
-                }
-
-                console.log('\n🔍 CURRENT MEMORY STATE:');
-                console.log('revenueData in memory:', revenueData);
-                console.log('Are they same?', rawRevenue === JSON.stringify(revenueData));
-
-            } catch (e) {
-                console.error('Error examining storage:', e);
-            }
-
-            return {localStorage: true};
-        }
-
-        // COMPREHENSIVE DEBUG FUNCTION - Find the root cause
-        function findDataContamination() {
-            console.log('🚨 FINDING DATA CONTAMINATION ROOT CAUSE');
-            console.log('===============================================');
-
-            console.log('\n📊 1. REVENUE DATA STRUCTURE:');
-            console.log('Raw revenueData:', revenueData);
-
-            // Test for object reference sharing
-            console.log('\n🔍 2. TESTING OBJECT REFERENCE SHARING:');
-            let refMap = new Map();
-            Object.entries(revenueData).forEach(([carnivalId, carnivalData]) => {
-                Object.entries(carnivalData).forEach(([clubId, clubData]) => {
-                    const objId = Object.prototype.toString.call(clubData) + '_' + JSON.stringify(clubData);
-                    if (refMap.has(objId)) {
-                        console.log(`⚠️ SHARED REFERENCE DETECTED! Clubs ${refMap.get(objId)} and ${carnivalId}.${clubId} share the same object!`);
-                    } else {
-                        refMap.set(objId, `${carnivalId}.${clubId}`);
-                    }
-
-                    // Check if entries array is shared
-                    if (clubData.entries) {
-                        const entriesId = clubData.entries.toString();
-                        if (refMap.has('entries_' + entriesId)) {
-                            console.log(`⚠️ SHARED ENTRIES ARRAY! Clubs ${refMap.get('entries_' + entriesId)} and ${carnivalId}.${clubId} share entries array!`);
-                        } else {
-                            refMap.set('entries_' + entriesId, `${carnivalId}.${clubId}`);
-                        }
-                    }
-                });
-            });
-
-            console.log('\n🏢 3. CLUBS LIST STRUCTURE:');
-            clubsList.forEach((club, index) => {
-                console.log(`Club ${index}: ID=${club.id}, Name="${club.name}", Carnivals=[${club.carnivals}]`);
-            });
-
-            console.log('\n🎪 4. TASKS STRUCTURE:');
-            Object.entries(allTasks).forEach(([carnivalId, carnivalData]) => {
-                console.log(`\nCarnival ${carnivalId}:`);
-                if (carnivalData.clubs) {
-                    Object.entries(carnivalData.clubs).forEach(([clubId, tasks]) => {
-                        console.log(`  Club ${clubId}: ${tasks.length} tasks`);
-                        // Check for task reference sharing
-                        tasks.forEach(task => {
-                            const club = clubsList.find(c => c.id == clubId);
-                            console.log(`    Task: ${task.description.substring(0, 30)}... ID=${task.id} Status=${task.status}`);
-                        });
-                    });
-                }
-            });
-
-            console.log('\n🧮 5. TESTING CALCULATION LOGIC:');
-            carnivalsList.forEach(carnival => {
-                console.log(`\nCarnival ${carnival.id} (${carnival.name}):`);
-                const directRevenue = calculateCarnivalRevenue(carnival.id);
-                console.log(`  Direct calculation: ₹${directRevenue}`);
-
-                const manualTotal = Object.values(revenueData[carnival.id] || {}).reduce((total, club) => total + (club.total || 0), 0);
-                console.log(`  Manual calculation: ₹${manualTotal}`);
-
-                if (directRevenue !== manualTotal) {
-                    console.log(`  ⚠️ CALCULATION MISMATCH!`);
-                }
-            });
-
-            console.log('\n🎯 6. LIVE RENDER TEST:');
-            const assignedClubs = clubsList.filter(club =>
-                club.carnivals && club.carnivals.includes(parseInt(1)) // Assuming carnival 1
-            );
-
-            assignedClubs.forEach(club => {
-                const clubRevenue = revenueData[1]?.[club.id]?.total || 0;
-                console.log(`  Club ${club.id} (${club.name}): ₹${clubRevenue}`);
-            });
-        }
-
-        // DEBUG FUNCTION - Inspect data structure for shared references
-        function debugDataStructure() {
-            console.log('🔍 DEBUGGING: Data Structure Analysis');
-            console.log('=====================================');
-
-            // Check revenue data structure
-            console.log('📊 Revenue Data:');
-            console.log(JSON.stringify(revenueData, null, 2));
-
-            // Check if revenue objects are shared
-            let revenueRefs = new Map();
-            Object.entries(revenueData).forEach(([carnivalId, carnivalData]) => {
-                Object.entries(carnivalData).forEach(([clubId, clubData]) => {
-                    const dataStr = JSON.stringify(clubData);
-                    if (revenueRefs.has(dataStr)) {
-                        console.log(`⚠️  Revenue data SHARED between clubs! ${revenueRefs.get(dataStr)} and ${carnivalId}.${clubId}`);
-                    } else {
-                        revenueRefs.set(dataStr, `${carnivalId}.${clubId}`);
-                    }
-                });
-            });
-
-            // Check task data structure
-            console.log('\n📋 Task Data Structure:');
-            carnivalsList.forEach(carnival => {
-                console.log(`\n🎪 Carnival ${carnival.id} (${carnival.name}):`);
-                const carnivalData = allTasks[carnival.id];
-                if (carnivalData) {
-                    if (carnivalData.carnivalTasks) {
-                        console.log(`  Carnival tasks: ${carnivalData.carnivalTasks.length}`);
-                    }
-                    if (carnivalData.clubs) {
-                        Object.entries(carnivalData.clubs).forEach(([clubId, tasks]) => {
-                            const club = clubsList.find(c => c.id == clubId);
-                            console.log(`  🏢 Club ${clubId} (${club?.name || 'Unknown'}): ${tasks.length} tasks`);
-
-                            // Check for task object sharing
-                            tasks.forEach((task, index) => {
-                                if (task.description === 'Post event content') {
-                                    console.log(`    📝 Task ${index}: ${task.description} - ID: ${task.id} - Status: ${task.status}`);
-                                }
-                            });
-                        });
-                    }
-                }
-            });
-
-            // Check clubsList structure
-            console.log('\n🏢 Club Structure:');
-            clubsList.forEach(club => {
-                console.log(`  Club ${club.id}: ${club.name} - Carnivals: [${club.carnivals}]`);
-            });
-        }
-
-        // TEST FUNCTION - Verify task isolation between clubs
-        function testTaskIsolation() {
-            console.log('🧪 TESTING: Task Isolation Between Clubs');
-            console.log('=========================================');
-
-            // Find "Post event content" tasks across all clubs
-            let postEventTasks = [];
-
-            carnivalsList.forEach(carnival => {
-                const carnivalData = allTasks[carnival.id];
-                if (carnivalData && carnivalData.clubs) {
-                    Object.entries(carnivalData.clubs).forEach(([clubId, tasks]) => {
-                        tasks.forEach(task => {
-                            if (task.description && task.description.toLowerCase().includes('post event content')) {
-                                const club = clubsList.find(c => c.id == clubId);
-                                postEventTasks.push({
-                                    carnival: carnival.name,
-                                    club: club ? club.name : `Club ${clubId}`,
-                                    task: task,
-                                    location: `allTasks[${carnival.id}].clubs[${clubId}]`
-                                });
-                            }
-                        });
-                    });
-                }
-            });
-
-            console.log(`✅ Found ${postEventTasks.length} "Post event content" tasks:`);
-            postEventTasks.forEach((item, index) => {
-                console.log(`  ${index + 1}. ${item.carnival} → ${item.club}`);
-                console.log(`     ID: ${item.task.id}`);
-                console.log(`     Status: ${item.task.status || 'pending'}`);
-                console.log(`     Owner: ${item.task.owner || 'Not assigned'}`);
-            });
-
-            if (postEventTasks.length >= 2) {
-                // Test: Modify the first task
-                const firstTask = postEventTasks[0];
-                console.log('\n📝 TEST: Modifying first task...');
-                console.log(`   Before: "${firstTask.task.description}"`);
-
-                // Create a unique test description
-                const testDescription = `Post event content - TEST ${Date.now()}`;
-                firstTask.task.description = testDescription;
-
-                console.log(`   After: "${firstTask.task.description}"`);
-
-                // Check if other tasks were affected
-                console.log('\n🔍 Checking other tasks...');
-                let isolated = true;
-                postEventTasks.slice(1).forEach((item, index) => {
-                    if (item.task.description === testDescription) {
-                        console.log(`   ❌ Task ${index + 2} was ALSO modified! (${item.carnival} → ${item.club})`);
-                        isolated = false;
-                    } else {
-                        console.log(`   ✅ Task ${index + 2} remains unchanged (${item.carnival} → ${item.club})`);
-                    }
-                });
-
-                // Restore original description
-                firstTask.task.description = "Post event content";
-
-                if (isolated) {
-                    console.log('\n✅ SUCCESS: Task updates are properly isolated!');
-                } else {
-                    console.log('\n❌ FAILED: Task updates are affecting multiple clubs!');
-                }
-            } else {
-                console.log('\n⚠️  Need at least 2 "Post event content" tasks to test isolation');
-            }
-
-            console.log('=========================================\n');
-
-            // Also test unique IDs
-            console.log('🔍 Testing Task ID Uniqueness:');
-            const allTaskIds = new Set();
-            const duplicateIds = [];
-
-            carnivalsList.forEach(carnival => {
-                const carnivalData = allTasks[carnival.id];
-                if (carnivalData && carnivalData.clubs) {
-                    Object.entries(carnivalData.clubs).forEach(([clubId, tasks]) => {
-                        tasks.forEach(task => {
-                            if (allTaskIds.has(task.id)) {
-                                duplicateIds.push(task.id);
-                            }
-                            allTaskIds.add(task.id);
-                        });
-                    });
-                }
-            });
-
-            if (duplicateIds.length > 0) {
-                console.log(`❌ Found ${duplicateIds.length} duplicate task IDs:`, duplicateIds);
-            } else {
-                console.log(`✅ All ${allTaskIds.size} task IDs are unique!`);
-            }
-
-            return isolated && duplicateIds.length === 0;
-        }
-
-        // TEST FUNCTION - Verify no auto-syncing between carnivals
-        function testNoAutoSync() {
-            console.log('🧪 TESTING: Verifying no auto-sync between carnivals...');
-
-            // Create test carnivals with identical tasks
-            const testCarnival1 = {
-                id: 'just-dink-it-test',
-                name: 'Just Dink It - Test',
-                description: 'Test carnival 1'
-            };
-
-            const testCarnival2 = {
-                id: 'rally-gully-test',
-                name: 'Rally Gully - Test',
-                description: 'Test carnival 2'
-            };
-
-            // Add test carnivals if they don't exist
-            if (!carnivalsList.find(c => c.id === testCarnival1.id)) {
-                carnivalsList.push(testCarnival1);
-            }
-            if (!carnivalsList.find(c => c.id === testCarnival2.id)) {
-                carnivalsList.push(testCarnival2);
-            }
-
-            // Create identical tasks in both carnivals
-            const testTask1 = {
-                id: 'test-task-1',
-                description: 'TEST: Venue booking and confirmation',
-                team: 'Operations',
-                owner: 'TestUser',
-                status: 'pending',
-                expectedDate: '2024-12-15',
-                actualDate: '',
-                createdAt: new Date().toLocaleDateString()
-            };
-
-            const testTask2 = {
-                id: 'test-task-2',
-                description: 'TEST: Venue booking and confirmation', // Same description
-                team: 'Operations',
-                owner: 'TestUser',
-                status: 'pending',
-                expectedDate: '2024-12-15',
-                actualDate: '',
-                createdAt: new Date().toLocaleDateString()
-            };
-
-            // Initialize task structures
-            if (!allTasks[testCarnival1.id]) allTasks[testCarnival1.id] = {};
-            if (!allTasks[testCarnival2.id]) allTasks[testCarnival2.id] = {};
-
-            if (!allTasks[testCarnival1.id]['test-club']) allTasks[testCarnival1.id]['test-club'] = [];
-            if (!allTasks[testCarnival2.id]['test-club']) allTasks[testCarnival2.id]['test-club'] = [];
-
-            // Add tasks to both carnivals
-            allTasks[testCarnival1.id]['test-club'].push(testTask1);
-            allTasks[testCarnival2.id]['test-club'].push(testTask2);
-
-            console.log('✅ Created test tasks in both carnivals:');
-            console.log('Just Dink It task:', allTasks[testCarnival1.id]['test-club'][0]);
-            console.log('Rally Gully task:', allTasks[testCarnival2.id]['test-club'][0]);
-
-            // Now simulate updating the task in Just Dink It
-            console.log('\n🔄 SIMULATING: Updating task in Just Dink It...');
-
-            const justDinkTask = allTasks[testCarnival1.id]['test-club'][0];
-            const originalRallyTask = JSON.parse(JSON.stringify(allTasks[testCarnival2.id]['test-club'][0])); // Deep clone
-
-            // Update Just Dink It task
-            justDinkTask.expectedDate = '2024-12-20';
-            justDinkTask.actualDate = '2024-12-18';
-            justDinkTask.status = 'completed';
-            justDinkTask.notes = 'Updated from Just Dink It test';
-
-            console.log('✏️ Updated Just Dink It task:', justDinkTask);
-
-            // Check if Rally Gully task was affected
-            const rallyTaskAfter = allTasks[testCarnival2.id]['test-club'][0];
-
-            console.log('\n🔍 CHECKING: Rally Gully task after Just Dink It update:');
-            console.log('Original Rally Gully task:', originalRallyTask);
-            console.log('Rally Gully task after update:', rallyTaskAfter);
-
-            // Verify no changes occurred
-            const noChanges = (
-                rallyTaskAfter.expectedDate === originalRallyTask.expectedDate &&
-                rallyTaskAfter.actualDate === originalRallyTask.actualDate &&
-                rallyTaskAfter.status === originalRallyTask.status &&
-                rallyTaskAfter.notes === originalRallyTask.notes
-            );
-
-            if (noChanges) {
-                console.log('\n✅ TEST PASSED: No auto-sync occurred! Rally Gully task was NOT affected.');
-                console.log('📝 Test Summary:');
-                console.log('- Just Dink It expectedDate:', justDinkTask.expectedDate);
-                console.log('- Rally Gully expectedDate:', rallyTaskAfter.expectedDate);
-                console.log('- Just Dink It actualDate:', justDinkTask.actualDate);
-                console.log('- Rally Gully actualDate:', rallyTaskAfter.actualDate);
-                console.log('- Just Dink It status:', justDinkTask.status);
-                console.log('- Rally Gully status:', rallyTaskAfter.status);
-                alert('✅ TEST PASSED: No auto-syncing between carnivals!\n\nJust Dink It updates do NOT affect Rally Gully tasks.\n\nCheck browser console for detailed test results.');
-            } else {
-                console.log('\n❌ TEST FAILED: Auto-sync detected! Rally Gully task was affected.');
-                console.log('📝 Differences detected:');
-                if (rallyTaskAfter.expectedDate !== originalRallyTask.expectedDate) console.log('- expectedDate changed!');
-                if (rallyTaskAfter.actualDate !== originalRallyTask.actualDate) console.log('- actualDate changed!');
-                if (rallyTaskAfter.status !== originalRallyTask.status) console.log('- status changed!');
-                if (rallyTaskAfter.notes !== originalRallyTask.notes) console.log('- notes changed!');
-                alert('❌ TEST FAILED: Auto-syncing still happening!\n\nJust Dink It updates are affecting Rally Gully tasks.\n\nCheck browser console for details.');
-            }
-
-            // Clean up test data
-            setTimeout(() => {
-                console.log('\n🧹 Cleaning up test data...');
-                const index1 = carnivalsList.findIndex(c => c.id === testCarnival1.id);
-                const index2 = carnivalsList.findIndex(c => c.id === testCarnival2.id);
-                if (index1 > -1) carnivalsList.splice(index1, 1);
-                if (index2 > -1) carnivalsList.splice(index2, 1);
-                delete allTasks[testCarnival1.id];
-                delete allTasks[testCarnival2.id];
-                console.log('✅ Test cleanup completed.');
-            }, 2000);
-        }
-
-        function validateTaskDate(dateType) {
-            if (!currentTaskDetails || !currentTaskDetails.task) return;
-
-            const task = currentTaskDetails.task;
-            const createdDate = task.createdAt ? new Date(task.createdAt) : new Date();
-            const inputId = dateType === 'expected' ? 'task-detail-expected-date' : 'task-detail-actual-date';
-            const errorId = dateType === 'expected' ? 'expected-date-error' : 'actual-date-error';
-
-            const inputElement = document.getElementById(inputId);
-            const errorElement = document.getElementById(errorId);
-            const selectedDate = new Date(inputElement.value);
-
-            // Reset border color
-            inputElement.classList.remove('border-red-500');
-            errorElement.classList.add('hidden');
-
-            // Validate if selected date is before creation date
-            if (inputElement.value && selectedDate < createdDate) {
-                inputElement.classList.add('border-red-500');
-                errorElement.classList.remove('hidden');
-                errorElement.textContent = `${dateType === 'expected' ? 'Expected' : 'Actual'} date cannot be before task creation date (${createdDate.toLocaleDateString()})`;
-
-                // Clear the invalid date
-                setTimeout(() => {
-                    inputElement.value = '';
-                    inputElement.classList.remove('border-red-500');
-                    errorElement.classList.add('hidden');
-                }, 2000);
-
-                return false;
-            }
-
-            return true;
-        }
-
-        // Expandable Dashboard Functions
-        let expandedCarnivals = new Set();
-        let revenueData = {}; // Store revenue data: {carnivalId: {clubId: {total: 0, entries: []}}}
-
-        function toggleAllCarnivals() {
-            const toggleText = document.getElementById('toggle-all-text');
-            const allExpanded = carnivalsList.length > 0 && expandedCarnivals.size === carnivalsList.length;
-
-            if (allExpanded) {
-                expandedCarnivals.clear();
-                toggleText.textContent = 'Expand All';
-            } else {
-                carnivalsList.forEach(carnival => expandedCarnivals.add(parseInt(carnival.id)));
-                toggleText.textContent = 'Collapse All';
-            }
-            renderCarnivalMatrix();
-        }
-
-        function toggleCarnival(carnivalId) {
-            // Convert to number to match carnival IDs in data
-            const id = parseInt(carnivalId);
-
-            if (expandedCarnivals.has(id)) {
-                expandedCarnivals.delete(id);
-            } else {
-                expandedCarnivals.add(id);
-            }
-            renderCarnivalMatrix();
-        }
-
-        function renderCarnivalMatrix() {
-            const container = document.getElementById('carnival-matrix');
-            if (!container) return;
-
-            container.innerHTML = '';
-
-            carnivalsList.forEach(carnival => {
-                const isExpanded = expandedCarnivals.has(parseInt(carnival.id));
-                const carnivalData = allTasks[carnival.id] || {};
-                const carnivalRevenue = calculateCarnivalRevenue(carnival.id);
-
-                // Calculate carnival stats
-                let totalTasks = 0;
-                let completedTasks = 0;
-                let urgentTasks = 0;
-                let clubs = 0;
-                let clubsWithUrgentTasks = 0;
-
-                // Process carnival-level tasks
-                if (carnivalData.carnivalTasks && Array.isArray(carnivalData.carnivalTasks)) {
-                    carnivalData.carnivalTasks.forEach(task => {
-                        totalTasks++;
-                        const isCompleted = task.status === 'completed' || task.status === 'Completed' || task.actualDate;
-                        if (isCompleted) completedTasks++;
-
-                        // Check urgency (due today or overdue)
-                        if (!isCompleted && task.expectedDate) {
-                            const dueDate = new Date(task.expectedDate);
-                            const today = new Date();
-                            const daysDiff = Math.floor((dueDate - today) / (1000 * 60 * 60 * 24));
-                            if (daysDiff <= 0) {
-                                urgentTasks++;
-                            }
-                        }
-                    });
-                }
-
-                // Process club-level tasks
-                if (carnivalData.clubs) {
-                    Object.entries(carnivalData.clubs).forEach(([clubId, tasks]) => {
-                        if (Array.isArray(tasks)) {
-                            clubs++;
-                            let clubHasUrgent = false;
-                            tasks.forEach(task => {
-                                totalTasks++;
-                                const isCompleted = task.status === 'completed' || task.status === 'Completed' || task.actualDate;
-                                if (isCompleted) completedTasks++;
-
-                                // Check urgency (due today or overdue)
-                                if (!isCompleted && task.expectedDate) {
-                                    const dueDate = new Date(task.expectedDate);
-                                    const today = new Date();
-                                    const daysDiff = Math.floor((dueDate - today) / (1000 * 60 * 60 * 24));
-                                    if (daysDiff <= 0) {
-                                        urgentTasks++;
-                                        clubHasUrgent = true;
-                                    }
-                                }
-                            });
-                            if (clubHasUrgent) clubsWithUrgentTasks++;
-                        }
-                    });
-                }
-
-                const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-                const status = getStatusColor(completionRate, urgentTasks);
-
-                const carnivalBox = document.createElement('div');
-                carnivalBox.className = `border-2 rounded-lg transition-all duration-300 ${status.borderColor}`;
-                carnivalBox.innerHTML = `
-                    <div class="p-4 cursor-pointer hover:bg-gray-50" onclick="toggleCarnival('${carnival.id}')">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-4 h-4 rounded-full ${status.dotColor}"></div>
-                                <h4 class="text-lg font-semibold text-gray-800">${carnival.name}</h4>
-                                <span class="text-xs px-2 py-1 rounded-full ${status.badgeColor}">${status.label}</span>
-                                ${urgentTasks > 0 ? `<span class="text-xs px-2 py-1 rounded-full bg-red-100 text-red-700">🚨 ${urgentTasks} urgent</span>` : ''}
-                            </div>
-                            <div class="flex items-center space-x-6">
-                                <div class="text-center">
-                                    <div class="text-sm text-gray-500">Revenue</div>
-                                    <div class="font-bold text-green-600">₹${carnivalRevenue.toLocaleString()}</div>
-                                </div>
-                                <div class="text-center">
-                                    <div class="text-sm text-gray-500">Clubs</div>
-                                    <div class="font-bold text-blue-600">${clubs}</div>
-                                    ${clubsWithUrgentTasks > 0 ? `<div class="text-xs text-red-600">${clubsWithUrgentTasks} need attention</div>` : ''}
-                                </div>
-                                <div class="text-center">
-                                    <div class="text-sm text-gray-500">Tasks</div>
-                                    <div class="font-bold text-indigo-600">${completedTasks}/${totalTasks}</div>
-                                    <div class="text-xs text-gray-500">${completionRate}% done</div>
-                                </div>
-                                <div class="text-gray-400 transform transition-transform ${
-                                    isExpanded ? 'rotate-90' : ''
-                                }">
-                                    ▶
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    ${isExpanded ? renderCarnivalDetails(carnival.id) : ''}
-                `;
-
-                container.appendChild(carnivalBox);
-            });
-        }
-
-        function renderCarnivalDetails(carnivalId) {
-            const carnivalData = allTasks[carnivalId] || {};
-            let html = '<div class="border-t bg-gray-50 p-4">';
-
-            if (!carnivalData.clubs || Object.keys(carnivalData.clubs).length === 0) {
-                html += '<div class="text-center py-6 text-gray-500">No clubs or tasks found for this carnival</div>';
-                html += '</div>';
-                return html;
-            }
-
-            // Render clubs with expandable task details
-            Object.entries(carnivalData.clubs).forEach(([clubId, tasks]) => {
-                if (Array.isArray(tasks)) {
-                    const club = clubsList.find(c => c.id == clubId) || { name: `Club ${clubId}`, activity: 'Unknown' };
-                    const clubRevenue = getClubRevenue(carnivalId, clubId);
-                    const completedTasks = tasks.filter(task => task.status === 'completed' || task.status === 'Completed' || task.actualDate);
-                    const pendingTasks = tasks.filter(task => !(task.status === 'completed' || task.status === 'Completed' || task.actualDate));
-                    const urgentTasks = pendingTasks.filter(task => {
-                        if (!task.expectedDate) return false;
-                        const dueDate = new Date(task.expectedDate);
-                        const today = new Date();
-                        return dueDate <= today;
-                    });
-                    const dueSoonTasks = pendingTasks.filter(task => {
-                        if (!task.expectedDate) return false;
-                        const dueDate = new Date(task.expectedDate);
-                        const today = new Date();
-                        const daysDiff = Math.floor((dueDate - today) / (1000 * 60 * 60 * 24));
-                        return daysDiff > 0 && daysDiff <= 3;
-                    });
-
-                    const clubExpandKey = `${carnivalId}-${clubId}`;
-                    const isClubExpanded = expandedCarnivals.has(clubExpandKey);
-
-                    html += `
-                        <div class="bg-white rounded-lg p-4 mb-3 border border-gray-200">
-                            <div class="cursor-pointer" onclick="toggleClubDetails('${carnivalId}', '${clubId}')">
-                                <div class="flex items-center justify-between mb-3">
-                                    <div class="flex items-center space-x-3">
-                                        <div class="transform transition-transform ${isClubExpanded ? 'rotate-90' : ''}">▶</div>
-                                        <h5 class="font-medium text-gray-800">${club.name}</h5>
-                                        <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">${club.activity}</span>
-                                        ${urgentTasks.length > 0 ? `<span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full">🚨 ${urgentTasks.length} urgent</span>` : ''}
-                                        ${dueSoonTasks.length > 0 ? `<span class="bg-orange-100 text-orange-700 text-xs px-2 py-1 rounded-full">⏰ ${dueSoonTasks.length} due soon</span>` : ''}
-                                    </div>
-                                    <div class="flex items-center space-x-3">
-                                        <div class="text-right">
-                                            <div class="text-sm text-gray-600">${completedTasks.length}/${tasks.length} tasks</div>
-                                            <div class="text-sm font-medium text-green-600">₹${clubRevenue.toLocaleString()}</div>
-                                        </div>
-                                        <button onclick="openRevenueModal('${carnivalId}', '${clubId}'); event.stopPropagation();" class="bg-green-100 text-green-700 px-3 py-1 rounded text-xs hover:bg-green-200">
-                                            + Revenue
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            ${isClubExpanded ? `
-                                <div class="mt-4 space-y-3 border-t pt-4">
-                                    ${urgentTasks.length > 0 ? `
-                                        <div>
-                                            <h6 class="text-sm font-medium text-red-700 mb-2">🚨 Urgent Actions Required (${urgentTasks.length})</h6>
-                                            <div class="space-y-2">
-                                                ${urgentTasks.map(task => renderTaskAction(task, carnivalId, clubId, 'urgent')).join('')}
-                                            </div>
-                                        </div>
-                                    ` : ''}
-
-                                    ${dueSoonTasks.length > 0 ? `
-                                        <div>
-                                            <h6 class="text-sm font-medium text-orange-700 mb-2">⏰ Due Soon (${dueSoonTasks.length})</h6>
-                                            <div class="space-y-2">
-                                                ${dueSoonTasks.map(task => renderTaskAction(task, carnivalId, clubId, 'due-soon')).join('')}
-                                            </div>
-                                        </div>
-                                    ` : ''}
-
-                                    ${pendingTasks.filter(task => !urgentTasks.includes(task) && !dueSoonTasks.includes(task)).length > 0 ? `
-                                        <div>
-                                            <h6 class="text-sm font-medium text-gray-700 mb-2">📋 Other Pending Tasks</h6>
-                                            <div class="space-y-2">
-                                                ${pendingTasks.filter(task => !urgentTasks.includes(task) && !dueSoonTasks.includes(task)).slice(0, 3).map(task => renderTaskAction(task, carnivalId, clubId, 'pending')).join('')}
-                                            </div>
-                                        </div>
-                                    ` : ''}
-
-                                    ${completedTasks.length > 0 ? `
-                                        <div>
-                                            <h6 class="text-sm font-medium text-green-700 mb-2">✅ Completed (${completedTasks.length})</h6>
-                                            <div class="text-xs text-gray-500">
-                                                ${completedTasks.slice(0, 2).map(task => `• ${task.description.substring(0, 40)}...`).join('<br>')}
-                                                ${completedTasks.length > 2 ? `<br>• +${completedTasks.length - 2} more completed tasks` : ''}
-                                            </div>
-                                        </div>
-                                    ` : ''}
-                                </div>
-                            ` : `
-                                <div class="mt-2">
-                                    <div class="text-sm text-gray-600">
-                                        ${urgentTasks.length > 0 ? `🚨 ${urgentTasks.length} urgent tasks • ` : ''}
-                                        ${pendingTasks.length} pending • ${completedTasks.length} completed
-                                        <span class="text-indigo-600 ml-2">▶ Click to expand</span>
-                                    </div>
-                                </div>
-                            `}
-                        </div>
-                    `;
-                }
-            });
-
-            html += '</div>';
-            return html;
-        }
-
-        function toggleClubDetails(carnivalId, clubId) {
-            const clubExpandKey = `${carnivalId}-${clubId}`;
-            if (expandedCarnivals.has(clubExpandKey)) {
-                expandedCarnivals.delete(clubExpandKey);
-            } else {
-                expandedCarnivals.add(clubExpandKey);
-            }
-            renderCarnivalMatrix();
-        }
-
-        function renderTaskAction(task, carnivalId, clubId, priority) {
-            const urgencyInfo = getTaskUrgency(task);
-            const priorityClass = priority === 'urgent' ? 'border-red-200 bg-red-50' :
-                                 priority === 'due-soon' ? 'border-orange-200 bg-orange-50' :
-                                 'border-gray-200 bg-gray-50';
-
-            return `
-                <div class="flex items-center justify-between p-3 border rounded-lg ${priorityClass}">
-                    <div class="flex-1">
-                        <div class="flex items-center space-x-2 mb-1">
-                            <div class="w-2 h-2 rounded-full ${urgencyInfo.color}"></div>
-                            <span class="text-sm font-medium text-gray-800">${task.description}</span>
-                        </div>
-                        <div class="text-xs text-gray-600">
-                            ${task.owner ? `Owner: ${task.owner} • ` : ''}
-                            ${task.team ? `Team: ${task.team} • ` : ''}
-                            ${urgencyInfo.label}
-                        </div>
-                    </div>
-                    <div class="flex items-center space-x-2 ml-3">
-                        <button onclick="markTaskComplete('${task.id}', '${carnivalId}', '${clubId}'); event.stopPropagation();"
-                                class="bg-green-100 text-green-700 px-3 py-1 rounded text-xs hover:bg-green-200">
-                            ✓ Complete
-                        </button>
-                        <button onclick="openTaskDetails('${task.id}', '${carnivalId}', '${clubId}'); event.stopPropagation();"
-                                class="bg-blue-100 text-blue-700 px-3 py-1 rounded text-xs hover:bg-blue-200">
-                            Edit
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
-
-        function markTaskComplete(taskId, carnivalId, clubId) {
-            const tasks = allTasks[carnivalId]?.[clubId];
-            if (!tasks) return;
-
-            const task = tasks.find(t => t.id === taskId);
-            if (!task) return;
-
-            task.status = 'completed';
-            task.actualDate = new Date().toISOString().split('T')[0];
-            task.updatedAt = new Date().toLocaleDateString();
-
-            saveToFirebase('tasks', allTasks);
-            renderCarnivalMatrix();
-            updateBasicStats();
-
-            alert(`✅ Task "${task.description.substring(0, 30)}..." marked as completed!`);
-        }
-
-        function renderPriorityTasks(tasks, carnivalId, clubId) {
-            const today = new Date();
-            const priorityTasks = tasks
-                .filter(task => {
-                    const isCompleted = task.status === 'completed' || task.status === 'Completed' || task.actualDate;
-                    return !isCompleted;
-                })
-                .sort((a, b) => {
-                    // Sort by urgency: overdue -> due today -> due soon
-                    const aDate = a.expectedDate ? new Date(a.expectedDate) : new Date('2099-12-31');
-                    const bDate = b.expectedDate ? new Date(b.expectedDate) : new Date('2099-12-31');
-                    return aDate - bDate;
-                })
-                .slice(0, 3); // Show top 3 priority tasks
-
-            if (priorityTasks.length === 0) {
-                return '<div class="text-sm text-gray-500 italic">All tasks completed! 🎉</div>';
-            }
-
-            return priorityTasks.map(task => {
-                const urgencyInfo = getTaskUrgency(task);
-                return `
-                    <div class="flex items-center justify-between p-2 bg-gray-50 rounded text-sm">
-                        <div class="flex items-center space-x-2">
-                            <div class="w-2 h-2 rounded-full ${urgencyInfo.color}"></div>
-                            <span class="text-gray-700">${task.description.substring(0, 50)}${task.description.length > 50 ? '...' : ''}</span>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <span class="text-xs text-gray-500">${urgencyInfo.label}</span>
-                            <button onclick="openTaskDetails('${task.id}', '${carnivalId}', '${clubId}')" class="text-indigo-600 hover:text-indigo-800 text-xs">
-                                Edit
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function getTaskUrgency(task) {
-            if (!task.expectedDate) return { color: 'bg-gray-400', label: 'No due date' };
-
-            const dueDate = new Date(task.expectedDate);
-            const today = new Date();
-            const daysDiff = Math.floor((dueDate - today) / (1000 * 60 * 60 * 24));
-
-            if (daysDiff < 0) return { color: 'bg-red-500', label: `${Math.abs(daysDiff)}d overdue` };
-            if (daysDiff === 0) return { color: 'bg-red-400', label: 'Due today' };
-            if (daysDiff <= 2) return { color: 'bg-orange-400', label: `Due in ${daysDiff}d` };
-            if (daysDiff <= 7) return { color: 'bg-yellow-400', label: `${daysDiff} days` };
-            return { color: 'bg-green-400', label: `${daysDiff} days` };
-        }
-
-        function getStatusColor(completionRate, urgentTasks) {
-            if (urgentTasks > 0) {
-                return {
-                    borderColor: 'border-red-300',
-                    dotColor: 'bg-red-500',
-                    badgeColor: 'bg-red-100 text-red-700',
-                    label: 'Critical'
-                };
-            } else if (completionRate >= 80) {
-                return {
-                    borderColor: 'border-green-300',
-                    dotColor: 'bg-green-500',
-                    badgeColor: 'bg-green-100 text-green-700',
-                    label: 'On Track'
-                };
-            } else if (completionRate >= 60) {
-                return {
-                    borderColor: 'border-yellow-300',
-                    dotColor: 'bg-yellow-500',
-                    badgeColor: 'bg-yellow-100 text-yellow-700',
-                    label: 'At Risk'
-                };
-            } else {
-                return {
-                    borderColor: 'border-orange-300',
-                    dotColor: 'bg-orange-500',
-                    badgeColor: 'bg-orange-100 text-orange-700',
-                    label: 'Behind'
-                };
-            }
-        }
-
-        // Revenue Management Functions
-        function openRevenueModal(carnivalId, clubId) {
-            const carnival = carnivalsList.find(c => c.id === carnivalId);
-            document.getElementById('revenue-carnival').value = carnival ? carnival.name : carnivalId;
-            document.getElementById('revenue-club').value = clubId;
-            document.getElementById('revenue-amount').value = '';
-            document.getElementById('revenue-date').value = new Date().toISOString().split('T')[0];
-            document.getElementById('revenue-description').value = '';
-
-            // Store current carnival and club for adding revenue
-            window.currentRevenueTarget = { carnivalId, clubId };
-
-            document.getElementById('revenue-modal').classList.remove('hidden');
-        }
-
-        function closeRevenueModal() {
-            document.getElementById('revenue-modal').classList.add('hidden');
-            window.currentRevenueTarget = null;
-        }
-
-        function addRevenue() {
-            if (!window.currentRevenueTarget) return;
-
-            const amount = parseFloat(document.getElementById('revenue-amount').value);
-            const date = document.getElementById('revenue-date').value;
-            const description = document.getElementById('revenue-description').value;
-
-            if (!amount || amount <= 0) {
-                alert('Please enter a valid revenue amount');
-                return;
-            }
-
-            if (!date) {
-                alert('Please select a date');
-                return;
-            }
-
-            const { carnivalId, clubId } = window.currentRevenueTarget;
-
-            // Initialize revenue data structure
-            if (!revenueData[carnivalId]) revenueData[carnivalId] = {};
-            if (!revenueData[carnivalId][clubId]) revenueData[carnivalId][clubId] = { total: 0, entries: [] };
-
-            // Add revenue entry
-            const revenueEntry = {
-                amount,
-                date,
-                description: description || 'Revenue entry',
-                timestamp: new Date().toISOString()
-            };
-
-            revenueData[carnivalId][clubId].entries.push(revenueEntry);
-            revenueData[carnivalId][clubId].total += amount;
-
-            // Save to Firebase/localStorage
-            saveToFirebase('revenue', revenueData);
-
-            console.log(`💰 Added ₹${amount.toLocaleString()} revenue for ${clubId} in ${carnivalId}`);
-
-            closeRevenueModal();
-            renderCarnivalMatrix();
-            updateBasicStats();
-
-            // Show success message
-            alert(`✅ Added ₹${amount.toLocaleString()} revenue for ${clubId}!`);
-        }
-
-        function calculateCarnivalRevenue(carnivalId) {
-            if (!revenueData[carnivalId]) return 0;
-            return Object.values(revenueData[carnivalId]).reduce((total, club) => total + club.total, 0);
-        }
-
-        function getClubRevenue(carnivalId, clubId) {
-            return revenueData[carnivalId]?.[clubId]?.total || 0;
-        }
-
-        // Revenue Management Functions
-        let currentEditingEntry = null;
-
-        function loadRevenueEntries() {
-            const carnivalId = document.getElementById('manage-revenue-carnival').value;
-            const entriesList = document.getElementById('revenue-entries-list');
-
-            if (!carnivalId) {
-                entriesList.innerHTML = '<p class="text-sm text-gray-500">Select a carnival to view revenue entries</p>';
-                return;
-            }
-
-            if (!revenueData[carnivalId]) {
-                entriesList.innerHTML = '<p class="text-sm text-gray-500">No revenue entries found for this carnival</p>';
-                return;
-            }
-
-            let html = '';
-            let totalRevenue = 0;
-
-            Object.entries(revenueData[carnivalId]).forEach(([clubId, clubData]) => {
-                const club = clubsList.find(c => c.id == clubId) || { name: `Club ${clubId}` };
-
-                if (clubData.entries && clubData.entries.length > 0) {
-                    html += `<div class="bg-gray-50 p-3 rounded-lg">
-                        <h5 class="font-medium text-gray-800 mb-2">${club.name}</h5>
-                        <div class="space-y-2">`;
-
-                    clubData.entries.forEach((entry, index) => {
-                        totalRevenue += entry.amount;
-                        const date = new Date(entry.timestamp).toLocaleDateString();
-                        html += `
-                            <div class="flex items-center justify-between bg-white p-2 rounded border">
-                                <div class="flex-1">
-                                    <div class="text-sm font-medium">₹${entry.amount.toLocaleString()}</div>
-                                    <div class="text-xs text-gray-600">${entry.description || 'No description'}</div>
-                                    <div class="text-xs text-gray-500">${date}</div>
-                                </div>
-                                <button onclick="openEditRevenueModal('${carnivalId}', '${clubId}', ${index})"
-                                        class="bg-blue-100 text-blue-700 px-3 py-1 rounded text-xs hover:bg-blue-200">
-                                    Edit
-                                </button>
-                            </div>`;
-                    });
-
-                    html += `</div></div>`;
-                }
-            });
-
-            if (html) {
-                html = `<div class="mb-3 p-2 bg-green-50 rounded">
-                    <strong>Total Revenue: ₹${totalRevenue.toLocaleString()}</strong>
-                </div>` + html;
-            } else {
-                html = '<p class="text-sm text-gray-500">No revenue entries found for this carnival</p>';
-            }
-
-            entriesList.innerHTML = html;
-        }
-
-        function openEditRevenueModal(carnivalId, clubId, entryIndex) {
-            const entry = revenueData[carnivalId][clubId].entries[entryIndex];
-            const club = clubsList.find(c => c.id == clubId) || { name: `Club ${clubId}` };
-
-            currentEditingEntry = { carnivalId, clubId, entryIndex, originalAmount: entry.amount };
-
-            document.getElementById('edit-revenue-amount').value = entry.amount;
-            document.getElementById('edit-revenue-description').value = entry.description || '';
-            document.getElementById('edit-revenue-club-name').textContent = club.name;
-            document.getElementById('edit-revenue-timestamp').textContent = new Date(entry.timestamp).toLocaleString();
-
-            document.getElementById('edit-revenue-modal').classList.remove('hidden');
-        }
-
-        function closeEditRevenueModal() {
-            document.getElementById('edit-revenue-modal').classList.add('hidden');
-            currentEditingEntry = null;
-        }
-
-        function saveRevenueEdit() {
-            if (!currentEditingEntry) return;
-
-            const newAmount = parseFloat(document.getElementById('edit-revenue-amount').value);
-            const newDescription = document.getElementById('edit-revenue-description').value.trim();
-
-            if (!newAmount || newAmount <= 0) {
-                alert('Please enter a valid amount');
-                return;
-            }
-
-            const { carnivalId, clubId, entryIndex, originalAmount } = currentEditingEntry;
-
-            // Update the entry
-            revenueData[carnivalId][clubId].entries[entryIndex].amount = newAmount;
-            revenueData[carnivalId][clubId].entries[entryIndex].description = newDescription;
-            revenueData[carnivalId][clubId].entries[entryIndex].updatedAt = new Date().toISOString();
-
-            // Update the total
-            revenueData[carnivalId][clubId].total = revenueData[carnivalId][clubId].total - originalAmount + newAmount;
-
-            // Save to storage
-            saveToFirebase('revenue', revenueData);
-
-            // Refresh views
-            loadRevenueEntries();
-            renderCarnivalMatrix();
-            renderRevenueSection();
-
-            closeEditRevenueModal();
-
-            console.log(`✏️ Updated revenue entry: ₹${newAmount.toLocaleString()}`);
-        }
-
-        function deleteRevenueEntry() {
-            if (!currentEditingEntry) return;
-
-            if (!confirm('Are you sure you want to delete this revenue entry? This action cannot be undone.')) {
-                return;
-            }
-
-            const { carnivalId, clubId, entryIndex, originalAmount } = currentEditingEntry;
-
-            // Remove the entry
-            revenueData[carnivalId][clubId].entries.splice(entryIndex, 1);
-
-            // Update the total
-            revenueData[carnivalId][clubId].total -= originalAmount;
-
-            // Clean up if no entries left
-            if (revenueData[carnivalId][clubId].entries.length === 0) {
-                revenueData[carnivalId][clubId].total = 0;
-            }
-
-            // Save to storage
-            saveToFirebase('revenue', revenueData);
-
-            // Refresh views
-            loadRevenueEntries();
-            renderCarnivalMatrix();
-            renderRevenueSection();
-
-            closeEditRevenueModal();
-
-            console.log(`🗑️ Deleted revenue entry: ₹${originalAmount.toLocaleString()}`);
-        }
-
-        // Dashboard Section Management
-        function showDashboardSection(sectionName) {
-            // Hide all sections
-            document.querySelectorAll('.dashboard-section').forEach(section => {
-                section.classList.add('hidden');
-            });
-
-            // Remove active state from all tabs
-            document.querySelectorAll('[id^="section-"]').forEach(tab => {
-                tab.classList.remove('border-indigo-500', 'text-indigo-600');
-                tab.classList.add('border-transparent', 'text-gray-500');
-            });
-
-            // Show selected section
-            document.getElementById(`dashboard-section-${sectionName}`).classList.remove('hidden');
-
-            // Activate selected tab
-            const activeTab = document.getElementById(`section-${sectionName}`);
-            activeTab.classList.remove('border-transparent', 'text-gray-500');
-            activeTab.classList.add('border-indigo-500', 'text-indigo-600');
-
-            // Render content for the selected section
-            switch(sectionName) {
-                case 'overview':
-                    renderOverviewSection();
-                    break;
-                case 'carnivals':
-                    renderCarnivalMatrix();
-                    break;
-                case 'revenue':
-                    renderRevenueSection();
-                    break;
-                case 'alerts':
-                    renderAlertsSection();
-                    break;
-            }
-        }
-
-        function renderOverviewSection() {
-            const carnivalsContainer = document.getElementById('overview-carnivals');
-            carnivalsContainer.innerHTML = '';
-
-            // Get current filter values
-            const carnivalFilter = document.getElementById('dashboard-carnival-filter')?.value || 'all';
-            const clubFilter = document.getElementById('dashboard-club-filter')?.value || 'all';
-            const teamFilter = document.getElementById('dashboard-team-filter')?.value || 'all';
-            const ownerFilter = document.getElementById('dashboard-owner-filter')?.value || 'all';
-
-            let totalTasks = 0;
-            let completedTasks = 0;
-            let totalRevenue = 0;
-            let urgentTasks = 0;
-
-            carnivalsList.forEach(carnival => {
-                // Apply carnival filter
-                if (carnivalFilter !== 'all' && carnival.id != carnivalFilter) return;
-                const carnivalTasks = allTasks[carnival.id] || {};
-                let carnivalTaskCount = 0;
-                let carnivalCompleted = 0;
-                let carnivalUrgent = 0;
-
-                Object.entries(carnivalTasks).forEach(([clubId, tasks]) => {
-                    if (clubId !== 'carnivalTasks' && Array.isArray(tasks)) {
-                        // Apply club filter
-                        if (clubFilter !== 'all' && !clubId.toLowerCase().includes(clubFilter.toLowerCase())) return;
-
-                        tasks.forEach(task => {
-                            // Apply team filter
-                            if (teamFilter !== 'all' && task.team !== teamFilter) return;
-                            // Apply owner filter
-                            if (ownerFilter !== 'all' && task.owner !== ownerFilter) return;
-                            carnivalTaskCount++;
-                            totalTasks++;
-                            const isCompleted = task.status === 'completed' || task.status === 'Completed' || task.actualDate;
-                            if (isCompleted) {
-                                carnivalCompleted++;
-                                completedTasks++;
-                            }
-                            if (!isCompleted && task.expectedDate) {
-                                const dueDate = new Date(task.expectedDate);
-                                const today = new Date();
-                                if (dueDate <= today) {
-                                    carnivalUrgent++;
-                                    urgentTasks++;
-                                }
-                            }
-                        });
-                    }
-                });
-
-                const carnivalRevenue = calculateCarnivalRevenue(carnival.id);
-                totalRevenue += carnivalRevenue;
-                const completionRate = carnivalTaskCount > 0 ? Math.round((carnivalCompleted / carnivalTaskCount) * 100) : 0;
-
-                const statusClass = carnivalUrgent > 0 ? 'text-red-600' :
-                                   completionRate >= 80 ? 'text-green-600' :
-                                   completionRate >= 60 ? 'text-yellow-600' : 'text-orange-600';
-
-                carnivalsContainer.innerHTML += `
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div>
-                            <div class="font-medium text-gray-800">${carnival.name}</div>
-                            <div class="text-sm text-gray-600">${carnivalCompleted}/${carnivalTaskCount} tasks • ${completionRate}% complete</div>
-                        </div>
-                        <div class="text-right">
-                            <div class="font-medium ${statusClass}">₹${carnivalRevenue.toLocaleString()}</div>
-                            ${carnivalUrgent > 0 ? `<div class="text-xs text-red-600">${carnivalUrgent} urgent</div>` : ''}
-                        </div>
-                    </div>
-                `;
-            });
-
-            // Update summary metrics
-            const overviewTotalEl = document.getElementById('overview-total-tasks');
-            const overviewCompletionEl = document.getElementById('overview-completion');
-            const overviewRevenueEl = document.getElementById('overview-revenue');
-            const overviewUrgentEl = document.getElementById('overview-urgent');
-
-            if (overviewTotalEl) overviewTotalEl.textContent = totalTasks;
-            if (overviewCompletionEl) overviewCompletionEl.textContent = totalTasks > 0 ? `${Math.round((completedTasks / totalTasks) * 100)}%` : '0%';
-            if (overviewRevenueEl) overviewRevenueEl.textContent = `₹${totalRevenue.toLocaleString()}`;
-            if (overviewUrgentEl) overviewUrgentEl.textContent = urgentTasks;
-        }
-
-        function renderRevenueSection() {
-            const container = document.getElementById('revenue-by-carnival');
-            container.innerHTML = '';
-
-            carnivalsList.forEach(carnival => {
-                const carnivalRevenue = calculateCarnivalRevenue(carnival.id);
-                const carnivalData = revenueData[carnival.id] || {};
-
-                // Get clubs assigned to this carnival
-                const assignedClubs = clubsList.filter(club =>
-                    club.carnivals && club.carnivals.includes(parseInt(carnival.id))
-                );
-
-                container.innerHTML += `
-                    <div class="border rounded-lg p-4 bg-white shadow-sm">
-                        <div class="flex items-center justify-between mb-3">
-                            <h5 class="font-medium text-gray-800">${carnival.name}</h5>
-                            <span class="font-bold text-green-600 text-lg">₹${carnivalRevenue.toLocaleString()}</span>
-                        </div>
-
-                        ${Object.keys(carnivalData).length > 0 ? `
-                            <div class="space-y-2">
-                                <div class="text-xs text-gray-500 font-medium mb-1">Club-wise Breakdown:</div>
-                                ${assignedClubs.map(club => {
-                                    // Safely get club revenue with better isolation
-                                    let clubRevenue = 0;
-                                    if (revenueData[carnival.id] && revenueData[carnival.id][club.id] && revenueData[carnival.id][club.id].total) {
-                                        clubRevenue = revenueData[carnival.id][club.id].total;
-                                    }
-                                    const hasRevenue = clubRevenue > 0;
-
-                                    // Debug logging for revenue display
-                                    console.log(`🔍 Club ${club.id} (${club.name}) revenue: ₹${clubRevenue} from carnival ${carnival.id}`);
-
-                                    return `
-                                        <div class="flex justify-between items-center text-sm ${hasRevenue ? 'bg-green-50' : 'bg-gray-50'} p-2 rounded">
-                                            <div class="flex items-center space-x-2">
-                                                <span class="${hasRevenue ? 'text-gray-700 font-medium' : 'text-gray-500'}">${club.name}</span>
-                                                <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">${club.activity}</span>
-                                                <span class="text-xs text-gray-400">[ID:${club.id}]</span>
-                                            </div>
-                                            <span class="${hasRevenue ? 'text-green-700 font-medium' : 'text-gray-400'}">₹${clubRevenue.toLocaleString()}</span>
-                                        </div>
-                                    `;
-                                }).join('')}
-                            </div>
-                        ` : `
-                            <div class="text-sm text-gray-500 italic">
-                                No revenue recorded yet
-                                ${assignedClubs.length > 0 ? `
-                                    <div class="mt-2 text-xs">
-                                        <div class="font-medium mb-1">Assigned Clubs:</div>
-                                        ${assignedClubs.map(club => `
-                                            <div class="flex items-center space-x-2 mb-1">
-                                                <span class="text-gray-600">• ${club.name}</span>
-                                                <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">${club.activity}</span>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                ` : ''}
-                            </div>
-                        `}
-                    </div>
-                `;
-            });
-
-            // Update quick add dropdowns
-            const carnivalSelect = document.getElementById('quick-revenue-carnival');
-            carnivalSelect.innerHTML = '<option value="">Select Carnival</option>';
-            carnivalsList.forEach(carnival => {
-                carnivalSelect.innerHTML += `<option value="${carnival.id}">${carnival.name}</option>`;
-            });
-        }
-
-        function updateRevenueDropdowns() {
-            // Update quick add revenue dropdown
-            const quickCarnivalSelect = document.getElementById('quick-revenue-carnival');
-            if (quickCarnivalSelect) {
-                quickCarnivalSelect.innerHTML = '<option value="">Select Carnival</option>';
-                carnivalsList.forEach(carnival => {
-                    quickCarnivalSelect.innerHTML += `<option value="${carnival.id}">${carnival.name}</option>`;
-                });
-            }
-
-            // Update manage revenue dropdown
-            const manageCarnivalSelect = document.getElementById('manage-revenue-carnival');
-            if (manageCarnivalSelect) {
-                const currentValue = manageCarnivalSelect.value; // Preserve selection
-                manageCarnivalSelect.innerHTML = '<option value="">Select Carnival</option>';
-                carnivalsList.forEach(carnival => {
-                    manageCarnivalSelect.innerHTML += `<option value="${carnival.id}">${carnival.name}</option>`;
-                });
-                if (currentValue) {
-                    manageCarnivalSelect.value = currentValue;
-                    loadRevenueEntries(); // Refresh the entries if carnival was selected
-                }
-            }
-        }
-
-        function renderAlertsSection() {
-            const container = document.getElementById('alerts-container');
-            container.innerHTML = '';
-
-            let urgentTasks = [];
-            let dueSoonTasks = [];
-            let noRevenueCarnvials = [];
-            let stuckTasks = [];
-
-            // Collect all priority tasks with full context
-            carnivalsList.forEach(carnival => {
-                const carnivalData = allTasks[carnival.id] || {};
-                const revenue = calculateCarnivalRevenue(carnival.id);
-
-                // Check revenue status
-                if (revenue === 0) {
-                    noRevenueCarnvials.push(carnival);
-                }
-
-                // Process carnival-level tasks
-                if (carnivalData.carnivalTasks && Array.isArray(carnivalData.carnivalTasks)) {
-                    carnivalData.carnivalTasks.forEach(task => {
-                        const isCompleted = task.status === 'completed' || task.status === 'Completed' || task.actualDate;
-                        if (!isCompleted && task.expectedDate) {
-                            const dueDate = new Date(task.expectedDate);
-                            const today = new Date();
-                            const daysDiff = Math.floor((dueDate - today) / (1000 * 60 * 60 * 24));
-
-                            const club = clubsList.find(c => c.id == 'carnival-level') || { name: 'Carnival Level' };
-                            const taskWithContext = {
-                                ...task,
-                                carnivalId: carnival.id,
-                                carnivalName: carnival.name,
-                                clubId: 'carnival-level',
-                                clubName: 'Carnival Level',
-                                team: task.team || 'Operations',
-                                daysDiff: daysDiff
-                            };
-
-                            if (daysDiff <= 0) {
-                                urgentTasks.push(taskWithContext);
-                            } else if (daysDiff <= 3) {
-                                dueSoonTasks.push(taskWithContext);
-                            }
-
-                            // Check for stuck tasks (in same status for too long)
-                            if (task.status === 'pending' && daysDiff <= -7) {
-                                stuckTasks.push(taskWithContext);
-                            }
-                        }
-                    });
-                }
-
-                // Process club-level tasks
-                if (carnivalData.clubs) {
-                    Object.entries(carnivalData.clubs).forEach(([clubId, tasks]) => {
-                        if (Array.isArray(tasks)) {
-                            const club = clubsList.find(c => c.id == clubId) || { name: `Club ${clubId}` };
-                            tasks.forEach(task => {
-                                const isCompleted = task.status === 'completed' || task.status === 'Completed' || task.actualDate;
-                                if (!isCompleted && task.expectedDate) {
-                                    const dueDate = new Date(task.expectedDate);
-                                    const today = new Date();
-                                    const daysDiff = Math.floor((dueDate - today) / (1000 * 60 * 60 * 24));
-
-                                    const taskWithContext = {
-                                        ...task,
-                                        carnivalId: carnival.id,
-                                        carnivalName: carnival.name,
-                                        clubId: clubId,
-                                        clubName: club.name,
-                                        team: task.team || 'Operations',
-                                        daysDiff: daysDiff
-                                    };
-
-                                if (daysDiff <= 0) {
-                                    urgentTasks.push(taskWithContext);
-                                } else if (daysDiff <= 3) {
-                                    dueSoonTasks.push(taskWithContext);
-                                }
-
-                                // Check for stuck tasks (pending for more than 7 days without updates)
-                                const createdDate = new Date(task.createdAt || new Date());
-                                const daysSinceCreated = Math.floor((today - createdDate) / (1000 * 60 * 60 * 24));
-                                if (daysSinceCreated > 7 && task.status === 'pending') {
-                                    stuckTasks.push(taskWithContext);
-                                }
-                            }
-                        });
-                        }
-                    });
-                }
-            });
-
-            // Sort by urgency
-            urgentTasks.sort((a, b) => a.daysDiff - b.daysDiff); // Most overdue first
-            dueSoonTasks.sort((a, b) => a.daysDiff - b.daysDiff); // Soonest due first
-
-            let html = '';
-
-            // Render urgent tasks section
-            if (urgentTasks.length > 0) {
-                html += `
-                    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                        <div class="flex items-center justify-between mb-3">
-                            <h4 class="font-semibold text-red-800">🚨 Urgent: ${urgentTasks.length} Overdue Tasks</h4>
-                            <button onclick="markAllUrgentComplete()" class="text-xs bg-red-100 text-red-700 px-3 py-1 rounded hover:bg-red-200">
-                                Bulk Actions
-                            </button>
-                        </div>
-                        <div class="space-y-3">
-                            ${urgentTasks.slice(0, 5).map(task => renderPriorityTaskAlert(task, 'urgent')).join('')}
-                            ${urgentTasks.length > 5 ? `<div class="text-xs text-red-600 text-center pt-2">+${urgentTasks.length - 5} more urgent tasks...</div>` : ''}
-                        </div>
-                    </div>
-                `;
-            }
-
-            // Render due soon tasks
-            if (dueSoonTasks.length > 0) {
-                html += `
-                    <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
-                        <h4 class="font-semibold text-orange-800 mb-3">⏰ Due Soon: ${dueSoonTasks.length} Tasks</h4>
-                        <div class="space-y-3">
-                            ${dueSoonTasks.slice(0, 3).map(task => renderPriorityTaskAlert(task, 'due-soon')).join('')}
-                            ${dueSoonTasks.length > 3 ? `<div class="text-xs text-orange-600 text-center pt-2">+${dueSoonTasks.length - 3} more due soon...</div>` : ''}
-                        </div>
-                    </div>
-                `;
-            }
-
-            // Render stuck tasks
-            if (stuckTasks.length > 0) {
-                html += `
-                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                        <h4 class="font-semibold text-yellow-800 mb-3">⌛ Stuck: ${stuckTasks.length} Tasks Need Attention</h4>
-                        <div class="space-y-3">
-                            ${stuckTasks.slice(0, 3).map(task => renderPriorityTaskAlert(task, 'stuck')).join('')}
-                            ${stuckTasks.length > 3 ? `<div class="text-xs text-yellow-600 text-center pt-2">+${stuckTasks.length - 3} more stuck tasks...</div>` : ''}
-                        </div>
-                    </div>
-                `;
-            }
-
-            // Render revenue alerts
-            if (noRevenueCarnvials.length > 0) {
-                html += `
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                        <h4 class="font-semibold text-blue-800 mb-3">💰 Revenue: ${noRevenueCarnvials.length} Carnivals Need Revenue Tracking</h4>
-                        <div class="space-y-2">
-                            ${noRevenueCarnvials.map(carnival => `
-                                <div class="flex items-center justify-between p-2 bg-white rounded border">
-                                    <span class="text-sm text-gray-700">${carnival.name}</span>
-                                    <button onclick="showDashboardSection('revenue')" class="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200">
-                                        Add Revenue
-                                    </button>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
-            }
-
-            if (html === '') {
-                container.innerHTML = `
-                    <div class="text-center py-12">
-                        <div class="text-6xl mb-4">🎉</div>
-                        <h3 class="text-xl font-semibold text-gray-800 mb-2">All Clear!</h3>
-                        <p class="text-gray-600">No urgent tasks or alerts at this time. Everything is on track!</p>
-                    </div>
-                `;
-            } else {
-                container.innerHTML = html;
-            }
-        }
-
-        function renderPriorityTaskAlert(task, priority) {
-            const priorityConfig = {
-                'urgent': {
-                    bgClass: 'bg-white border-red-200',
-                    textClass: 'text-red-700',
-                    icon: '🚨',
-                    label: `${Math.abs(task.daysDiff)} days overdue`
-                },
-                'due-soon': {
-                    bgClass: 'bg-white border-orange-200',
-                    textClass: 'text-orange-700',
-                    icon: '⏰',
-                    label: `Due in ${task.daysDiff} days`
-                },
-                'stuck': {
-                    bgClass: 'bg-white border-yellow-200',
-                    textClass: 'text-yellow-700',
-                    icon: '⌛',
-                    label: 'No progress'
-                }
-            };
-
-            const config = priorityConfig[priority];
-
-            return `
-                <div class="border rounded-lg p-3 ${config.bgClass}">
-                    <div class="flex items-start justify-between">
-                        <div class="flex-1">
-                            <div class="flex items-center space-x-2 mb-1">
-                                <span class="text-sm">${config.icon}</span>
-                                <span class="text-sm font-medium text-gray-800">${task.description}</span>
-                            </div>
-                            <div class="text-xs text-gray-600 mb-2">
-                                <span class="font-medium">${task.carnivalName}</span> •
-                                <span>${task.clubName || task.clubId}</span> •
-                                <span class="${config.textClass}">${config.label}</span>
-                            </div>
-                            <div class="text-xs text-gray-500">
-                                ${task.team ? `<span class="bg-blue-100 text-blue-700 px-2 py-1 rounded mr-2">${task.team}</span>` : ''}
-                                ${task.owner ? `Owner: ${task.owner}` : 'No owner assigned'}
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-2 ml-3">
-                            <button onclick="quickCompleteTask('${task.id}', '${task.carnivalId}', '${task.clubId}')"
-                                    class="bg-green-100 text-green-700 px-3 py-1 rounded text-xs hover:bg-green-200">
-                                ✓ Complete
-                            </button>
-                            <button onclick="openTaskDetails('${task.id}', '${task.carnivalId}', '${task.clubId}')"
-                                    class="bg-gray-100 text-gray-700 px-3 py-1 rounded text-xs hover:bg-gray-200">
-                                Edit
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function quickCompleteTask(taskId, carnivalId, clubId) {
-            markTaskComplete(taskId, carnivalId, clubId);
-            // Refresh alerts section
-            renderAlertsSection();
-        }
-
-        function quickAddRevenue() {
-            const carnivalId = document.getElementById('quick-revenue-carnival').value;
-            const clubId = document.getElementById('quick-revenue-club').value;
-            const amount = parseFloat(document.getElementById('quick-revenue-amount').value);
-
-            if (!carnivalId || !clubId || !amount) {
-                alert('Please fill all fields');
-                return;
-            }
-
-            if (!amount || amount <= 0) {
-                alert('Please enter a valid amount');
-                return;
-            }
-
-            // Initialize revenue data structure with proper isolation
-            if (!revenueData[carnivalId]) {
-                revenueData[carnivalId] = {};
-            }
-            if (!revenueData[carnivalId][clubId]) {
-                revenueData[carnivalId][clubId] = {
-                    total: 0,
-                    entries: []
-                };
-            }
-
-            // Add revenue entry with better tracking
-            const revenueEntry = {
-                id: `rev_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                amount: amount,
-                date: new Date().toISOString().split('T')[0],
-                description: 'Quick add revenue',
-                timestamp: new Date().toISOString(),
-                clubId: clubId,
-                carnivalId: carnivalId
-            };
-
-            // Ensure we're updating the correct club's data
-            const targetClub = revenueData[carnivalId][clubId];
-            targetClub.entries.push(revenueEntry);
-            targetClub.total = (targetClub.total || 0) + amount;
-
-            // Save to Firebase/localStorage
-            saveToFirebase('revenue', revenueData);
-
-            console.log(`💰 Quick added ₹${amount.toLocaleString()} revenue for club ${clubId} (${clubsList.find(c => c.id == clubId)?.name}) in carnival ${carnivalId}`);
-            console.log(`📊 Club ${clubId} new total: ₹${targetClub.total.toLocaleString()}`);
-
-            // Clear form
-            document.getElementById('quick-revenue-amount').value = '';
-
-            // Refresh views
-            renderCarnivalMatrix();
-            renderRevenueSection();
-            updateBasicStats();
-
-            alert(`✅ Added ₹${amount.toLocaleString()} revenue successfully!`);
-        }
-
-        function updateClubDropdown() {
-            const carnivalId = document.getElementById('quick-revenue-carnival').value;
-            const clubSelect = document.getElementById('quick-revenue-club');
-
-            clubSelect.innerHTML = '<option value="">Select Club</option>';
-
-            if (carnivalId) {
-                // Show all clubs assigned to this carnival (based on club.carnivals array)
-                const assignedClubs = clubsList.filter(club =>
-                    club.carnivals && club.carnivals.includes(parseInt(carnivalId))
-                );
-
-                assignedClubs.forEach(club => {
-                    clubSelect.innerHTML += `<option value="${club.id}">${club.name}</option>`;
-                });
-            }
-        }
-
-        function updateBasicStats() {
-            // Calculate basic dashboard stats
-            let totalTasks = 0;
-            let completedTasks = 0;
-            let totalRevenue = 0;
-
-            carnivalsList.forEach(carnival => {
-                const carnivalData = allTasks[carnival.id] || {};
-
-                // Count carnival-level tasks
-                if (carnivalData.carnivalTasks && Array.isArray(carnivalData.carnivalTasks)) {
-                    carnivalData.carnivalTasks.forEach(task => {
-                        totalTasks++;
-                        const isCompleted = task.status === 'completed' || task.status === 'Completed' || task.actualDate;
-                        if (isCompleted) completedTasks++;
-                    });
-                }
-
-                // Count club-level tasks
-                if (carnivalData.clubs) {
-                    Object.entries(carnivalData.clubs).forEach(([clubId, tasks]) => {
-                        if (Array.isArray(tasks)) {
-                            tasks.forEach(task => {
-                                totalTasks++;
-                                const isCompleted = task.status === 'completed' || task.status === 'Completed' || task.actualDate;
-                                if (isCompleted) completedTasks++;
-                            });
-                        }
-                    });
-                }
-
-                totalRevenue += calculateCarnivalRevenue(carnival.id);
-            });
-
-            const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
-            const totalTasksStatEl = document.getElementById('total-tasks-stat');
-            const completedTasksStatEl = document.getElementById('completed-tasks-stat');
-            const totalRevenueStatEl = document.getElementById('total-revenue-stat');
-            const completionStatEl = document.getElementById('completion-stat');
-
-            if (totalTasksStatEl) totalTasksStatEl.textContent = totalTasks;
-            if (completedTasksStatEl) completedTasksStatEl.textContent = completedTasks;
-            if (totalRevenueStatEl) totalRevenueStatEl.textContent = `₹${totalRevenue.toLocaleString()}`;
-            if (completionStatEl) completionStatEl.textContent = `${completionRate}%`;
         }
 
         function deleteCurrentTask() {
@@ -5370,79 +3292,116 @@
         }
 
         function loadLocalTestData() {
-            console.log('🧪 LOADING CLEAN LOCALHOST TEST DATA v2.1.15');
-
-            // COMPLETE WIPE FIRST
-            carnivalsList = [];
-            clubsList = [];
-            allTasks = {};
-            revenueData = {};
-
             // Create test carnivals
             const carnival1 = {
                 id: 1,
-                name: "Sports Fever",
-                description: "Summer sports carnival",
+                name: "Summer Sports Fest 2025",
+                description: "Annual summer sports festival",
                 startDate: "2025-06-01",
                 endDate: "2025-06-15"
             };
 
-            carnivalsList = [carnival1]; // Only one carnival for simplicity
-            nextCarnivalId = 2;
+            const carnival2 = {
+                id: 2,
+                name: "Winter Arts Carnival 2025",
+                description: "Winter arts and cultural fest",
+                startDate: "2025-12-10",
+                endDate: "2025-12-20"
+            };
+
+            carnivalsList.push(carnival1, carnival2);
+            nextCarnivalId = 3;
 
             // Initialize tasks structure
             allTasks[1] = { carnivalTasks: [], clubs: {} };
+            allTasks[2] = { carnivalTasks: [], clubs: {} };
 
-            // Add minimal carnival-level tasks
+            // Add carnival-level tasks
             allTasks[1].carnivalTasks = [
-                { id: 101, description: "Plan Sports Fever logistics", team: "Operations", owner: "Admin", status: "pending", expectedDate: "2025-05-01", priority: "high" }
+                { id: 101, description: "Deciding the fest name for Summer Sports Fest", team: "Operations", owner: "Joy", status: "completed", expectedDate: "2025-05-01", priority: "high" },
+                { id: 102, description: "Announcement to leaders group for Sports Fest", team: "Operations", owner: "Joy", status: "in-progress", expectedDate: "2025-05-15", priority: "medium" }
             ];
 
-            // Create clean test clubs with UNIQUE IDs
-            const club1 = { id: 1, name: "Just Dink It", activity: "Pickleball", commissionType: "Percentage", commissionAmount: "5", carnivals: [1] };
-            const club2 = { id: 2, name: "888 Smash Lab Club", activity: "Badminton", commissionType: "Fixed", commissionAmount: "1000", carnivals: [1] };
-            const club3 = { id: 3, name: "Picklers", activity: "Pickleball", commissionType: "Percentage", commissionAmount: "8", carnivals: [1] };
-            const club4 = { id: 4, name: "Gamers Den", activity: "Video Gaming Club", commissionType: "Revenue Share", commissionAmount: "10", carnivals: [1] };
-            const club5 = { id: 5, name: "Ballers", activity: "Basketball", commissionType: "Fixed", commissionAmount: "1500", carnivals: [1] };
-            const club6 = { id: 6, name: "RallyGully", activity: "Pickleball", commissionType: "Percentage", commissionAmount: "6", carnivals: [1] };
-            const club7 = { id: 7, name: "Trail it (Hikethon)", activity: "Hiking", commissionType: "Fixed", commissionAmount: "2000", carnivals: [1] };
+            allTasks[2].carnivalTasks = [
+                { id: 201, description: "Deciding the fest name for Winter Arts Carnival", team: "Operations", owner: "Joy", status: "pending", expectedDate: "2025-11-15", priority: "high" },
+                { id: 202, description: "Artist invitations for Arts Carnival", team: "Marketing", owner: "Ayushi", status: "pending", expectedDate: "2025-11-01", priority: "medium" }
+            ];
 
-            clubsList = [club1, club2, club3, club4, club5, club6, club7];
-            nextClubId = 8;
+            // Create test clubs
+            const club1 = {
+                id: 1,
+                name: "Delhi Football Club",
+                activity: "Football",
+                commissionType: "Percentage",
+                commissionAmount: "5",
+                carnivals: [1] // Only Summer Sports
+            };
 
-            // Create proper tasks for each club - ALL 19 template tasks with ISOLATED data
-            clubsList.forEach(club => {
-                allTasks[1].clubs[club.id] = taskTemplate.map((task, index) => ({
+            const club2 = {
+                id: 2,
+                name: "Mumbai Music Society",
+                activity: "Music",
+                commissionType: "Fixed",
+                commissionAmount: "10000",
+                carnivals: [2] // Only Winter Arts
+            };
+
+            const club3 = {
+                id: 3,
+                name: "Bangalore Dance Troupe",
+                activity: "Dance",
+                commissionType: "Revenue Share",
+                commissionAmount: "8",
+                carnivals: [1, 2] // Both carnivals
+            };
+
+            clubsList.push(club1, club2, club3);
+            nextClubId = 4;
+
+            // Create club tasks
+            club1.carnivals.forEach(carnivalId => {
+                allTasks[carnivalId].clubs[club1.id] = taskTemplate.slice(0, 5).map((task, index) => ({
                     ...task,
-                    id: `club_${club.id}_template_${index}_${Date.now()}`,
-                    clubId: club.id,
-                    carnivalId: 1,
-                    // Copy properties to avoid reference sharing
-                    description: task.description,
-                    team: task.team,
-                    owner: task.owner,
-                    status: task.status,
-                    priority: task.priority,
-                    expectedDate: task.expectedDate,
-                    createdAt: new Date().toISOString().split('T')[0]
+                    id: 1000 + carnivalId * 100 + club1.id * 10 + index,
+                    clubId: club1.id,
+                    carnivalId: carnivalId,
+                    status: index < 2 ? 'completed' : index < 4 ? 'in-progress' : 'pending',
+                    expectedDate: new Date(Date.now() + (index * 7 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
+                    priority: index < 2 ? 'high' : 'medium'
                 }));
             });
 
-            // Initialize empty revenue data - NO pre-filled contaminated data
-            revenueData = {};
+            club2.carnivals.forEach(carnivalId => {
+                allTasks[carnivalId].clubs[club2.id] = taskTemplate.slice(0, 6).map((task, index) => ({
+                    ...task,
+                    id: 1000 + carnivalId * 100 + club2.id * 10 + index,
+                    clubId: club2.id,
+                    carnivalId: carnivalId,
+                    status: index < 1 ? 'completed' : index < 3 ? 'in-progress' : 'pending',
+                    expectedDate: new Date(Date.now() + (index * 5 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
+                    priority: index < 3 ? 'high' : 'medium'
+                }));
+            });
 
-            // Save clean data
-            saveToLocalStorage();
+            club3.carnivals.forEach(carnivalId => {
+                allTasks[carnivalId].clubs[club3.id] = taskTemplate.slice(0, 4).map((task, index) => ({
+                    ...task,
+                    id: 1000 + carnivalId * 100 + club3.id * 10 + index,
+                    clubId: club3.id,
+                    carnivalId: carnivalId,
+                    status: index < 1 ? 'completed' : index < 2 ? 'in-progress' : 'pending',
+                    expectedDate: new Date(Date.now() + (index * 10 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
+                    priority: index < 2 ? 'high' : 'medium'
+                }));
+            });
 
-            console.log('✅ CLEAN localhost test data loaded:');
-            console.log('  Carnivals:', carnivalsList.length);
-            console.log('  Clubs:', clubsList.length, 'with unique IDs:', clubsList.map(c => c.id));
-            console.log('  Template tasks per club:', taskTemplate.length);
-            console.log('  Total tasks:', 1 + (clubsList.length * taskTemplate.length), '(1 carnival + ' + clubsList.length + ' clubs × ' + taskTemplate.length + ' tasks)');
-            console.log('  Revenue data:', Object.keys(revenueData).length, '(empty)');
-
-            updateAllDropdowns();
-            renderDashboard();
+            console.log('✅ Test data loaded:', {
+                carnivals: carnivalsList.length,
+                clubs: clubsList.length,
+                totalTasks: Object.values(allTasks).reduce((total, carnival) => {
+                    return total + carnival.carnivalTasks.length + Object.values(carnival.clubs).reduce((clubTotal, tasks) => clubTotal + tasks.length, 0);
+                }, 0)
+            });
         }
 
         // Initialize on page load
@@ -5450,25 +3409,31 @@
             console.log('Misfits Carnival Manager loaded');
             console.log('Template tasks:', taskTemplate.length);
 
-            // Initialize revenue data with proper isolation
-            revenueData = revenueData || {};
+            // For localhost testing - load immediate test data
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                console.log('🧪 Loading test data for localhost testing');
+                loadLocalTestData();
+            } else {
+                // Initialize Firebase first for production
+                initializeFirebase();
 
-            // Enable Firebase for all environments
-            console.log('🔥 Firebase enabled for all environments');
-
-            // Initialize Firebase for production and localhost
-            initializeFirebase();
-
-            // Load test data if available (only if Firebase fails)
-            setTimeout(() => {
-                if (!isFirebaseReady && carnivalsList.length === 0) {
-                    loadTestDataIfAvailable();
-                }
-            }, 2000);
+                // Load test data if available (only if Firebase fails)
+                setTimeout(() => {
+                    if (!isFirebaseReady && carnivalsList.length === 0) {
+                        loadTestDataIfAvailable();
+                    }
+                }, 2000);
+            }
 
             updateAllDropdowns();
             renderDashboard();
 
+            // Show welcome message if test data was loaded
+            if (carnivalsList.length > 0) {
+                setTimeout(() => {
+                    alert('🎪 Welcome! Test data has been loaded with 2 carnivals, 3 clubs, and 90+ tasks. Try clicking on any task to see the enhanced details modal!');
+                }, 1000);
+            }
         };
     </script>
 </body>

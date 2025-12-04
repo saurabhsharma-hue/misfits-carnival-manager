@@ -1,0 +1,3386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Misfits Carnival Program Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- CSS Fix for Dropdown Interaction Issues -->
+    <style>
+        /* Force dropdown interactivity */
+        select {
+            pointer-events: auto !important;
+            z-index: 999 !important;
+            position: relative !important;
+            cursor: pointer !important;
+            -webkit-appearance: menulist !important;
+            -moz-appearance: menulist !important;
+            appearance: auto !important;
+        }
+
+        /* Ensure dropdown arrows are visible */
+        select::-ms-expand {
+            display: block !important;
+        }
+
+        /* Fix for potential overlay issues */
+        .view {
+            position: relative !important;
+            z-index: 1 !important;
+        }
+
+        /* Ensure dropdowns can open above other elements */
+        select option {
+            background-color: white !important;
+            color: black !important;
+        }
+    </style>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, set, get, onValue, push, update, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        // Firebase configuration - Real project for team collaboration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCweHkt882pn_1A-KkEqisYU_YlwOsfFxQ",
+            authDomain: "event-management-app-fbbae.firebaseapp.com",
+            databaseURL: "https://event-management-app-fbbae-default-rtdb.asia-southeast1.firebasedatabase.app/",
+            projectId: "event-management-app-fbbae",
+            storageBucket: "event-management-app-fbbae.firebasestorage.app",
+            messagingSenderId: "924131616519",
+            appId: "1:924131616519:web:ad5105519c72963d5ac7a2",
+            measurementId: "G-RGBYH07B4G"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // Make Firebase functions available globally
+        window.firebase = {
+            database,
+            ref,
+            set,
+            get,
+            onValue,
+            push,
+            update,
+            remove
+        };
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .hidden { display: none !important; }
+        .view { display: block; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div id="app" class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <header class="mb-8">
+            <h1 class="text-4xl font-extrabold text-indigo-700 tracking-tight">
+                🎪 Misfits Carnival Program Manager
+            </h1>
+            <p class="mt-2 text-lg text-gray-600">
+                Complete Task Management System
+            </p>
+        </header>
+
+        <!-- Collaboration Status Banner -->
+        <div id="collaboration-status" class="mb-6 p-4 rounded-lg border-2 border-blue-200 bg-blue-50">
+            <div class="flex items-center">
+                <div id="status-icon" class="text-2xl mr-3">🔄</div>
+                <div>
+                    <h3 class="font-semibold text-blue-800">Initializing Real-Time Collaboration...</h3>
+                    <p id="status-text" class="text-sm text-blue-600">Setting up multi-user synchronization...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <nav class="flex space-x-4 border-b border-gray-200 mb-6">
+            <button onclick="showView('dashboard')" id="tab-dashboard" class="py-2 px-4 text-sm font-medium rounded-t-lg transition-colors duration-200 text-indigo-600 border-b-2 border-indigo-600">
+                Dashboard
+            </button>
+            <button onclick="showView('task-tracker')" id="tab-task-tracker" class="py-2 px-4 text-sm font-medium rounded-t-lg transition-colors duration-200 text-gray-500 hover:text-gray-700">
+                Task Tracker
+            </button>
+            <button onclick="showView('timeline')" id="tab-timeline" class="py-2 px-4 text-sm font-medium rounded-t-lg transition-colors duration-200 text-gray-500 hover:text-gray-700">
+                Timeline
+            </button>
+            <button onclick="showView('setup')" id="tab-setup" class="py-2 px-4 text-sm font-medium rounded-t-lg transition-colors duration-200 text-gray-500 hover:text-gray-700">
+                Setup & Template
+            </button>
+        </nav>
+
+        <!-- Dashboard View -->
+        <div id="dashboard-view" class="view">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">📊 Dashboard</h2>
+
+            <!-- Filters -->
+            <div class="bg-white p-4 rounded-lg shadow mb-6">
+                <h3 class="text-lg font-medium mb-3">Filters</h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <select id="dashboard-carnival-filter" class="border rounded-lg px-3 py-2" onchange="renderDashboard()">
+                        <option value="all">All Carnivals</option>
+                    </select>
+                    <select id="dashboard-club-filter" class="border rounded-lg px-3 py-2" onchange="renderDashboard()">
+                        <option value="all">All Clubs</option>
+                    </select>
+                    <select id="dashboard-team-filter" class="border rounded-lg px-3 py-2" onchange="renderDashboard()">
+                        <option value="all">All Teams</option>
+                    </select>
+                    <select id="dashboard-owner-filter" class="border rounded-lg px-3 py-2" onchange="renderDashboard()">
+                        <option value="all">All Owners</option>
+                    </select>
+                    <select id="dashboard-status-filter" class="border rounded-lg px-3 py-2" onchange="renderDashboard()">
+                        <option value="all">All Status</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Total Tasks</h3>
+                    <p id="total-tasks-stat" class="text-3xl font-bold text-blue-600">21</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Completed</h3>
+                    <p id="completed-tasks-stat" class="text-3xl font-bold text-green-600">0</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">In Progress</h3>
+                    <p id="progress-tasks-stat" class="text-3xl font-bold text-yellow-600">0</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Completion %</h3>
+                    <p id="completion-stat" class="text-3xl font-bold text-indigo-600">0%</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow cursor-pointer hover:shadow-lg transition-shadow" onclick="showRevenueModal()">
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Total Revenue</h3>
+                    <p id="total-revenue-stat" class="text-3xl font-bold text-green-600">₹0</p>
+                    <p class="text-sm text-gray-500 mt-1">Click to manage</p>
+                </div>
+            </div>
+
+            <!-- Revenue Management Section -->
+            <div class="bg-white p-6 rounded-lg shadow mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-semibold text-gray-900">💰 Revenue Management</h3>
+                    <button onclick="showRevenueModal()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                        + Add Revenue
+                    </button>
+                </div>
+
+                <!-- Carnival Revenue Impact -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Total Revenue Overview -->
+                    <div class="bg-gradient-to-br from-green-50 to-blue-50 p-6 rounded-lg">
+                        <h4 class="font-semibold text-gray-800 mb-3">📊 Revenue Overview</h4>
+                        <div id="revenue-overview" class="space-y-2">
+                            <!-- Revenue overview will be populated here -->
+                        </div>
+                    </div>
+
+                    <!-- Carnival Performance -->
+                    <div class="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-lg">
+                        <h4 class="font-semibold text-gray-800 mb-3">🎪 Carnival Performance</h4>
+                        <div id="carnival-performance" class="space-y-3">
+                            <!-- Carnival performance will be populated here -->
+                        </div>
+                    </div>
+
+                    <!-- Top Performing Clubs -->
+                    <div class="bg-gradient-to-br from-orange-50 to-yellow-50 p-6 rounded-lg">
+                        <h4 class="font-semibold text-gray-800 mb-3">🏆 Top Performing Clubs</h4>
+                        <div id="top-clubs" class="space-y-3">
+                            <!-- Top clubs will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Tracker View -->
+        <div id="task-tracker-view" class="view hidden">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">🎯 Task Tracker</h2>
+
+            <!-- Navigation Breadcrumb -->
+            <div class="bg-white p-4 rounded-lg shadow mb-6">
+                <h3 class="text-lg font-medium mb-3">Navigation</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <select id="tracker-carnival-select" class="border rounded-lg px-3 py-2" onchange="updateTrackerView()">
+                        <option value="">Select Carnival to View Tasks</option>
+                    </select>
+                    <select id="tracker-club-select" class="border rounded-lg px-3 py-2" onchange="renderTaskTracker()">
+                        <option value="all">All Clubs</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-white p-4 rounded-lg shadow mb-6">
+                <h3 class="text-lg font-medium mb-3">Filters</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <select id="tracker-team-filter" class="border rounded-lg px-3 py-2" onchange="renderTaskTracker()">
+                        <option value="all">All Teams</option>
+                    </select>
+                    <select id="tracker-owner-filter" class="border rounded-lg px-3 py-2" onchange="renderTaskTracker()">
+                        <option value="all">All Owners</option>
+                    </select>
+                    <select id="tracker-status-filter" class="border rounded-lg px-3 py-2" onchange="renderTaskTracker()">
+                        <option value="all">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Task List -->
+            <div id="tracker-task-list" class="space-y-3">
+                <!-- Tasks will be rendered here -->
+            </div>
+        </div>
+
+        <!-- Timeline View -->
+        <div id="timeline-view" class="view hidden">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">📅 Timeline</h2>
+
+            <!-- Comprehensive Filters -->
+            <div class="bg-white p-6 rounded-lg shadow mb-6">
+                <h3 class="text-lg font-medium mb-4">Timeline Filters</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
+                    <select id="timeline-carnival-filter" class="border rounded-lg px-3 py-2" onchange="renderTimeline()">
+                        <option value="all">All Carnivals</option>
+                    </select>
+                    <select id="timeline-club-filter" class="border rounded-lg px-3 py-2" onchange="renderTimeline()">
+                        <option value="all">All Clubs</option>
+                    </select>
+                    <select id="timeline-team-filter" class="border rounded-lg px-3 py-2" onchange="renderTimeline()">
+                        <option value="all">All Teams</option>
+                    </select>
+                    <select id="timeline-owner-filter" class="border rounded-lg px-3 py-2" onchange="renderTimeline()">
+                        <option value="all">All Owners</option>
+                    </select>
+                    <select id="timeline-status-filter" class="border rounded-lg px-3 py-2" onchange="renderTimeline()">
+                        <option value="all">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <select id="timeline-period-filter" class="border rounded-lg px-3 py-2" onchange="renderTimeline()">
+                        <option value="all">All Time</option>
+                        <option value="upcoming">Next 7 Days</option>
+                        <option value="this-week">This Week</option>
+                        <option value="this-month">This Month</option>
+                        <option value="overdue">Overdue Tasks</option>
+                    </select>
+                    <select id="timeline-task-type" class="border rounded-lg px-3 py-2" onchange="renderTimeline()">
+                        <option value="all">All Task Types</option>
+                        <option value="carnival">Carnival Tasks</option>
+                        <option value="club">Club Tasks</option>
+                    </select>
+            </div>
+
+            <!-- Timeline Stats Summary -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="text-sm font-medium text-gray-500">Filtered Tasks</h3>
+                    <p id="timeline-total-filtered" class="text-2xl font-bold text-blue-600">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="text-sm font-medium text-gray-500">Upcoming This Week</h3>
+                    <p id="timeline-upcoming-week" class="text-2xl font-bold text-yellow-600">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="text-sm font-medium text-gray-500">Overdue</h3>
+                    <p id="timeline-overdue" class="text-2xl font-bold text-red-600">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="text-sm font-medium text-gray-500">Completion Rate</h3>
+                    <p id="timeline-completion-rate" class="text-2xl font-bold text-green-600">0%</p>
+                </div>
+            </div>
+
+            <!-- Timeline Display -->
+            <div id="timeline-content" class="space-y-4">
+                <!-- Timeline items will be rendered here -->
+            </div>
+        </div>
+
+        <!-- Setup & Template View -->
+        <div id="setup-view" class="view hidden">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">⚙️ Setup & Template</h2>
+
+            <!-- Carnival Management -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <!-- Carnival Creation -->
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-xl font-semibold text-indigo-700 mb-4">🎪 Create Carnival</h3>
+                    <div class="space-y-4">
+                        <input type="text" id="carnival-name-input" placeholder="Carnival Name" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500">
+                        <textarea id="carnival-description-input" placeholder="Carnival Description" rows="3" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"></textarea>
+                        <input type="date" id="carnival-start-date" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500">
+                        <input type="date" id="carnival-end-date" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500">
+                        <button onclick="createCarnival()" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors">
+                            Create Carnival
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Club Registration -->
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-xl font-semibold text-green-700 mb-4">🏛️ Register Club</h3>
+                    <div class="space-y-4">
+                        <input type="text" id="club-name-input" placeholder="Club Name" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
+                        <div>
+                            <select id="club-activity-select" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500" onchange="handleActivitySelection()">
+                                <option value="">Select Activity</option>
+                                <option value="Football">Football</option>
+                                <option value="Cricket">Cricket</option>
+                                <option value="Basketball">Basketball</option>
+                                <option value="Badminton">Badminton</option>
+                                <option value="Chess">Chess</option>
+                                <option value="Music">Music</option>
+                                <option value="Dance">Dance</option>
+                                <option value="Art">Art</option>
+                                <option value="Drama">Drama</option>
+                                <option value="Photography">Photography</option>
+                                <option value="custom">+ Add Custom Activity</option>
+                            </select>
+                            <input type="text" id="custom-activity-input" placeholder="Enter custom activity name" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 mt-2 hidden">
+                        </div>
+                        <select id="club-commission-type" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500" onchange="handleCommissionTypeChange()">
+                            <option value="">Commission Type</option>
+                            <option value="Percentage">Percentage Based</option>
+                            <option value="Fixed">Fixed Amount</option>
+                            <option value="Revenue Share">Revenue Share</option>
+                        </select>
+
+                        <!-- Commission Amount Input -->
+                        <div id="commission-amount-container" class="hidden">
+                            <div class="flex items-center">
+                                <span id="commission-currency-symbol" class="text-gray-600 mr-2">%</span>
+                                <input type="number" id="commission-amount" placeholder="Enter amount"
+                                       class="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500"
+                                       min="0" step="0.01">
+                            </div>
+                            <p id="commission-help-text" class="text-sm text-gray-500 mt-1">Enter percentage (e.g., 5 for 5%)</p>
+                        </div>
+
+                        <!-- Multiple Carnival Selection -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Select Carnivals (Multiple)</label>
+                            <div id="carnival-checkbox-list" class="max-h-40 overflow-y-auto border rounded-lg p-3 bg-gray-50">
+                                <p class="text-sm text-gray-500">Create carnivals first to register clubs</p>
+                            </div>
+                        </div>
+
+                        <button onclick="registerClub()" class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
+                            Register Club
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Creation Section -->
+            <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
+                <h3 class="text-xl font-semibold text-purple-700 mb-4">📝 Create New Task</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <select id="task-type-select" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" onchange="handleTaskTypeChange()">
+                            <option value="">Select Task Type</option>
+                            <option value="template">Template Task (applies to all future clubs)</option>
+                            <option value="carnival">Carnival-Level Task</option>
+                            <option value="club">Club-Specific Task</option>
+                        </select>
+
+                        <div id="carnival-select-container" class="hidden">
+                            <select id="task-carnival-select" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                                <option value="">Select Carnival</option>
+                            </select>
+                        </div>
+
+                        <div id="club-select-container" class="hidden">
+                            <select id="task-club-select" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                                <option value="">Select Club</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <textarea id="task-description-input" placeholder="Task Description" rows="3" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"></textarea>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="text" id="task-team-input" list="team-suggestions" placeholder="Team" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                            <datalist id="team-suggestions">
+                                <option value="Operations">
+                                <option value="Marketing">
+                                <option value="Finance">
+                                <option value="Tech">
+                            </datalist>
+
+                            <input type="text" id="task-owner-input" list="owner-suggestions" placeholder="Owner" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                            <datalist id="owner-suggestions">
+                                <option value="Joy">
+                                <option value="Ayushi">
+                                <option value="Tauheed">
+                                <option value="Team Lead">
+                            </datalist>
+                        </div>
+
+                        <button onclick="createCustomTask()" class="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors">
+                            Create Task
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Template Management -->
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-semibold text-indigo-700">📋 Template Tasks (Mandatory for All Clubs)</h3>
+                    <button onclick="toggleTemplateExpansion()" class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-lg hover:bg-indigo-200 transition-colors">
+                        <span id="template-toggle-text">Expand All</span>
+                    </button>
+                </div>
+                <p class="text-sm text-gray-600 mb-4">These tasks are automatically assigned to every new club registration</p>
+
+                <div id="mandatory-task-summary" class="bg-indigo-50 p-4 rounded-lg mb-4">
+                    <p class="text-sm text-indigo-800 font-medium">📊 <span id="template-count">19</span> mandatory tasks configured</p>
+                    <p class="text-xs text-indigo-600 mt-1">Click "Expand All" to view and edit individual tasks</p>
+                </div>
+
+                <div id="task-template-list" class="space-y-3 hidden">
+                    <!-- Tasks will be rendered here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Enhanced Task Details Modal -->
+        <div id="task-details-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
+                <div class="flex items-center justify-between p-6 border-b">
+                    <h3 class="text-xl font-semibold text-gray-800">Task Details</h3>
+                    <button onclick="closeTaskDetailsModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="p-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Basic Task Info -->
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Task Description</label>
+                                <textarea id="task-detail-description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"></textarea>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Team</label>
+                                    <select id="task-detail-team" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                                        <option value="Operations">Operations</option>
+                                        <option value="Marketing">Marketing</option>
+                                        <option value="Finance">Finance</option>
+                                        <option value="Tech">Tech</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Owner</label>
+                                    <input type="text" id="task-detail-owner" list="owner-suggestions-modal" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                                    <datalist id="owner-suggestions-modal">
+                                        <option value="Joy">
+                                        <option value="Ayushi">
+                                        <option value="Tauheed">
+                                        <option value="Team Lead">
+                                    </datalist>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                                <select id="task-detail-status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                                    <option value="pending">Pending</option>
+                                    <option value="in-progress">In Progress</option>
+                                    <option value="completed">Completed</option>
+                                </select>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Expected Date</label>
+                                    <input type="date" id="task-detail-expected-date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Actual Date</label>
+                                    <input type="date" id="task-detail-actual-date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Enhanced Details -->
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Detailed Notes</label>
+                                <textarea id="task-detail-notes" rows="4" placeholder="Add detailed notes, requirements, or updates..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"></textarea>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Document Links</label>
+                                <div class="space-y-2">
+                                    <input type="url" id="task-detail-link1" placeholder="https://docs.google.com/document/..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                                    <input type="url" id="task-detail-link2" placeholder="https://drive.google.com/file/..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                                    <input type="url" id="task-detail-link3" placeholder="https://github.com/repo/..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Priority Level</label>
+                                <select id="task-detail-priority" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                                    <option value="low">Low Priority</option>
+                                    <option value="medium">Medium Priority</option>
+                                    <option value="high">High Priority</option>
+                                    <option value="urgent">Urgent</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Progress (%)</label>
+                                <div class="flex items-center space-x-3">
+                                    <input type="range" id="task-detail-progress" min="0" max="100" step="5" class="flex-1" oninput="updateProgressDisplay()">
+                                    <span id="progress-display" class="text-sm font-medium text-gray-600 w-12">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Task Context Info -->
+                    <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                        <h4 class="font-medium text-gray-800 mb-2">Task Context</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div>
+                                <span class="text-gray-500">Carnival:</span>
+                                <span id="task-context-carnival" class="ml-1 font-medium">-</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">Club:</span>
+                                <span id="task-context-club" class="ml-1 font-medium">-</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">Type:</span>
+                                <span id="task-context-type" class="ml-1 font-medium">-</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">Created:</span>
+                                <span id="task-context-created" class="ml-1 font-medium">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between p-6 border-t bg-gray-50">
+                    <button onclick="closeTaskDetailsModal()" class="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <div class="space-x-3">
+                        <button onclick="deleteCurrentTask()" class="px-6 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100">
+                            Delete Task
+                        </button>
+                        <button onclick="saveTaskDetails()" class="px-6 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">
+                            Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Revenue Management Modal -->
+        <div id="revenue-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4">
+                <div class="flex items-center justify-between p-6 border-b">
+                    <h3 class="text-xl font-semibold text-gray-800">💰 Add Revenue</h3>
+                    <button onclick="closeRevenueModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="p-6">
+                    <div class="space-y-4">
+                        <!-- Carnival Selection -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Select Carnival</label>
+                            <select id="revenue-carnival" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" onchange="updateRevenueClubs()">
+                                <option value="">Choose a carnival...</option>
+                            </select>
+                        </div>
+
+                        <!-- Club Selection -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Select Club</label>
+                            <select id="revenue-club" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                                <option value="">First select a carnival...</option>
+                            </select>
+                        </div>
+
+                        <!-- Revenue Amount -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Revenue Amount</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-2 text-gray-500">₹</span>
+                                <input type="number" id="revenue-amount" placeholder="0" class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" />
+                            </div>
+                        </div>
+
+                        <!-- Quick Amount Buttons -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Quick Add</label>
+                            <div class="flex space-x-2 flex-wrap">
+                                <button onclick="setQuickAmount(10000)" class="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">₹10K</button>
+                                <button onclick="setQuickAmount(25000)" class="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">₹25K</button>
+                                <button onclick="setQuickAmount(50000)" class="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">₹50K</button>
+                                <button onclick="setQuickAmount(100000)" class="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">₹1L</button>
+                                <button onclick="setQuickAmount(200000)" class="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">₹2L</button>
+                                <button onclick="setQuickAmount(500000)" class="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">₹5L</button>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Notes (Optional)</label>
+                            <textarea id="revenue-notes" rows="3" placeholder="Add notes about this revenue..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between p-6 border-t bg-gray-50">
+                    <button onclick="closeRevenueModal()" class="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button onclick="addRevenue()" class="px-6 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700">
+                        Add Revenue
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Structure for Multi-Carnival Support
+        let carnivalsList = []; // {id, name, description, startDate, endDate, tasks: []}
+        let clubsList = []; // {id, name, activity, commissionType, carnivals: []}
+        let allTasks = {}; // {carnivalId: {clubId: [tasks], carnivalTasks: [tasks]}}
+
+        // Revenue Management System
+        let revenueData = JSON.parse(localStorage.getItem('carnivalRevenueData') || '{}');
+        // Structure: {carnivalId-clubId: {carnival: "", club: "", amount: 0, history: []}}
+
+        // Revenue Management Functions
+        function showRevenueModal() {
+            const modal = document.getElementById('revenue-modal');
+            const carnivalSelect = document.getElementById('revenue-carnival');
+
+            // Populate carnival dropdown
+            carnivalSelect.innerHTML = '<option value="">Choose a carnival...</option>';
+            carnivalsList.forEach(carnival => {
+                const option = document.createElement('option');
+                option.value = carnival.id;
+                option.textContent = carnival.name;
+                carnivalSelect.appendChild(option);
+            });
+
+            // Reset form
+            document.getElementById('revenue-club').innerHTML = '<option value="">First select a carnival...</option>';
+            document.getElementById('revenue-amount').value = '';
+            document.getElementById('revenue-notes').value = '';
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeRevenueModal() {
+            document.getElementById('revenue-modal').classList.add('hidden');
+        }
+
+        function updateRevenueClubs() {
+            const carnivalId = document.getElementById('revenue-carnival').value;
+            const clubSelect = document.getElementById('revenue-club');
+
+            if (!carnivalId) {
+                clubSelect.innerHTML = '<option value="">First select a carnival...</option>';
+                return;
+            }
+
+            // Get clubs for this carnival
+            const clubsInCarnival = clubsList.filter(club =>
+                club.carnivals && club.carnivals.includes(parseInt(carnivalId))
+            );
+
+            clubSelect.innerHTML = '<option value="">Choose a club...</option>';
+            clubsInCarnival.forEach(club => {
+                const option = document.createElement('option');
+                option.value = club.id;
+                option.textContent = `${club.name} (${club.activity})`;
+                clubSelect.appendChild(option);
+            });
+        }
+
+        function setQuickAmount(amount) {
+            document.getElementById('revenue-amount').value = amount;
+        }
+
+        function addRevenue() {
+            const carnivalId = document.getElementById('revenue-carnival').value;
+            const clubId = document.getElementById('revenue-club').value;
+            const amount = parseFloat(document.getElementById('revenue-amount').value);
+            const notes = document.getElementById('revenue-notes').value;
+
+            if (!carnivalId || !clubId) {
+                alert('Please select both carnival and club');
+                return;
+            }
+
+            if (!amount || amount <= 0) {
+                alert('Please enter a valid amount');
+                return;
+            }
+
+            const carnival = carnivalsList.find(c => c.id == carnivalId);
+            const club = clubsList.find(c => c.id == clubId);
+            const key = `${carnivalId}-${clubId}`;
+
+            // Initialize if doesn't exist
+            if (!revenueData[key]) {
+                revenueData[key] = {
+                    carnivalId: carnivalId,
+                    clubId: clubId,
+                    carnivalName: carnival.name,
+                    clubName: club.name,
+                    total: 0,
+                    history: []
+                };
+            }
+
+            // Add revenue entry
+            const entry = {
+                amount: amount,
+                notes: notes,
+                date: new Date().toISOString().split('T')[0],
+                timestamp: new Date().toISOString()
+            };
+
+            revenueData[key].total += amount;
+            revenueData[key].history.push(entry);
+
+            // Save to localStorage
+            localStorage.setItem('carnivalRevenueData', JSON.stringify(revenueData));
+
+            // Update dashboard
+            updateRevenueDisplay();
+
+            // Close modal and show success
+            closeRevenueModal();
+            alert(`Revenue ₹${amount.toLocaleString()} added successfully!\n\nCarnival: ${carnival.name}\nClub: ${club.name}\nTotal: ₹${revenueData[key].total.toLocaleString()}`);
+        }
+
+        function getTotalRevenue() {
+            return Object.values(revenueData).reduce((total, entry) => total + entry.total, 0);
+        }
+
+        function getCarnivalRevenue(carnivalId) {
+            return Object.values(revenueData)
+                .filter(entry => entry.carnivalId == carnivalId)
+                .reduce((total, entry) => total + entry.total, 0);
+        }
+
+        function updateRevenueDisplay() {
+            // Update total revenue stat
+            document.getElementById('total-revenue-stat').textContent = '₹' + getTotalRevenue().toLocaleString();
+
+            // Update revenue overview
+            const overviewDiv = document.getElementById('revenue-overview');
+            const totalRevenue = getTotalRevenue();
+
+            if (totalRevenue === 0) {
+                overviewDiv.innerHTML = '<p class="text-gray-500 text-sm">No revenue data yet</p>';
+            } else {
+                overviewDiv.innerHTML = `
+                    <div class="text-sm space-y-1">
+                        <div class="flex justify-between">
+                            <span>Total Revenue:</span>
+                            <span class="font-semibold text-green-600">₹${totalRevenue.toLocaleString()}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Active Streams:</span>
+                            <span class="font-semibold">${Object.keys(revenueData).length}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Avg per Stream:</span>
+                            <span class="font-semibold">₹${Math.round(totalRevenue / Object.keys(revenueData).length).toLocaleString()}</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Update carnival performance
+            const performanceDiv = document.getElementById('carnival-performance');
+            const carnivalRevenues = {};
+
+            // Calculate revenue per carnival
+            carnivalsList.forEach(carnival => {
+                carnivalRevenues[carnival.id] = {
+                    name: carnival.name,
+                    revenue: getCarnivalRevenue(carnival.id)
+                };
+            });
+
+            const sortedCarnivals = Object.values(carnivalRevenues)
+                .filter(c => c.revenue > 0)
+                .sort((a, b) => b.revenue - a.revenue);
+
+            if (sortedCarnivals.length === 0) {
+                performanceDiv.innerHTML = '<p class="text-gray-500 text-sm">No carnival revenue yet</p>';
+            } else {
+                performanceDiv.innerHTML = sortedCarnivals.map((carnival, index) => `
+                    <div class="flex items-center justify-between p-2 bg-white rounded border">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-lg">${index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '🎪'}</span>
+                            <span class="text-sm font-medium">${carnival.name}</span>
+                        </div>
+                        <span class="text-sm font-semibold text-green-600">₹${carnival.revenue.toLocaleString()}</span>
+                    </div>
+                `).join('');
+            }
+
+            // Update top clubs
+            const topClubsDiv = document.getElementById('top-clubs');
+            const clubRevenues = {};
+
+            Object.values(revenueData).forEach(entry => {
+                if (!clubRevenues[entry.clubId]) {
+                    clubRevenues[entry.clubId] = {
+                        name: entry.clubName,
+                        total: 0
+                    };
+                }
+                clubRevenues[entry.clubId].total += entry.total;
+            });
+
+            const sortedClubs = Object.values(clubRevenues)
+                .sort((a, b) => b.total - a.total)
+                .slice(0, 5);
+
+            if (sortedClubs.length === 0) {
+                topClubsDiv.innerHTML = '<p class="text-gray-500 text-sm">No club revenue yet</p>';
+            } else {
+                topClubsDiv.innerHTML = sortedClubs.map((club, index) => `
+                    <div class="flex items-center justify-between p-2 bg-white rounded border">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-lg">${index === 0 ? '🏆' : index === 1 ? '🥈' : index === 2 ? '🥉' : '⭐'}</span>
+                            <span class="text-sm font-medium">${club.name}</span>
+                        </div>
+                        <span class="text-sm font-semibold text-green-600">₹${club.total.toLocaleString()}</span>
+                    </div>
+                `).join('');
+            }
+        }
+        let isFirebaseReady = false;
+
+        // Real-time collaboration setup (BroadcastChannel for multi-tab sync + Firebase fallback)
+        let broadcastChannel;
+
+        // Firebase Database Functions
+        async function initializeFirebase() {
+            try {
+                // Setup local multi-tab synchronization
+                setupBroadcastChannel();
+
+                // Wait for Firebase to be available
+                while (!window.firebase) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+
+                isFirebaseReady = true;
+                console.log('✅ Firebase initialized successfully - Real-time collaboration enabled!');
+                updateCollaborationStatus('success', '✅ Firebase real-time collaboration active - All team members sync automatically!', '🔥');
+
+                // Load data from Firebase
+                await loadDataFromFirebase();
+
+                // Set up real-time listeners
+                setupRealtimeListeners();
+
+            } catch (error) {
+                console.warn('⚠️ Firebase not configured yet. Using localStorage + BroadcastChannel for multi-tab sync:', error);
+                isFirebaseReady = false;
+                updateCollaborationStatus('warning', '📡 Multi-tab sync enabled. For full team collaboration, Firebase setup needed.', '📡');
+                loadFromLocalStorage();
+            }
+        }
+
+        function setupBroadcastChannel() {
+            // Enable multi-tab synchronization
+            broadcastChannel = new BroadcastChannel('carnival-manager-sync');
+
+            broadcastChannel.onmessage = (event) => {
+                const { type, data } = event.data;
+
+                switch(type) {
+                    case 'carnivals-updated':
+                        carnivalsList = data;
+                        updateAllDropdowns();
+                        renderDashboard();
+                        console.log('🔄 Carnivals synced from another tab');
+                        showSyncNotification('Carnivals synced from team member');
+                        break;
+                    case 'clubs-updated':
+                        clubsList = data;
+                        updateAllDropdowns();
+                        renderDashboard();
+                        console.log('🔄 Clubs synced from another tab');
+                        showSyncNotification('Clubs synced from team member');
+                        break;
+                    case 'tasks-updated':
+                        allTasks = data;
+                        renderDashboard();
+                        // Refresh current view
+                        const currentView = document.querySelector('.view:not(.hidden)')?.id;
+                        if (currentView === 'task-tracker-view') renderTaskTracker();
+                        if (currentView === 'timeline-view') renderTimeline();
+                        console.log('🔄 Tasks synced from another tab');
+                        showSyncNotification('Tasks synced from team member');
+                        break;
+                }
+            };
+
+            console.log('📡 Multi-tab synchronization enabled');
+        }
+
+        function broadcastUpdate(type, data) {
+            if (broadcastChannel) {
+                broadcastChannel.postMessage({ type, data });
+            }
+        }
+
+        function updateCollaborationStatus(status, message, icon = '🔄') {
+            const statusEl = document.getElementById('collaboration-status');
+            const iconEl = document.getElementById('status-icon');
+            const textEl = document.getElementById('status-text');
+
+            if (statusEl) {
+                iconEl.textContent = icon;
+                textEl.textContent = message;
+
+                // Update banner color based on status
+                statusEl.className = statusEl.className.replace(/border-\w+-\d+|bg-\w+-\d+/g, '');
+
+                if (status === 'success') {
+                    statusEl.classList.add('border-green-200', 'bg-green-50');
+                    textEl.classList.remove('text-blue-600');
+                    textEl.classList.add('text-green-600');
+                } else if (status === 'warning') {
+                    statusEl.classList.add('border-yellow-200', 'bg-yellow-50');
+                    textEl.classList.remove('text-blue-600', 'text-green-600');
+                    textEl.classList.add('text-yellow-600');
+                } else if (status === 'error') {
+                    statusEl.classList.add('border-red-200', 'bg-red-50');
+                    textEl.classList.remove('text-blue-600', 'text-green-600', 'text-yellow-600');
+                    textEl.classList.add('text-red-600');
+                } else {
+                    statusEl.classList.add('border-blue-200', 'bg-blue-50');
+                    textEl.classList.add('text-blue-600');
+                }
+            }
+        }
+
+        function showSyncNotification(message) {
+            // Create a temporary notification
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 transform transition-all duration-300';
+            notification.innerHTML = `<div class="flex items-center"><span class="mr-2">🔄</span>${message}</div>`;
+
+            document.body.appendChild(notification);
+
+            // Animate in
+            setTimeout(() => notification.style.transform = 'translateX(0)', 100);
+
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => document.body.removeChild(notification), 300);
+            }, 3000);
+        }
+
+        async function saveToFirebase(path, data) {
+            // Always save to localStorage as backup
+            saveToLocalStorage();
+
+            // Broadcast update to other tabs
+            broadcastUpdate(path + '-updated', data);
+
+            if (!isFirebaseReady) {
+                return;
+            }
+
+            try {
+                await window.firebase.set(window.firebase.ref(window.firebase.database, path), data);
+                console.log(`✅ Data saved to Firebase: ${path}`);
+            } catch (error) {
+                console.error('❌ Firebase save failed:', error);
+            }
+        }
+
+        async function loadDataFromFirebase() {
+            if (!isFirebaseReady) return;
+
+            try {
+                // Load carnivals
+                const carnivalsSnapshot = await window.firebase.get(window.firebase.ref(window.firebase.database, 'carnivals'));
+                if (carnivalsSnapshot.exists()) {
+                    carnivalsList = Object.values(carnivalsSnapshot.val()) || [];
+                }
+
+                // Load clubs
+                const clubsSnapshot = await window.firebase.get(window.firebase.ref(window.firebase.database, 'clubs'));
+                if (clubsSnapshot.exists()) {
+                    clubsList = Object.values(clubsSnapshot.val()) || [];
+                }
+
+                // Load tasks
+                const tasksSnapshot = await window.firebase.get(window.firebase.ref(window.firebase.database, 'tasks'));
+                if (tasksSnapshot.exists()) {
+                    allTasks = tasksSnapshot.val() || {};
+                }
+
+                console.log('Data loaded from Firebase');
+                updateAllDropdowns();
+                renderDashboard();
+            } catch (error) {
+                console.error('Failed to load from Firebase:', error);
+            }
+        }
+
+        function setupRealtimeListeners() {
+            if (!isFirebaseReady) return;
+
+            // Listen for carnival changes
+            window.firebase.onValue(window.firebase.ref(window.firebase.database, 'carnivals'), (snapshot) => {
+                if (snapshot.exists()) {
+                    carnivalsList = Object.values(snapshot.val()) || [];
+                    updateAllDropdowns();
+                    renderDashboard();
+                }
+            });
+
+            // Listen for club changes
+            window.firebase.onValue(window.firebase.ref(window.firebase.database, 'clubs'), (snapshot) => {
+                if (snapshot.exists()) {
+                    clubsList = Object.values(snapshot.val()) || [];
+                    updateAllDropdowns();
+                    renderDashboard();
+                }
+            });
+
+            // Listen for task changes
+            window.firebase.onValue(window.firebase.ref(window.firebase.database, 'tasks'), (snapshot) => {
+                if (snapshot.exists()) {
+                    allTasks = snapshot.val() || {};
+                    renderDashboard();
+                    // Refresh current view if it's tasks-related
+                    const currentView = document.querySelector('.view:not(.hidden)')?.id;
+                    if (currentView === 'task-tracker-view' || currentView === 'timeline-view') {
+                        if (currentView === 'task-tracker-view') renderTaskTracker();
+                        if (currentView === 'timeline-view') renderTimeline();
+                    }
+                }
+            });
+        }
+
+        function saveToLocalStorage() {
+            // Fallback to localStorage if Firebase fails
+            localStorage.setItem('carnivalsList', JSON.stringify(carnivalsList));
+            localStorage.setItem('clubsList', JSON.stringify(clubsList));
+            localStorage.setItem('allTasks', JSON.stringify(allTasks));
+        }
+
+        function loadFromLocalStorage() {
+            // Load from localStorage as fallback
+            try {
+                const savedCarnivals = localStorage.getItem('carnivalsList');
+                const savedClubs = localStorage.getItem('clubsList');
+                const savedTasks = localStorage.getItem('allTasks');
+
+                if (savedCarnivals) carnivalsList = JSON.parse(savedCarnivals);
+                if (savedClubs) clubsList = JSON.parse(savedClubs);
+                if (savedTasks) allTasks = JSON.parse(savedTasks);
+
+                updateAllDropdowns();
+                renderDashboard();
+            } catch (error) {
+                console.error('Failed to load from localStorage:', error);
+            }
+        }
+
+        // Template tasks (mandatory for all clubs)
+        const mandatoryTemplate = [
+            { id: 1, description: "Once the leader reverts, event coordinator to sit with them, finalise the dates, event flow and commission %", team: "Operations", owner: "Joy", status: "pending", createdAt: "2025-01-01" },
+            { id: 2, description: "Get the venue requested by the venue team and map a venue to the event", team: "Operations", owner: "Tauheed", status: "pending", createdAt: "2025-01-01" },
+            { id: 3, description: "Prepare the content plan with marketing team - how much hype to be done, how etc etc and when", team: "Marketing", owner: "Joy", status: "pending", createdAt: "2025-01-01" },
+            { id: 4, description: "Logistical requirement to be taken on a doc by the club and keep it somewhere against the club with the status of what all is done", team: "Operations", owner: "Joy", status: "pending", createdAt: "2025-01-01" },
+            { id: 5, description: "Banner to be created by the marketing team - alignment and completion", team: "Marketing", owner: "Ayushi", status: "pending", createdAt: "2025-01-01" },
+            { id: 6, description: "Sharing event flow details with marketing team", team: "Operations", owner: "Joy", status: "pending", createdAt: "2025-01-01" },
+            { id: 7, description: "Logo to be created by the marketing team - alignment and completion", team: "Marketing", owner: "Ayushi", status: "pending", createdAt: "2025-01-01" },
+            { id: 8, description: "Marketing asset requirement - Ideally I should be able to add under this section (Example - medals, certificate, standees)", team: "Marketing", owner: "Joy", status: "pending", createdAt: "2025-01-01" },
+            { id: 9, description: "Banner to be placed in the festival section of the app", team: "Operations", owner: "Joy", status: "pending", createdAt: "2025-01-01" },
+            { id: 10, description: "Meetup creation and linking to the festival section", team: "Operations", owner: "Joy", status: "pending", createdAt: "2025-01-01" },
+            { id: 11, description: "Asset making by marketing team", team: "Marketing", owner: "Ayushi", status: "pending", createdAt: "2025-01-01" },
+            { id: 12, description: "Asset printing", team: "Marketing", owner: "Joy", status: "pending", createdAt: "2025-01-01" },
+            { id: 13, description: "Asset delivery", team: "Operations", owner: "Joy", status: "pending", createdAt: "2025-01-01" },
+            { id: 14, description: "Logistical requirement delivery", team: "Operations", owner: "Joy", status: "pending", createdAt: "2025-01-01" },
+            { id: 15, description: "Logistical and asset implementation", team: "Operations", owner: "Joy", status: "pending", createdAt: "2025-01-01" },
+            { id: 16, description: "Videographer requirement and alignment", team: "Marketing", owner: "Joy", status: "pending", createdAt: "2025-01-01" },
+            { id: 17, description: "Post event content", team: "Marketing", owner: "Joy", status: "pending", createdAt: "2025-01-01" },
+            { id: 18, description: "On ground assistant requirements", team: "Operations", owner: "Joy", status: "pending", createdAt: "2025-01-01" },
+            { id: 19, description: "On ground assistant implementation", team: "Operations", owner: "Joy", status: "pending", createdAt: "2025-01-01" }
+        ];
+
+        let taskTemplate = [...mandatoryTemplate]; // Working copy
+        let currentEditingIndex = null;
+        let templateExpanded = false;
+        let nextCarnivalId = 1;
+        let nextClubId = 1;
+
+        // Carnival Management Functions
+        function createCarnival() {
+            const name = document.getElementById('carnival-name-input').value.trim();
+            const description = document.getElementById('carnival-description-input').value.trim();
+            const startDate = document.getElementById('carnival-start-date').value;
+            const endDate = document.getElementById('carnival-end-date').value;
+
+            if (!name) {
+                alert('Please enter a carnival name');
+                return;
+            }
+
+            const carnival = {
+                id: nextCarnivalId++,
+                name: name,
+                description: description,
+                startDate: startDate,
+                endDate: endDate,
+                tasks: []
+            };
+
+            carnivalsList.push(carnival);
+            allTasks[carnival.id] = { carnivalTasks: [], clubs: {} };
+
+            // Save to Firebase
+            saveToFirebase('carnivals', carnivalsList);
+            saveToFirebase('tasks', allTasks);
+
+            // Auto-create carnival-level tasks
+            const carnivalTasks = [
+                { description: "Deciding the fest name which is deciding the carnival name", team: "Operations", owner: "Joy", status: "pending", id: Date.now() },
+                { description: "Announcement to leaders group", team: "Operations", owner: "Joy", status: "pending", id: Date.now() + 1 }
+            ];
+            allTasks[carnival.id].carnivalTasks = carnivalTasks;
+
+            // Save updated tasks to Firebase
+            saveToFirebase('tasks', allTasks);
+
+            // Clear inputs
+            document.getElementById('carnival-name-input').value = '';
+            document.getElementById('carnival-description-input').value = '';
+            document.getElementById('carnival-start-date').value = '';
+            document.getElementById('carnival-end-date').value = '';
+
+            updateAllDropdowns();
+            alert(`Carnival "${name}" created successfully with 2 carnival-level tasks!`);
+        }
+
+        function handleActivitySelection() {
+            const select = document.getElementById('club-activity-select');
+            const customInput = document.getElementById('custom-activity-input');
+
+            if (select.value === 'custom') {
+                customInput.classList.remove('hidden');
+                customInput.focus();
+            } else {
+                customInput.classList.add('hidden');
+                customInput.value = '';
+            }
+        }
+
+        function handleCommissionTypeChange() {
+            const commissionType = document.getElementById('club-commission-type').value;
+            const container = document.getElementById('commission-amount-container');
+            const symbol = document.getElementById('commission-currency-symbol');
+            const helpText = document.getElementById('commission-help-text');
+            const input = document.getElementById('commission-amount');
+
+            if (commissionType) {
+                container.classList.remove('hidden');
+
+                switch(commissionType) {
+                    case 'Percentage':
+                        symbol.textContent = '%';
+                        helpText.textContent = 'Enter percentage (e.g., 5 for 5%)';
+                        input.placeholder = 'Enter percentage';
+                        input.max = '100';
+                        break;
+                    case 'Fixed':
+                        symbol.textContent = '₹';
+                        helpText.textContent = 'Enter fixed amount in rupees';
+                        input.placeholder = 'Enter amount';
+                        input.max = '';
+                        break;
+                    case 'Revenue Share':
+                        symbol.textContent = '%';
+                        helpText.textContent = 'Enter revenue share percentage';
+                        input.placeholder = 'Enter percentage';
+                        input.max = '100';
+                        break;
+                }
+            } else {
+                container.classList.add('hidden');
+                input.value = '';
+            }
+        }
+
+        function registerClub() {
+            const name = document.getElementById('club-name-input').value.trim();
+            let activity = document.getElementById('club-activity-select').value;
+            const commissionType = document.getElementById('club-commission-type').value;
+            const commissionAmount = document.getElementById('commission-amount').value;
+
+            // Handle custom activity
+            if (activity === 'custom') {
+                const customActivity = document.getElementById('custom-activity-input').value.trim();
+                if (!customActivity) {
+                    alert('Please enter custom activity name');
+                    return;
+                }
+                activity = customActivity;
+            }
+
+            if (!name || !activity || !commissionType) {
+                alert('Please fill all required fields');
+                return;
+            }
+
+            // Validate commission amount if commission type is selected
+            if (commissionType && !commissionAmount) {
+                alert('Please enter commission amount');
+                return;
+            }
+
+            // Get selected carnivals
+            const selectedCarnivals = [];
+            const checkboxes = document.querySelectorAll('input[name="carnival-checkbox"]:checked');
+            checkboxes.forEach(checkbox => {
+                selectedCarnivals.push(parseInt(checkbox.value));
+            });
+
+            if (selectedCarnivals.length === 0) {
+                alert('Please select at least one carnival');
+                return;
+            }
+
+            const club = {
+                id: nextClubId++,
+                name: name,
+                activity: activity,
+                commissionType: commissionType,
+                commissionAmount: commissionAmount,
+                carnivals: selectedCarnivals
+            };
+
+            clubsList.push(club);
+
+            // Save clubs to Firebase
+            saveToFirebase('clubs', clubsList);
+
+            // Create tasks for each carnival
+            selectedCarnivals.forEach(carnivalId => {
+                if (!allTasks[carnivalId]) {
+                    allTasks[carnivalId] = { carnivalTasks: [], clubs: {} };
+                }
+                allTasks[carnivalId].clubs[club.id] = taskTemplate.map(task => ({
+                    ...task,
+                    id: Date.now() + Math.random(),
+                    clubId: club.id,
+                    carnivalId: carnivalId
+                }));
+            });
+
+            // Save tasks to Firebase
+            saveToFirebase('tasks', allTasks);
+
+            // Clear inputs
+            document.getElementById('club-name-input').value = '';
+            document.getElementById('club-activity-select').value = '';
+            document.getElementById('club-commission-type').value = '';
+            document.getElementById('commission-amount').value = '';
+            document.getElementById('custom-activity-input').value = '';
+            document.getElementById('custom-activity-input').classList.add('hidden');
+            document.getElementById('commission-amount-container').classList.add('hidden');
+            checkboxes.forEach(checkbox => checkbox.checked = false);
+
+            updateAllDropdowns();
+            alert(`Club "${name}" registered successfully for ${selectedCarnivals.length} carnival(s) with ${taskTemplate.length} tasks each!`);
+        }
+
+        function handleTaskTypeChange() {
+            const taskType = document.getElementById('task-type-select').value;
+            const carnivalContainer = document.getElementById('carnival-select-container');
+            const clubContainer = document.getElementById('club-select-container');
+
+            // Hide all conditional containers
+            carnivalContainer.classList.add('hidden');
+            clubContainer.classList.add('hidden');
+
+            if (taskType === 'carnival' || taskType === 'club') {
+                carnivalContainer.classList.remove('hidden');
+                updateCarnivalDropdown('task-carnival-select');
+            }
+
+            if (taskType === 'club') {
+                clubContainer.classList.remove('hidden');
+            }
+        }
+
+        function createCustomTask() {
+            const taskType = document.getElementById('task-type-select').value;
+            const description = document.getElementById('task-description-input').value.trim();
+            const team = document.getElementById('task-team-input').value.trim();
+            const owner = document.getElementById('task-owner-input').value.trim();
+
+            if (!taskType || !description || !team || !owner) {
+                alert('Please fill all required fields');
+                return;
+            }
+
+            const task = {
+                description: description,
+                team: team,
+                owner: owner,
+                status: 'pending',
+                id: Date.now(),
+                createdAt: new Date().toLocaleDateString(),
+                priority: 'medium',
+                progress: 0
+            };
+
+            if (taskType === 'template') {
+                taskTemplate.push(task);
+                alert('Template task added! This will be assigned to all future club registrations.');
+            } else if (taskType === 'carnival') {
+                const carnivalId = parseInt(document.getElementById('task-carnival-select').value);
+                if (!carnivalId) {
+                    alert('Please select a carnival');
+                    return;
+                }
+                allTasks[carnivalId].carnivalTasks.push(task);
+                alert('Carnival-level task created successfully!');
+            } else if (taskType === 'club') {
+                const carnivalId = parseInt(document.getElementById('task-carnival-select').value);
+                const clubId = parseInt(document.getElementById('task-club-select').value);
+                if (!carnivalId || !clubId) {
+                    alert('Please select both carnival and club');
+                    return;
+                }
+                if (!allTasks[carnivalId].clubs[clubId]) {
+                    allTasks[carnivalId].clubs[clubId] = [];
+                }
+                allTasks[carnivalId].clubs[clubId].push(task);
+                alert('Club-specific task created successfully!');
+            }
+
+            // Clear form
+            document.getElementById('task-type-select').value = '';
+            document.getElementById('task-description-input').value = '';
+            document.getElementById('task-team-input').value = '';
+            document.getElementById('task-owner-input').value = '';
+            handleTaskTypeChange();
+            updateAllDropdowns();
+        }
+
+        function toggleTemplateExpansion() {
+            templateExpanded = !templateExpanded;
+            const templateList = document.getElementById('task-template-list');
+            const toggleText = document.getElementById('template-toggle-text');
+
+            if (templateExpanded) {
+                templateList.classList.remove('hidden');
+                toggleText.textContent = 'Collapse';
+                renderTaskTemplate();
+            } else {
+                templateList.classList.add('hidden');
+                toggleText.textContent = 'Expand All';
+            }
+        }
+
+        // Dropdown Update Functions
+        function updateAllDropdowns() {
+            updateCarnivalDropdown('dashboard-carnival-filter');
+            updateCarnivalDropdown('task-carnival-select');
+            updateClubDropdown('dashboard-club-filter');
+            updateClubDropdown('task-club-select');
+            updateCarnivalCheckboxes();
+            updateTeamOwnerSuggestions();
+            updateTemplateCount();
+        }
+
+        function updateCarnivalDropdown(selectId) {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+
+            const currentValue = select.value;
+            select.innerHTML = selectId.includes('filter') ? '<option value="all">All Carnivals</option>' : '<option value="">Select Carnival</option>';
+
+            carnivalsList.forEach(carnival => {
+                const option = document.createElement('option');
+                option.value = carnival.id;
+                option.textContent = carnival.name;
+                select.appendChild(option);
+            });
+
+            if (currentValue) select.value = currentValue;
+
+            // Update club dropdown when carnival changes
+            if (selectId === 'task-carnival-select') {
+                select.onchange = () => updateClubDropdown('task-club-select');
+            }
+        }
+
+        function updateClubDropdown(selectId) {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+
+            const currentValue = select.value;
+            select.innerHTML = selectId.includes('filter') ? '<option value="all">All Clubs</option>' : '<option value="">Select Club</option>';
+
+            let clubsToShow = clubsList;
+
+            // Filter clubs based on selected carnival for task creation
+            if (selectId === 'task-club-select') {
+                const selectedCarnival = parseInt(document.getElementById('task-carnival-select').value);
+                if (selectedCarnival) {
+                    clubsToShow = clubsList.filter(club => club.carnivals.includes(selectedCarnival));
+                }
+            }
+
+            clubsToShow.forEach(club => {
+                const option = document.createElement('option');
+                option.value = club.id;
+                option.textContent = `${club.name} (${club.activity})`;
+                select.appendChild(option);
+            });
+
+            if (currentValue) select.value = currentValue;
+        }
+
+        function updateCarnivalCheckboxes() {
+            const container = document.getElementById('carnival-checkbox-list');
+            if (!container) return;
+
+            if (carnivalsList.length === 0) {
+                container.innerHTML = '<p class="text-sm text-gray-500">Create carnivals first to register clubs</p>';
+                return;
+            }
+
+            const html = carnivalsList.map(carnival => `
+                <label class="flex items-center space-x-2 mb-2">
+                    <input type="checkbox" name="carnival-checkbox" value="${carnival.id}" class="form-checkbox h-4 w-4 text-indigo-600">
+                    <span class="text-sm text-gray-700">${carnival.name}</span>
+                </label>
+            `).join('');
+
+            container.innerHTML = html;
+        }
+
+        function updateTeamOwnerSuggestions() {
+            const allTasksFlat = getAllTasksFlat();
+
+            // Update team suggestions
+            const teams = new Set(['Operations', 'Marketing', 'Finance', 'Tech']);
+            allTasksFlat.forEach(task => {
+                if (task.team) teams.add(task.team);
+            });
+
+            const teamDatalist = document.getElementById('team-suggestions');
+            teamDatalist.innerHTML = Array.from(teams).map(team => `<option value="${team}">`).join('');
+
+            // Update owner suggestions
+            const owners = new Set(['Joy', 'Ayushi', 'Tauheed', 'Team Lead']);
+            allTasksFlat.forEach(task => {
+                if (task.owner) owners.add(task.owner);
+            });
+
+            const ownerDatalist = document.getElementById('owner-suggestions');
+            ownerDatalist.innerHTML = Array.from(owners).map(owner => `<option value="${owner}">`).join('');
+        }
+
+        function updateTemplateCount() {
+            document.getElementById('template-count').textContent = taskTemplate.length;
+        }
+
+        function getAllTasksFlat() {
+            const tasks = [...taskTemplate];
+
+            Object.values(allTasks).forEach(carnival => {
+                tasks.push(...carnival.carnivalTasks);
+                Object.values(carnival.clubs).forEach(clubTasks => {
+                    tasks.push(...clubTasks);
+                });
+            });
+
+            return tasks;
+        }
+
+        // Navigation function
+        function showView(viewId) {
+            // Hide all views
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('task-tracker-view').classList.add('hidden');
+            document.getElementById('timeline-view').classList.add('hidden');
+            document.getElementById('setup-view').classList.add('hidden');
+
+            // Show target view
+            document.getElementById(viewId + '-view').classList.remove('hidden');
+
+            // Update tab styles
+            document.getElementById('tab-dashboard').className = 'py-2 px-4 text-sm font-medium rounded-t-lg transition-colors duration-200 text-gray-500 hover:text-gray-700';
+            document.getElementById('tab-task-tracker').className = 'py-2 px-4 text-sm font-medium rounded-t-lg transition-colors duration-200 text-gray-500 hover:text-gray-700';
+            document.getElementById('tab-timeline').className = 'py-2 px-4 text-sm font-medium rounded-t-lg transition-colors duration-200 text-gray-500 hover:text-gray-700';
+            document.getElementById('tab-setup').className = 'py-2 px-4 text-sm font-medium rounded-t-lg transition-colors duration-200 text-gray-500 hover:text-gray-700';
+
+            document.getElementById('tab-' + viewId).className = 'py-2 px-4 text-sm font-medium rounded-t-lg transition-colors duration-200 text-indigo-600 border-b-2 border-indigo-600';
+
+            // Render content based on view
+            if (viewId === 'setup') {
+                updateAllDropdowns();
+                if (templateExpanded) renderTaskTemplate();
+            } else if (viewId === 'task-tracker') {
+                updateAllDropdowns();
+                updateTrackerDropdowns();
+                renderTaskTracker();
+            } else if (viewId === 'timeline') {
+                updateAllDropdowns();
+                renderTimeline();
+            } else if (viewId === 'dashboard') {
+                renderDashboard();
+            }
+        }
+
+        // Render task template in setup view
+        function renderTaskTemplate() {
+            const container = document.getElementById('task-template-list');
+            if (!container) return;
+
+            const html = taskTemplate.map((task, index) => {
+                return `<div class="flex items-center justify-between p-3 bg-gray-50 border rounded-lg hover:bg-gray-100 transition-colors">
+                    <div class="flex-1">
+                        <p class="text-sm text-gray-800 font-medium">${task.description}</p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span class="text-xs text-blue-700 bg-blue-100 px-2 py-1 rounded-full">${task.team || 'N/A'}</span>
+                        <span class="text-xs text-indigo-700 bg-indigo-100 px-2 py-1 rounded-full">${task.owner || 'N/A'}</span>
+                        <span class="text-xs text-green-700 bg-green-100 px-2 py-1 rounded-full">Mandatory</span>
+                        <button onclick="openTaskDetails('${task.id}', null, null)" class="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-100" title="Edit Task">✏️</button>
+                        <button onclick="deleteTask(${index})" class="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100" title="Delete Task">🗑️</button>
+                    </div>
+                </div>`;
+            }).join('');
+
+            container.innerHTML = html;
+        }
+
+        // Dashboard Dropdown Functions
+        function updateDashboardDropdowns() {
+            console.log('🔄 Updating Dashboard dropdowns');
+            try {
+                // Save current filter values before updating dropdowns
+                const currentFilters = {
+                    carnival: document.getElementById('dashboard-carnival-filter')?.value,
+                    club: document.getElementById('dashboard-club-filter')?.value,
+                    team: document.getElementById('dashboard-team-filter')?.value,
+                    owner: document.getElementById('dashboard-owner-filter')?.value,
+                    status: document.getElementById('dashboard-status-filter')?.value
+                };
+
+                // Use same data approach as Timeline (working approach)
+                const teams = new Set(['Operations', 'Marketing', 'Finance', 'Tech']);
+                const owners = new Set(['Joy', 'Ayushi', 'Tauheed', 'Team Lead']);
+
+                // Collect teams and owners from actual task data
+                carnivalsList.forEach(carnival => {
+                    const carnivalData = allTasks[carnival.id];
+                    if (!carnivalData) return;
+
+                    // Get teams/owners from carnival tasks
+                    const carnivalTasks = carnivalData.carnivalTasks || [];
+                    carnivalTasks.forEach(task => {
+                        if (task.team) teams.add(task.team);
+                        if (task.owner) owners.add(task.owner);
+                    });
+
+                    // Get teams/owners from club tasks
+                    const clubs = clubsList.filter(club => club.carnivals.includes(carnival.id));
+                    clubs.forEach(club => {
+                        const clubTasks = carnivalData.clubs[club.id] || [];
+                        clubTasks.forEach(task => {
+                            if (task.team) teams.add(task.team);
+                            if (task.owner) owners.add(task.owner);
+                        });
+                    });
+                });
+
+                // Update team filter
+                const teamFilter = document.getElementById('dashboard-team-filter');
+                if (teamFilter) {
+                    teamFilter.innerHTML = '<option value="all">All Teams</option>';
+                    Array.from(teams).sort().forEach(team => {
+                        const option = document.createElement('option');
+                        option.value = team;
+                        option.textContent = team;
+                        teamFilter.appendChild(option);
+                    });
+                }
+
+                // Update owner filter
+                const ownerFilter = document.getElementById('dashboard-owner-filter');
+                if (ownerFilter) {
+                    ownerFilter.innerHTML = '<option value="all">All Owners</option>';
+                    Array.from(owners).sort().forEach(owner => {
+                        const option = document.createElement('option');
+                        option.value = owner;
+                        option.textContent = owner;
+                        ownerFilter.appendChild(option);
+                    });
+                }
+
+                // Update status filter
+                const statusFilter = document.getElementById('dashboard-status-filter');
+                if (statusFilter) {
+                    statusFilter.innerHTML = '<option value="all">All Status</option>';
+                    const statuses = ['pending', 'in-progress', 'completed'];
+                    statuses.forEach(status => {
+                        const option = document.createElement('option');
+                        option.value = status;
+                        option.textContent = status === 'in-progress' ? 'In Progress' : status.charAt(0).toUpperCase() + status.slice(1);
+                        statusFilter.appendChild(option);
+                    });
+                }
+
+                // Restore filter values after dropdown update
+                if (currentFilters.carnival && document.getElementById('dashboard-carnival-filter')) {
+                    document.getElementById('dashboard-carnival-filter').value = currentFilters.carnival;
+                }
+                if (currentFilters.club && document.getElementById('dashboard-club-filter')) {
+                    document.getElementById('dashboard-club-filter').value = currentFilters.club;
+                }
+                if (currentFilters.team && document.getElementById('dashboard-team-filter')) {
+                    document.getElementById('dashboard-team-filter').value = currentFilters.team;
+                }
+                if (currentFilters.owner && document.getElementById('dashboard-owner-filter')) {
+                    document.getElementById('dashboard-owner-filter').value = currentFilters.owner;
+                }
+                if (currentFilters.status && document.getElementById('dashboard-status-filter')) {
+                    document.getElementById('dashboard-status-filter').value = currentFilters.status;
+                }
+
+                console.log('✅ Dashboard dropdowns updated successfully');
+
+            } catch (error) {
+                console.error('❌ Error updating dashboard dropdowns:', error);
+            }
+        }
+
+        // Update tracker dropdowns
+        function updateTrackerDropdowns() {
+            // Update carnival dropdown
+            const carnivalSelect = document.getElementById('tracker-carnival-select');
+            carnivalSelect.innerHTML = '<option value="">Select Carnival to View Tasks</option>';
+            carnivalsList.forEach(carnival => {
+                const option = document.createElement('option');
+                option.value = carnival.id;
+                option.textContent = carnival.name;
+                carnivalSelect.appendChild(option);
+            });
+
+            // Update team and owner filters
+            const allTasks = getAllTasksFlat();
+            const teams = new Set(['Operations', 'Marketing', 'Finance', 'Tech']);
+            const owners = new Set(['Joy', 'Ayushi', 'Tauheed', 'Team Lead']);
+
+            allTasks.forEach(task => {
+                if (task.team) teams.add(task.team);
+                if (task.owner) owners.add(task.owner);
+            });
+
+            const teamFilter = document.getElementById('tracker-team-filter');
+            teamFilter.innerHTML = '<option value="all">All Teams</option>';
+            Array.from(teams).sort().forEach(team => {
+                const option = document.createElement('option');
+                option.value = team;
+                option.textContent = team;
+                teamFilter.appendChild(option);
+            });
+
+            const ownerFilter = document.getElementById('tracker-owner-filter');
+            ownerFilter.innerHTML = '<option value="all">All Owners</option>';
+            Array.from(owners).sort().forEach(owner => {
+                const option = document.createElement('option');
+                option.value = owner;
+                option.textContent = owner;
+                ownerFilter.appendChild(option);
+            });
+        }
+
+        function updateTrackerView() {
+            console.log('🔍 Task Tracker filters triggered');
+            const selectedCarnival = parseInt(document.getElementById('tracker-carnival-select').value);
+            const clubSelect = document.getElementById('tracker-club-select');
+
+            // Update club dropdown based on selected carnival
+            if (selectedCarnival) {
+                const clubs = clubsList.filter(club => club.carnivals.includes(selectedCarnival));
+                clubSelect.innerHTML = '<option value="all">All Clubs in Carnival</option>';
+                clubs.forEach(club => {
+                    const option = document.createElement('option');
+                    option.value = club.id;
+                    option.textContent = `${club.name} (${club.activity})`;
+                    clubSelect.appendChild(option);
+                });
+            } else {
+                clubSelect.innerHTML = '<option value="all">Select Carnival First</option>';
+            }
+
+            renderTaskTracker();
+        }
+
+        // Render task tracker with filtering
+        function renderTaskTracker() {
+            console.log('📋 Rendering Task Tracker view');
+            const container = document.getElementById('tracker-task-list');
+            if (!container) return;
+
+            const selectedCarnival = parseInt(document.getElementById('tracker-carnival-select').value);
+            const selectedClub = document.getElementById('tracker-club-select').value;
+            const teamFilter = document.getElementById('tracker-team-filter').value;
+            const ownerFilter = document.getElementById('tracker-owner-filter').value;
+            const statusFilter = document.getElementById('tracker-status-filter').value;
+
+            console.log('📋 Task Tracker Filters:', {
+                carnival: selectedCarnival,
+                club: selectedClub,
+                team: teamFilter,
+                owner: ownerFilter,
+                status: statusFilter
+            });
+
+            let html = '';
+
+            if (carnivalsList.length === 0) {
+                html = `<div class="bg-yellow-50 border border-yellow-200 p-6 rounded-lg text-center">
+                    <h3 class="text-lg font-medium text-yellow-800 mb-2">No Carnivals Created Yet</h3>
+                    <p class="text-yellow-700">Create carnivals and register clubs in the Setup tab to start tracking tasks.</p>
+                </div>`;
+            } else if (!selectedCarnival) {
+                html = `<div class="bg-blue-50 border border-blue-200 p-6 rounded-lg text-center">
+                    <h3 class="text-lg font-medium text-blue-800 mb-2">Select a Carnival</h3>
+                    <p class="text-blue-700">Choose a carnival from the dropdown above to view its tasks.</p>
+                </div>`;
+            } else {
+                const carnival = carnivalsList.find(c => c.id === selectedCarnival);
+                const carnivalTasks = allTasks[selectedCarnival]?.carnivalTasks || [];
+                const clubs = clubsList.filter(club => club.carnivals.includes(selectedCarnival));
+
+                // Filter tasks
+                const filterTasks = (tasks) => {
+                    return tasks.filter(task => {
+                        if (teamFilter !== 'all' && task.team !== teamFilter) return false;
+                        if (ownerFilter !== 'all' && task.owner !== ownerFilter) return false;
+                        if (statusFilter !== 'all' && task.status !== statusFilter) return false;
+                        return true;
+                    });
+                };
+
+                html += `<div class="bg-white p-6 rounded-xl shadow-lg mb-6">
+                    <h3 class="text-xl font-semibold text-indigo-700 mb-4">🎪 ${carnival.name}</h3>`;
+
+                // Carnival-level tasks
+                const filteredCarnivalTasks = filterTasks(carnivalTasks);
+                if (filteredCarnivalTasks.length > 0) {
+                    html += `<div class="mb-6">
+                        <h4 class="text-md font-medium text-purple-700 mb-3">Carnival-Level Tasks (${filteredCarnivalTasks.length})</h4>
+                        <div class="space-y-3">
+                            ${filteredCarnivalTasks.map(task => `
+                            <div class="bg-purple-50 p-4 rounded-lg border border-purple-200 hover:shadow-md transition-shadow cursor-pointer" onclick="openTaskDetails('${task.id}', '${selectedCarnival}', null)">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-gray-800 mb-2">${task.description}</p>
+                                        <div class="flex items-center space-x-2">
+                                            <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">${task.team}</span>
+                                            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">${task.owner}</span>
+                                            <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">${task.status}</span>
+                                            ${task.expectedDate ? `<span class="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">Due: ${task.expectedDate}</span>` : ''}
+                                        </div>
+                                    </div>
+                                    <button class="text-indigo-500 hover:text-indigo-700 p-1 rounded" title="View Details">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            `).join('')}
+                        </div>
+                    </div>`;
+                }
+
+                // Club tasks
+                if (selectedClub === 'all' || selectedClub === '') {
+                    // Show all clubs
+                    html += `<div><h4 class="text-md font-medium text-green-700 mb-3">Club Tasks</h4>`;
+                    clubs.forEach(club => {
+                        const clubTasks = allTasks[selectedCarnival]?.clubs[club.id] || [];
+                        const filteredClubTasks = filterTasks(clubTasks);
+
+                        if (filteredClubTasks.length > 0) {
+                            html += `<div class="mb-4 bg-green-50 p-4 rounded-lg border border-green-200">
+                                <h5 class="font-medium text-gray-900 mb-3">${club.name} (${club.activity}) - ${filteredClubTasks.length} tasks</h5>
+                                <div class="space-y-2">
+                                    ${filteredClubTasks.map(task => `
+                                    <div class="bg-white p-3 rounded border hover:shadow-md transition-shadow cursor-pointer" onclick="openTaskDetails('${task.id}', '${selectedCarnival}', '${club.id}')">
+                                        <div class="flex items-start justify-between">
+                                            <div class="flex-1">
+                                                <p class="text-sm font-medium text-gray-800 mb-2">${task.description}</p>
+                                                <div class="flex items-center space-x-2 mb-2">
+                                                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">${task.team}</span>
+                                                    <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">${task.owner}</span>
+                                                    <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">${task.status}</span>
+                                                    ${task.expectedDate ? `<span class="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">Due: ${task.expectedDate}</span>` : ''}
+                                                </div>
+                                                <button onclick="event.stopPropagation(); transferTaskToCarnival('${selectedCarnival}', '${club.id}', '${task.id}', '${task.description.replace(/'/g, "&apos;")}')" class="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full hover:bg-purple-200 transition-colors" title="Transfer this task to carnival level (applies to all clubs)">🎪 Transfer to Carnival</button>
+                                            </div>
+                                            <button class="text-indigo-500 hover:text-indigo-700 p-1 rounded" title="View Details">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    `).join('')}
+                                </div>
+                            </div>`;
+                        }
+                    });
+                    html += `</div>`;
+                } else {
+                    // Show specific club
+                    const selectedClubId = parseInt(selectedClub);
+                    const club = clubs.find(c => c.id === selectedClubId);
+                    if (club) {
+                        const clubTasks = allTasks[selectedCarnival]?.clubs[selectedClubId] || [];
+                        const filteredClubTasks = filterTasks(clubTasks);
+
+                        html += `<div><h4 class="text-md font-medium text-green-700 mb-3">${club.name} Tasks (${filteredClubTasks.length})</h4>
+                            <div class="space-y-3">
+                                ${filteredClubTasks.map(task => `
+                                <div class="bg-green-50 p-4 rounded-lg border border-green-200 hover:shadow-md transition-shadow cursor-pointer" onclick="openTaskDetails('${task.id}', '${selectedCarnival}', '${selectedClubId}')">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex-1">
+                                            <p class="text-sm font-medium text-gray-800 mb-2">${task.description}</p>
+                                            <div class="flex items-center space-x-2 mb-2">
+                                                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">${task.team}</span>
+                                                <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">${task.owner}</span>
+                                                <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">${task.status}</span>
+                                                ${task.expectedDate ? `<span class="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">📅 Due: ${task.expectedDate}</span>` : ''}
+                                            </div>
+                                            <button onclick="event.stopPropagation(); transferTaskToCarnival('${selectedCarnival}', '${selectedClubId}', '${task.id}', '${task.description.replace(/'/g, "&apos;")}')" class="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full hover:bg-purple-200 transition-colors" title="Transfer this task to carnival level (applies to all clubs)">🎪 Transfer to Carnival</button>
+                                        </div>
+                                        <button class="text-indigo-500 hover:text-indigo-700 p-1 rounded" title="View Details">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                `).join('')}
+                            </div>
+                        </div>`;
+                    }
+                }
+
+                html += `</div>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        // Update timeline dropdowns and filters
+        function updateTimelineDropdowns() {
+            console.log('🔄 updateTimelineDropdowns called');
+            try {
+                // Use same data approach as getFilteredTimelineTasks (working approach)
+                const teams = new Set(['Operations', 'Marketing', 'Finance', 'Tech']);
+                const owners = new Set(['Joy', 'Ayushi', 'Tauheed', 'Team Lead']);
+
+                console.log('📋 Initial teams:', Array.from(teams));
+                console.log('📋 Initial owners:', Array.from(owners));
+                console.log('📋 Carnivals list:', carnivalsList.length);
+                console.log('📋 Clubs list:', clubsList.length);
+
+                // Collect teams and owners from actual task data (same approach as filtering)
+                carnivalsList.forEach(carnival => {
+                    const carnivalData = allTasks[carnival.id];
+                    if (!carnivalData) {
+                        console.log(`❌ No carnival data for ${carnival.id}`);
+                        return;
+                    }
+
+                    console.log(`✅ Processing carnival ${carnival.id} (${carnival.name})`);
+
+                    // Get teams/owners from carnival tasks
+                    const carnivalTasks = carnivalData.carnivalTasks || [];
+                    console.log(`📋 Carnival tasks: ${carnivalTasks.length}`);
+                    carnivalTasks.forEach(task => {
+                        if (task.team) teams.add(task.team);
+                        if (task.owner) owners.add(task.owner);
+                    });
+
+                    // Get teams/owners from club tasks
+                    const clubs = clubsList.filter(club => club.carnivals.includes(carnival.id));
+                    console.log(`📋 Clubs for carnival ${carnival.id}: ${clubs.length}`);
+                    clubs.forEach(club => {
+                        const clubTasks = carnivalData.clubs[club.id] || [];
+                        console.log(`📋 Club ${club.id} tasks: ${clubTasks.length}`);
+                        clubTasks.forEach(task => {
+                            if (task.team) teams.add(task.team);
+                            if (task.owner) owners.add(task.owner);
+                        });
+                    });
+                });
+
+                console.log('📋 Final teams collected:', Array.from(teams));
+                console.log('📋 Final owners collected:', Array.from(owners));
+
+                // Update carnival filter
+                console.log('🔄 Updating carnival filter');
+                const carnivalFilter = document.getElementById('timeline-carnival-filter');
+                if (!carnivalFilter) {
+                    console.error('❌ Carnival filter element not found!');
+                    return;
+                }
+                carnivalFilter.innerHTML = '<option value="all">All Carnivals</option>';
+                carnivalsList.forEach(carnival => {
+                    const option = document.createElement('option');
+                    option.value = carnival.id;
+                    option.textContent = carnival.name;
+                    carnivalFilter.appendChild(option);
+                });
+                console.log(`✅ Carnival filter updated with ${carnivalsList.length} options`);
+
+                // Update club filter
+                console.log('🔄 Updating club filter');
+                const clubFilter = document.getElementById('timeline-club-filter');
+                if (!clubFilter) {
+                    console.error('❌ Club filter element not found!');
+                    return;
+                }
+                clubFilter.innerHTML = '<option value="all">All Clubs</option>';
+                clubsList.forEach(club => {
+                    const option = document.createElement('option');
+                    option.value = club.id;
+                    option.textContent = `${club.name} (${club.activity})`;
+                    clubFilter.appendChild(option);
+                });
+                console.log(`✅ Club filter updated with ${clubsList.length} options`);
+
+                // Update team filter
+                console.log('🔄 Updating team filter');
+                const teamFilter = document.getElementById('timeline-team-filter');
+                if (!teamFilter) {
+                    console.error('❌ Team filter element not found!');
+                    return;
+                }
+                teamFilter.innerHTML = '<option value="all">All Teams</option>';
+                const teamsArray = Array.from(teams).sort();
+                console.log('📋 Teams to add:', teamsArray);
+                teamsArray.forEach(team => {
+                    const option = document.createElement('option');
+                    option.value = team;
+                    option.textContent = team;
+                    teamFilter.appendChild(option);
+                });
+                console.log(`✅ Team filter updated with ${teamsArray.length} options`);
+
+                // Update owner filter
+                console.log('🔄 Updating owner filter');
+                const ownerFilter = document.getElementById('timeline-owner-filter');
+                if (!ownerFilter) {
+                    console.error('❌ Owner filter element not found!');
+                    return;
+                }
+                ownerFilter.innerHTML = '<option value="all">All Owners</option>';
+                const ownersArray = Array.from(owners).sort();
+                console.log('📋 Owners to add:', ownersArray);
+                ownersArray.forEach(owner => {
+                    const option = document.createElement('option');
+                    option.value = owner;
+                    option.textContent = owner;
+                    ownerFilter.appendChild(option);
+                });
+                console.log(`✅ Owner filter updated with ${ownersArray.length} options`);
+
+                // Update status filter (was missing!)
+                console.log('🔄 Updating status filter');
+                const statusFilter = document.getElementById('timeline-status-filter');
+                if (!statusFilter) {
+                    console.error('❌ Status filter element not found!');
+                    return;
+                }
+                statusFilter.innerHTML = '<option value="all">All Status</option>';
+                const statuses = ['pending', 'in-progress', 'completed'];
+                statuses.forEach(status => {
+                    const option = document.createElement('option');
+                    option.value = status;
+                    option.textContent = status === 'in-progress' ? 'In Progress' : status.charAt(0).toUpperCase() + status.slice(1);
+                    statusFilter.appendChild(option);
+                });
+                console.log(`✅ Status filter updated with ${statuses.length} options`);
+
+                console.log('✅ updateTimelineDropdowns completed successfully');
+
+            } catch (error) {
+                console.error('❌ Error in updateTimelineDropdowns:', error);
+            }
+        }
+
+        function updateTimelineView() {
+            console.log('🔍 Timeline filters triggered');
+            const viewMode = document.getElementById('timeline-view-mode').value;
+            const personalSelect = document.getElementById('personal-owner-select');
+            const personalAlert = document.getElementById('personal-dashboard-alert');
+
+            if (viewMode === 'my-tasks') {
+                personalSelect.classList.remove('hidden');
+                personalAlert.classList.remove('hidden');
+
+                // Update personal owner dropdown
+                const allTasks = getAllTasksFlat();
+                const owners = new Set();
+                allTasks.forEach(task => {
+                    if (task.owner) owners.add(task.owner);
+                });
+
+                personalSelect.innerHTML = '<option value="">Select Your Name</option>';
+                Array.from(owners).sort().forEach(owner => {
+                    const option = document.createElement('option');
+                    option.value = owner;
+                    option.textContent = owner;
+                    personalSelect.appendChild(option);
+                });
+
+                const selectedOwner = personalSelect.value;
+                if (selectedOwner) {
+                    document.getElementById('personal-owner-name').textContent = selectedOwner;
+                }
+            } else {
+                personalSelect.classList.add('hidden');
+                personalAlert.classList.add('hidden');
+            }
+
+            renderTimeline();
+        }
+
+        function getFilteredTimelineTasks() {
+            // Use EXACT same approach as Task Tracker - simple and reliable
+            const allTasksList = [];
+
+            // Get filter values (same as Task Tracker)
+            const carnivalFilter = document.getElementById('timeline-carnival-filter').value;
+            const clubFilter = document.getElementById('timeline-club-filter').value;
+            const teamFilter = document.getElementById('timeline-team-filter').value;
+            const ownerFilter = document.getElementById('timeline-owner-filter').value;
+            const statusFilter = document.getElementById('timeline-status-filter').value;
+            const taskTypeFilter = document.getElementById('timeline-task-type').value;
+
+            // Simple filter function (copied from Task Tracker)
+            const filterTasks = (tasks) => {
+                return tasks.filter(task => {
+                    if (teamFilter !== 'all' && task.team !== teamFilter) return false;
+                    if (ownerFilter !== 'all' && task.owner !== ownerFilter) return false;
+                    if (statusFilter !== 'all' && task.status !== statusFilter) return false;
+                    return true;
+                });
+            };
+
+            // Process each carnival (same structure as Task Tracker)
+            carnivalsList.forEach(carnival => {
+                // Apply carnival filter first
+                if (carnivalFilter !== 'all' && carnival.id != carnivalFilter) return;
+
+                const carnivalData = allTasks[carnival.id];
+                if (!carnivalData) return;
+
+                // Add carnival tasks
+                const carnivalTasks = carnivalData.carnivalTasks || [];
+                const filteredCarnivalTasks = filterTasks(carnivalTasks);
+                filteredCarnivalTasks.forEach(task => {
+                    if (taskTypeFilter === 'all' || taskTypeFilter === 'carnival') {
+                        allTasksList.push({
+                            ...task,
+                            carnivalId: carnival.id,
+                            carnivalName: carnival.name,
+                            clubId: null,
+                            clubName: null,
+                            taskType: 'carnival'
+                        });
+                    }
+                });
+
+                // Add club tasks (same approach as Task Tracker)
+                const clubs = clubsList.filter(club => club.carnivals.includes(carnival.id));
+                clubs.forEach(club => {
+                    // Apply club filter
+                    if (clubFilter !== 'all' && club.id != clubFilter) return;
+
+                    const clubTasks = carnivalData.clubs[club.id] || [];
+                    const filteredClubTasks = filterTasks(clubTasks);
+                    filteredClubTasks.forEach(task => {
+                        if (taskTypeFilter === 'all' || taskTypeFilter === 'club') {
+                            allTasksList.push({
+                                ...task,
+                                carnivalId: carnival.id,
+                                carnivalName: carnival.name,
+                                clubId: club.id,
+                                clubName: club.name,
+                                taskType: 'club'
+                            });
+                        }
+                    });
+                });
+            });
+
+            // Special handling for personal dashboard
+            if (viewMode === 'my-tasks') {
+                const personalOwner = document.getElementById('personal-owner-select').value;
+                if (personalOwner) {
+                    return allTasksList.filter(task => task.owner === personalOwner);
+                } else {
+                    return [];
+                }
+            }
+
+            return allTasksList;
+        }
+
+        // Render comprehensive timeline
+        function renderTimeline() {
+            console.log('📅 Rendering Timeline view');
+            const container = document.getElementById('timeline-content');
+            if (!container) {
+                console.error('❌ timeline-content container not found!');
+                return;
+            }
+
+            // Save current filter values before updating dropdowns
+            const currentFilters = {
+                carnival: document.getElementById('timeline-carnival-filter')?.value,
+                club: document.getElementById('timeline-club-filter')?.value,
+                team: document.getElementById('timeline-team-filter')?.value,
+                owner: document.getElementById('timeline-owner-filter')?.value,
+                status: document.getElementById('timeline-status-filter')?.value,
+                taskType: document.getElementById('timeline-task-type')?.value
+            };
+
+            console.log('🔍 About to call updateTimelineDropdowns...');
+            try {
+                updateTimelineDropdowns();
+                console.log('✅ updateTimelineDropdowns completed');
+
+                // Restore filter values after dropdown update
+                console.log('🔄 Restoring filter values:', currentFilters);
+                if (currentFilters.carnival && document.getElementById('timeline-carnival-filter')) {
+                    document.getElementById('timeline-carnival-filter').value = currentFilters.carnival;
+                }
+                if (currentFilters.club && document.getElementById('timeline-club-filter')) {
+                    document.getElementById('timeline-club-filter').value = currentFilters.club;
+                }
+                if (currentFilters.team && document.getElementById('timeline-team-filter')) {
+                    document.getElementById('timeline-team-filter').value = currentFilters.team;
+                }
+                if (currentFilters.owner && document.getElementById('timeline-owner-filter')) {
+                    document.getElementById('timeline-owner-filter').value = currentFilters.owner;
+                }
+                if (currentFilters.status && document.getElementById('timeline-status-filter')) {
+                    document.getElementById('timeline-status-filter').value = currentFilters.status;
+                }
+                if (currentFilters.taskType && document.getElementById('timeline-task-type')) {
+                    document.getElementById('timeline-task-type').value = currentFilters.taskType;
+                }
+
+            } catch (error) {
+                console.error('❌ Error in updateTimelineDropdowns:', error);
+            }
+
+            const filteredTasks = getFilteredTimelineTasks();
+
+            // Update summary stats
+            const totalFiltered = filteredTasks.length;
+            const completed = filteredTasks.filter(t => t.status === 'completed').length;
+            const completionRate = totalFiltered > 0 ? Math.round((completed / totalFiltered) * 100) : 0;
+
+            document.getElementById('timeline-total-filtered').textContent = totalFiltered;
+            document.getElementById('timeline-upcoming-week').textContent = filteredTasks.filter(t => t.status === 'pending').length;
+            document.getElementById('timeline-overdue').textContent = filteredTasks.filter(t => t.status === 'pending').length; // Simplified for now
+            document.getElementById('timeline-completion-rate').textContent = completionRate + '%';
+
+            if (totalFiltered === 0) {
+                container.innerHTML = `<div class="bg-yellow-50 border border-yellow-200 p-6 rounded-lg text-center">
+                    <h3 class="text-lg font-medium text-yellow-800 mb-2">No Tasks Match Your Filters</h3>
+                    <p class="text-yellow-700">Try adjusting the filters above to see more tasks.</p>
+                </div>`;
+                return;
+            }
+
+            // Always use list view
+            renderTimelineListView(filteredTasks, container);
+        }
+
+        function renderTimelineListView(tasks, container) {
+
+            // Group tasks by carnival and club
+            const groupedTasks = {};
+
+            tasks.forEach(task => {
+                const carnivalKey = task.carnivalName || 'Template Tasks';
+                const clubKey = task.clubName || (task.taskType === 'carnival' ? 'Carnival Level' : 'Global');
+
+                if (!groupedTasks[carnivalKey]) {
+                    groupedTasks[carnivalKey] = {};
+                }
+                if (!groupedTasks[carnivalKey][clubKey]) {
+                    groupedTasks[carnivalKey][clubKey] = [];
+                }
+                groupedTasks[carnivalKey][clubKey].push(task);
+            });
+
+            let html = '';
+            Object.entries(groupedTasks).forEach(([carnivalName, clubs]) => {
+                html += `<div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                    <h3 class="text-xl font-semibold text-indigo-700 mb-4">🎪 ${carnivalName}</h3>`;
+
+                Object.entries(clubs).forEach(([clubName, clubTasks]) => {
+                    const completedCount = clubTasks.filter(t => t.status === 'completed').length;
+                    const totalCount = clubTasks.length;
+                    const percentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
+                    const clubColor = clubTasks[0].taskType === 'carnival' ? 'purple' :
+                                     clubTasks[0].taskType === 'template' ? 'blue' : 'green';
+
+                    html += `<div class="mb-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-lg font-medium text-${clubColor}-700">${clubName}</h4>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-sm text-gray-600">${completedCount}/${totalCount} completed</span>
+                                <div class="w-20 bg-gray-200 rounded-full h-2">
+                                    <div class="bg-${clubColor}-600 h-2 rounded-full transition-all duration-300" style="width: ${percentage}%"></div>
+                                </div>
+                                <span class="text-sm font-medium text-${clubColor}-600">${percentage}%</span>
+                            </div>
+                        </div>
+                        <div class="space-y-3">`;
+
+                    // Enhanced hierarchical sorting: Priority > Status > Due Date > Team
+                    const sortedTasks = clubTasks.sort((a, b) => {
+                        // 1. Priority order (urgent tasks first)
+                        const priorityOrder = { 'urgent': 4, 'high': 3, 'medium': 2, 'low': 1 };
+                        const aPriority = priorityOrder[a.priority] || 2;
+                        const bPriority = priorityOrder[b.priority] || 2;
+
+                        if (aPriority !== bPriority) {
+                            return bPriority - aPriority;
+                        }
+
+                        // 2. Status order (active tasks before completed)
+                        const statusOrder = {
+                            'Blocked': 5,      // Blocked tasks need attention
+                            'In Progress': 4,   // Currently active tasks
+                            'To Do': 3,        // Pending tasks
+                            'pending': 3,      // Legacy status mapping
+                            'in-progress': 4,  // Legacy status mapping
+                            'Done': 1,         // Completed tasks last
+                            'completed': 1     // Legacy status mapping
+                        };
+                        const aStatus = statusOrder[a.status] || 2;
+                        const bStatus = statusOrder[b.status] || 2;
+
+                        if (aStatus !== bStatus) {
+                            return bStatus - aStatus;
+                        }
+
+                        // 3. Due date order (overdue and near-due first)
+                        const aDate = a.expectedDate ? new Date(a.expectedDate) : new Date('9999-12-31');
+                        const bDate = b.expectedDate ? new Date(b.expectedDate) : new Date('9999-12-31');
+                        const today = new Date();
+
+                        const aOverdue = aDate < today && a.status !== 'Done';
+                        const bOverdue = bDate < today && b.status !== 'Done';
+
+                        if (aOverdue && !bOverdue) return -1;
+                        if (!aOverdue && bOverdue) return 1;
+                        if (aOverdue && bOverdue) return aDate - bDate; // Earlier overdue first
+
+                        // 4. Team grouping (within same priority/status)
+                        if (a.team && b.team && a.team !== b.team) {
+                            return a.team.localeCompare(b.team);
+                        }
+
+                        // 5. Finally, sort by due date
+                        return aDate - bDate;
+                    });
+
+                    sortedTasks.forEach(task => {
+                        // Enhanced status color mapping
+                        const statusColor =
+                            task.status === 'Done' || task.status === 'completed' ? 'green' :
+                            task.status === 'In Progress' || task.status === 'in-progress' ? 'blue' :
+                            task.status === 'Blocked' ? 'red' :
+                            task.status === 'To Do' || task.status === 'pending' ? 'yellow' : 'gray';
+
+                        const priorityColor = task.priority === 'urgent' ? 'red' :
+                                             task.priority === 'high' ? 'orange' :
+                                             task.priority === 'medium' ? 'blue' : 'gray';
+
+                        // Check for overdue tasks
+                        const isOverdue = task.expectedDate &&
+                                        new Date(task.expectedDate) < new Date() &&
+                                        task.status !== 'Done' && task.status !== 'completed';
+
+                        html += `<div class="bg-${clubColor}-50 border border-${clubColor}-200 p-4 rounded-lg hover:shadow-md transition-shadow cursor-pointer ${isOverdue ? 'ring-2 ring-red-400' : ''}" onclick="openTaskDetails('${task.id}', '${task.carnivalId}', '${task.clubId}')">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-800 mb-2 ${isOverdue ? 'text-red-700' : ''}">${task.description} ${isOverdue ? '🚨' : ''}</p>
+                                    <div class="flex items-center space-x-2 flex-wrap">
+                                        <span class="text-xs bg-${priorityColor}-100 text-${priorityColor}-800 px-2 py-1 rounded">${task.priority || 'medium'} priority</span>
+                                        <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">${task.team}</span>
+                                        <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">${task.owner}</span>
+                                        <span class="text-xs bg-${statusColor}-100 text-${statusColor}-800 px-2 py-1 rounded">${task.status}</span>
+                                        ${task.expectedDate ? `<span class="text-xs ${isOverdue ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'} px-2 py-1 rounded font-medium">📅 Expected: ${new Date(task.expectedDate).toLocaleDateString()}</span>` : '<span class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">⚠️ No Due Date</span>'}
+                                        ${task.actualDate && (task.status === 'completed' || task.status === 'Done') ? `<span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">✅ Completed: ${new Date(task.actualDate).toLocaleDateString()}</span>` : ''}
+                                        ${isOverdue ? '<span class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded font-bold">🚨 OVERDUE</span>' : ''}
+                                    </div>
+                                </div>
+                                <div class="ml-4 flex items-center space-x-2">
+                                    <button onclick="event.stopPropagation(); toggleTaskStatus('${task.id}', '${task.carnivalId}', '${task.clubId}')"
+                                            class="text-xs bg-white border border-gray-300 px-3 py-1 rounded hover:bg-gray-50 transition-colors">
+                                        Update Status
+                                    </button>
+                                    <button class="text-indigo-500 hover:text-indigo-700 p-1 rounded" title="View Details">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>`;
+                    });
+
+                    html += `</div></div>`;
+                });
+
+                html += `</div>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function renderPersonalDashboard(tasks, container) {
+            const selectedOwner = document.getElementById('personal-owner-select').value;
+
+            if (!selectedOwner) {
+                container.innerHTML = `<div class="bg-blue-50 border border-blue-200 p-6 rounded-lg text-center">
+                    <h3 class="text-lg font-medium text-blue-800 mb-2">Select Your Name</h3>
+                    <p class="text-blue-700">Choose your name from the dropdown above to view your personal task dashboard.</p>
+                </div>`;
+                return;
+            }
+
+            // Filter and categorize tasks
+            const pending = tasks.filter(t => t.status === 'pending');
+            const inProgress = tasks.filter(t => t.status === 'in-progress');
+            const overdue = tasks.filter(t => t.expectedDate && new Date(t.expectedDate) < new Date() && t.status !== 'completed');
+            const completed = tasks.filter(t => t.status === 'completed');
+
+            let html = `<div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-semibold text-indigo-700">👤 ${selectedOwner}'s Personal Dashboard</h3>
+                    <div class="text-sm text-gray-500">${tasks.length} total tasks assigned</div>
+                </div>
+
+                <!-- Personal Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-red-50 p-4 rounded-lg text-center">
+                        <div class="text-2xl font-bold text-red-600">${overdue.length}</div>
+                        <div class="text-sm text-red-600">Overdue Tasks</div>
+                    </div>
+                    <div class="bg-yellow-50 p-4 rounded-lg text-center">
+                        <div class="text-2xl font-bold text-yellow-600">${pending.length}</div>
+                        <div class="text-sm text-yellow-600">Pending Tasks</div>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-lg text-center">
+                        <div class="text-2xl font-bold text-blue-600">${inProgress.length}</div>
+                        <div class="text-sm text-blue-600">In Progress</div>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg text-center">
+                        <div class="text-2xl font-bold text-green-600">${completed.length}</div>
+                        <div class="text-sm text-green-600">Completed</div>
+                    </div>
+                </div>`;
+
+            // Show overdue tasks first
+            if (overdue.length > 0) {
+                html += `<div class="mb-6">
+                    <h4 class="text-lg font-medium text-red-700 mb-3">⚠️ Overdue Tasks (${overdue.length})</h4>
+                    <div class="space-y-3">`;
+
+                overdue.forEach(task => {
+                    html += `<div class="bg-red-50 border border-red-200 p-4 rounded-lg hover:shadow-md transition-shadow cursor-pointer" onclick="openTaskDetails('${task.id}', '${task.carnivalId}', '${task.clubId}')">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-800 mb-2">${task.description}</p>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">Due: ${task.expectedDate}</span>
+                                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">${task.team}</span>
+                                    <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">${task.carnivalName || 'Template'}</span>
+                                </div>
+                            </div>
+                            <button onclick="event.stopPropagation(); toggleTaskStatus('${task.id}', '${task.carnivalId}', '${task.clubId}')"
+                                    class="text-xs bg-white border border-gray-300 px-3 py-1 rounded hover:bg-gray-50 transition-colors">
+                                Mark Progress
+                            </button>
+                        </div>
+                    </div>`;
+                });
+                html += `</div></div>`;
+            }
+
+            // Show pending and in-progress tasks
+            const activeTasks = [...pending, ...inProgress];
+            if (activeTasks.length > 0) {
+                html += `<div class="mb-6">
+                    <h4 class="text-lg font-medium text-blue-700 mb-3">🚀 Active Tasks (${activeTasks.length})</h4>
+                    <div class="space-y-3">`;
+
+                activeTasks.forEach(task => {
+                    const bgColor = task.status === 'in-progress' ? 'yellow' : 'blue';
+                    html += `<div class="bg-${bgColor}-50 border border-${bgColor}-200 p-4 rounded-lg hover:shadow-md transition-shadow cursor-pointer" onclick="openTaskDetails('${task.id}', '${task.carnivalId}', '${task.clubId}')">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-800 mb-2">${task.description}</p>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs bg-${bgColor}-100 text-${bgColor}-800 px-2 py-1 rounded">${task.status}</span>
+                                    ${task.expectedDate ? `<span class="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">Due: ${task.expectedDate}</span>` : ''}
+                                    <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">${task.carnivalName || 'Template'}</span>
+                                </div>
+                            </div>
+                            <button onclick="event.stopPropagation(); toggleTaskStatus('${task.id}', '${task.carnivalId}', '${task.clubId}')"
+                                    class="text-xs bg-white border border-gray-300 px-3 py-1 rounded hover:bg-gray-50 transition-colors">
+                                Update Status
+                            </button>
+                        </div>
+                    </div>`;
+                });
+                html += `</div></div>`;
+            }
+
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
+        function renderTimelineGanttView(tasks, container) {
+            container.innerHTML = `<div class="bg-white p-8 rounded-lg shadow text-center">
+                <div class="mb-4">
+                    <svg class="w-16 h-16 text-indigo-500 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Gantt Chart View</h3>
+                <p class="text-gray-600 mb-4">Visual timeline with task dependencies and deadlines</p>
+                <p class="text-sm text-gray-500">Coming Soon: Interactive Gantt chart with drag-and-drop scheduling</p>
+                <p class="text-sm text-indigo-600 mt-2">${tasks.length} tasks ready for timeline visualization</p>
+            </div>`;
+        }
+
+        function renderTimelineCalendarView(tasks, container) {
+            container.innerHTML = `<div class="bg-white p-8 rounded-lg shadow text-center">
+                <div class="mb-4">
+                    <svg class="w-16 h-16 text-green-500 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Calendar View</h3>
+                <p class="text-gray-600 mb-4">Monthly calendar with task deadlines and milestones</p>
+                <p class="text-sm text-gray-500">Coming Soon: Interactive calendar with deadline management</p>
+                <p class="text-sm text-green-600 mt-2">${tasks.length} tasks ready for calendar integration</p>
+            </div>`;
+        }
+
+        // Render Founder-Level Dashboard with Product Manager Insights
+        function renderDashboard() {
+            // Update dashboard dropdowns with current data
+            updateDashboardDropdowns();
+
+            // Get filter values
+            const carnivalFilter = document.getElementById('dashboard-carnival-filter').value;
+            const clubFilter = document.getElementById('dashboard-club-filter').value;
+            const teamFilter = document.getElementById('dashboard-team-filter').value;
+            const ownerFilter = document.getElementById('dashboard-owner-filter').value;
+            const statusFilter = document.getElementById('dashboard-status-filter').value;
+
+            console.log('📊 Founder Dashboard Filters:', { carnival: carnivalFilter, club: clubFilter, team: teamFilter, owner: ownerFilter, status: statusFilter });
+
+            // Get comprehensive data for founder insights
+            const allTasksFlat = getAllTasksFlat();
+            const filteredTasks = allTasksFlat.filter(task => {
+                if (carnivalFilter !== 'all' && task.carnivalId != carnivalFilter) return false;
+                if (clubFilter !== 'all' && task.clubId != clubFilter) return false;
+                if (teamFilter !== 'all' && task.team !== teamFilter) return false;
+                if (ownerFilter !== 'all' && task.owner !== ownerFilter) return false;
+                if (statusFilter !== 'all' && task.status !== statusFilter) return false;
+                return true;
+            });
+
+            // === FOUNDER-LEVEL ANALYTICS ===
+
+            // 1. Strategic KPIs
+            const totalTasks = filteredTasks.length;
+            const completedTasks = filteredTasks.filter(task => task.status === 'Done' || task.status === 'completed').length;
+            const inProgressTasks = filteredTasks.filter(task => task.status === 'In Progress' || task.status === 'in-progress').length;
+            const blockedTasks = filteredTasks.filter(task => task.status === 'Blocked').length;
+            const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+            // 2. Risk Indicators
+            const overdueTasks = filteredTasks.filter(task => {
+                if (!task.expectedDate || task.status === 'Done' || task.status === 'completed') return false;
+                return new Date(task.expectedDate) < new Date();
+            });
+            const overdueRate = totalTasks > 0 ? Math.round((overdueTasks.length / totalTasks) * 100) : 0;
+
+            // 3. Team Performance Analysis
+            const teamStats = {};
+            const ownerStats = {};
+
+            filteredTasks.forEach(task => {
+                // Team analysis
+                if (!teamStats[task.team]) {
+                    teamStats[task.team] = { total: 0, completed: 0, overdue: 0, blocked: 0 };
+                }
+                teamStats[task.team].total++;
+                if (task.status === 'Done' || task.status === 'completed') teamStats[task.team].completed++;
+                if (task.status === 'Blocked') teamStats[task.team].blocked++;
+                if (task.expectedDate && new Date(task.expectedDate) < new Date() && task.status !== 'Done' && task.status !== 'completed') {
+                    teamStats[task.team].overdue++;
+                }
+
+                // Owner analysis
+                if (!ownerStats[task.owner]) {
+                    ownerStats[task.owner] = { total: 0, completed: 0, overdue: 0, efficiency: 0 };
+                }
+                ownerStats[task.owner].total++;
+                if (task.status === 'Done' || task.status === 'completed') ownerStats[task.owner].completed++;
+                if (task.expectedDate && new Date(task.expectedDate) < new Date() && task.status !== 'Done' && task.status !== 'completed') {
+                    ownerStats[task.owner].overdue++;
+                }
+            });
+
+            // Calculate efficiency scores
+            Object.keys(ownerStats).forEach(owner => {
+                const stats = ownerStats[owner];
+                stats.efficiency = stats.total > 0 ? Math.round(((stats.completed / stats.total) * 100) - (stats.overdue / stats.total * 10)) : 0;
+            });
+
+            // 4. Carnival Performance Analysis
+            const carnivalStats = {};
+            carnivalsList.forEach(carnival => {
+                const carnivalTasks = filteredTasks.filter(task => task.carnivalId == carnival.id);
+                const carnivalRevenue = getTotalRevenueForCarnival(carnival.id);
+
+                carnivalStats[carnival.id] = {
+                    name: carnival.name,
+                    totalTasks: carnivalTasks.length,
+                    completedTasks: carnivalTasks.filter(task => task.status === 'Done' || task.status === 'completed').length,
+                    revenue: carnivalRevenue,
+                    clubs: clubsList.filter(club => club.carnivalId == carnival.id).length,
+                    completionRate: carnivalTasks.length > 0 ? Math.round((carnivalTasks.filter(task => task.status === 'Done' || task.status === 'completed').length / carnivalTasks.length) * 100) : 0,
+                    overdueTasks: carnivalTasks.filter(task => task.expectedDate && new Date(task.expectedDate) < new Date() && task.status !== 'Done' && task.status !== 'completed').length
+                };
+            });
+
+            // 5. Update Basic Stats
+            document.getElementById('total-tasks-stat').textContent = totalTasks;
+            document.getElementById('completed-tasks-stat').textContent = completedTasks;
+            document.getElementById('progress-tasks-stat').textContent = inProgressTasks;
+            document.getElementById('completion-stat').textContent = completionRate + '%';
+
+            // 6. Create Founder Dashboard Content
+            const dashboardContainer = document.querySelector('#dashboard-view .grid.grid-cols-1.md\\:grid-cols-5.gap-6.mb-6');
+            if (!dashboardContainer) {
+                updateAllDropdowns();
+                return;
+            }
+
+            // Add founder insights section after the stats cards
+            const existingFounderDashboard = document.getElementById('founder-insights-section');
+            if (existingFounderDashboard) {
+                existingFounderDashboard.remove();
+            }
+
+            const founderInsights = createFounderInsightsHTML(teamStats, ownerStats, carnivalStats, overdueTasks, blockedTasks, overdueRate);
+            dashboardContainer.parentNode.insertAdjacentHTML('afterend', founderInsights);
+
+            updateAllDropdowns();
+        }
+
+        // Helper function to get total revenue for a carnival
+        function getTotalRevenueForCarnival(carnivalId) {
+            const revenueData = JSON.parse(localStorage.getItem('carnivalRevenueData') || '{}');
+            let total = 0;
+
+            Object.keys(revenueData).forEach(key => {
+                if (key.startsWith(carnivalId + '-')) {
+                    const revenue = revenueData[key];
+                    if (revenue && revenue.transactions) {
+                        total += revenue.transactions.reduce((sum, transaction) => sum + transaction.amount, 0);
+                    }
+                }
+            });
+
+            return total;
+        }
+
+        // Create expandable carnival overview dashboard
+        function createFounderInsightsHTML(teamStats, ownerStats, carnivalStats, overdueTasks, blockedTasks, overdueRate) {
+            const topPerformingTeam = Object.keys(teamStats).reduce((best, team) => {
+                const rate = teamStats[team].total > 0 ? (teamStats[team].completed / teamStats[team].total) : 0;
+                const bestRate = teamStats[best] && teamStats[best].total > 0 ? (teamStats[best].completed / teamStats[best].total) : 0;
+                return rate > bestRate ? team : best;
+            }, Object.keys(teamStats)[0] || 'N/A');
+
+            const topPerformer = Object.keys(ownerStats).reduce((best, owner) => {
+                return ownerStats[owner].efficiency > (ownerStats[best]?.efficiency || 0) ? owner : best;
+            }, Object.keys(ownerStats)[0] || 'N/A');
+
+            const topCarnival = Object.keys(carnivalStats).reduce((best, carnivalId) => {
+                const current = carnivalStats[carnivalId];
+                const bestData = carnivalStats[best];
+                if (!bestData) return carnivalId;
+                const currentScore = current.completionRate + (current.revenue / 1000);
+                const bestScore = bestData.completionRate + (bestData.revenue / 1000);
+                return currentScore > bestScore ? carnivalId : best;
+            }, Object.keys(carnivalStats)[0] || 'N/A');
+
+            return `
+                <div id="founder-insights-section" class="mt-8">
+                    <!-- Executive Summary -->
+                    <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 rounded-xl shadow-lg mb-6">
+                        <h3 class="text-2xl font-bold mb-4">🎯 Carnival Overview Dashboard</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="text-center">
+                                <div class="text-3xl font-bold">${Object.keys(carnivalStats).length}</div>
+                                <div class="text-indigo-200">Active Carnivals</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-3xl font-bold">₹${Object.values(carnivalStats).reduce((sum, carnival) => sum + carnival.revenue, 0).toLocaleString()}</div>
+                                <div class="text-indigo-200">Total Revenue Impact</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-3xl font-bold ${overdueRate > 20 ? 'text-red-300' : overdueRate > 10 ? 'text-yellow-300' : 'text-green-300'}">${overdueRate}%</div>
+                                <div class="text-indigo-200">Overdue Rate</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Carnival Status Overview with Expandable Club Details -->
+                    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">🎪 Carnival Status Overview</h4>
+                        <div class="space-y-4">
+                            ${Object.values(carnivalStats)
+                                .sort((a, b) => {
+                                    // Sort by urgency: overdue tasks first, then by completion rate
+                                    if (a.overdueTasks !== b.overdueTasks) return b.overdueTasks - a.overdueTasks;
+                                    return b.completionRate - a.completionRate;
+                                })
+                                .map((carnival, index) => {
+                                    const urgentClubs = getUrgentClubsForCarnival(carnival.name);
+                                    const statusColor = carnival.overdueTasks > 0 ? 'red' : carnival.completionRate >= 80 ? 'green' : carnival.completionRate >= 60 ? 'yellow' : 'orange';
+                                    const statusText = carnival.overdueTasks > 0 ? 'NEEDS ATTENTION' : carnival.completionRate >= 80 ? 'ON TRACK' : carnival.completionRate >= 60 ? 'MODERATE RISK' : 'HIGH RISK';
+
+                                    return `
+                                        <div class="border border-${statusColor === 'red' ? 'red' : statusColor === 'green' ? 'green' : statusColor === 'yellow' ? 'yellow' : 'orange'}-200 rounded-lg overflow-hidden">
+                                            <!-- Carnival Header -->
+                                            <div class="bg-${statusColor === 'red' ? 'red' : statusColor === 'green' ? 'green' : statusColor === 'yellow' ? 'yellow' : 'orange'}-50 p-4 cursor-pointer" onclick="toggleCarnivalDetails('carnival-${index}')">
+                                                <div class="flex items-center justify-between">
+                                                    <div class="flex items-center space-x-4">
+                                                        <span class="text-lg font-semibold text-gray-800">${carnival.name}</span>
+                                                        <span class="text-sm font-medium px-3 py-1 rounded-full bg-${statusColor === 'red' ? 'red' : statusColor === 'green' ? 'green' : statusColor === 'yellow' ? 'yellow' : 'orange'}-100 text-${statusColor === 'red' ? 'red' : statusColor === 'green' ? 'green' : statusColor === 'yellow' ? 'yellow' : 'orange'}-800">${statusText}</span>
+                                                        ${carnival.overdueTasks > 0 ? `<span class="text-sm font-bold text-red-600">🚨 ${carnival.overdueTasks} Overdue</span>` : ''}
+                                                    </div>
+                                                    <div class="flex items-center space-x-6">
+                                                        <div class="text-sm text-gray-600 text-right">
+                                                            <div>Completion: <span class="font-semibold">${carnival.completionRate}%</span></div>
+                                                            <div>Revenue: <span class="font-semibold">₹${carnival.revenue.toLocaleString()}</span></div>
+                                                        </div>
+                                                        <button class="text-gray-500 hover:text-gray-700">
+                                                            <svg id="icon-carnival-${index}" class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Expandable Club Details -->
+                                            <div id="carnival-${index}" class="hidden bg-white">
+                                                <div class="p-4 border-t">
+                                                    <h5 class="font-medium text-gray-700 mb-3">Club Status Details</h5>
+                                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                                        ${urgentClubs.map(club => `
+                                                            <div class="border rounded p-3 ${club.needsAttention ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50'}">
+                                                                <div class="flex items-center justify-between mb-2">
+                                                                    <span class="font-medium text-sm">${club.name}</span>
+                                                                    ${club.needsAttention ? '<span class="text-xs font-bold text-red-600">⚠️ URGENT</span>' : '<span class="text-xs text-green-600">✅ OK</span>'}
+                                                                </div>
+                                                                <div class="text-xs text-gray-600 space-y-1">
+                                                                    <div>📋 ${club.totalTasks} tasks (${club.completedTasks} done)</div>
+                                                                    <div>📊 ${club.completionRate}% complete</div>
+                                                                    ${club.overdueTasks > 0 ? `<div class="text-red-600 font-medium">🚨 ${club.overdueTasks} overdue</div>` : ''}
+                                                                    ${club.blockedTasks > 0 ? `<div class="text-orange-600 font-medium">🚫 ${club.blockedTasks} blocked</div>` : ''}
+                                                                </div>
+                                                                ${club.needsAttention ? `
+                                                                    <div class="mt-2 text-xs">
+                                                                        <div class="font-medium text-red-700 mb-1">Action Required:</div>
+                                                                        ${club.overdueTasks > 0 ? '<div class="text-red-600">• Address overdue tasks</div>' : ''}
+                                                                        ${club.blockedTasks > 0 ? '<div class="text-orange-600">• Unblock tasks</div>' : ''}
+                                                                        ${club.completionRate < 50 ? '<div class="text-yellow-600">• Review progress</div>' : ''}
+                                                                    </div>
+                                                                ` : ''}
+                                                            </div>
+                                                        `).join('')}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                        </div>
+                    </div>
+
+                </div>
+            `;
+        }
+
+        // Helper function to get urgent clubs for a carnival
+        function getUrgentClubsForCarnival(carnivalName) {
+            const carnival = carnivalsList.find(c => c.name === carnivalName);
+            if (!carnival) return [];
+
+            const clubs = clubsList.filter(club => club.carnivals.includes(carnival.id));
+            const carnivalTasks = allTasks[carnival.id];
+
+            return clubs.map(club => {
+                const clubTasks = carnivalTasks?.clubs?.[club.id] || [];
+                const completedTasks = clubTasks.filter(task => task.status === 'Done' || task.status === 'completed').length;
+                const overdueTasks = clubTasks.filter(task => {
+                    return task.expectedDate &&
+                           new Date(task.expectedDate) < new Date() &&
+                           task.status !== 'Done' &&
+                           task.status !== 'completed';
+                }).length;
+                const blockedTasks = clubTasks.filter(task => task.status === 'Blocked').length;
+                const completionRate = clubTasks.length > 0 ? Math.round((completedTasks / clubTasks.length) * 100) : 0;
+
+                return {
+                    name: club.name,
+                    activity: club.activity,
+                    totalTasks: clubTasks.length,
+                    completedTasks: completedTasks,
+                    overdueTasks: overdueTasks,
+                    blockedTasks: blockedTasks,
+                    completionRate: completionRate,
+                    needsAttention: overdueTasks > 0 || blockedTasks > 0 || completionRate < 50
+                };
+            }).sort((a, b) => {
+                // Sort by urgency: clubs needing attention first
+                if (a.needsAttention !== b.needsAttention) return b.needsAttention - a.needsAttention;
+                if (a.overdueTasks !== b.overdueTasks) return b.overdueTasks - a.overdueTasks;
+                return a.completionRate - b.completionRate;
+            });
+        }
+
+        // Toggle expandable carnival details
+        function toggleCarnivalDetails(carnivalId) {
+            const detailsEl = document.getElementById(carnivalId);
+            const iconEl = document.getElementById('icon-' + carnivalId);
+
+            if (detailsEl && iconEl) {
+                const isHidden = detailsEl.classList.contains('hidden');
+
+                if (isHidden) {
+                    detailsEl.classList.remove('hidden');
+                    iconEl.classList.add('rotate-180');
+                } else {
+                    detailsEl.classList.add('hidden');
+                    iconEl.classList.remove('rotate-180');
+                }
+            }
+        }
+
+        // Legacy edit functions (replaced by enhanced task details modal)
+        function editTask(index) {
+            const task = taskTemplate[index];
+            openTaskDetails(task.id, null, null);
+        }
+
+        // Delete task function
+        function deleteTask(index) {
+            const task = taskTemplate[index];
+            const confirmed = confirm('Are you sure you want to delete this mandatory task?\n\n' + task.description + '\n\nThis will affect all future club registrations.');
+
+            if (confirmed) {
+                taskTemplate.splice(index, 1);
+                renderTaskTemplate();
+                updateTemplateCount();
+                alert('Mandatory task deleted successfully! You now have ' + taskTemplate.length + ' mandatory tasks.');
+            }
+        }
+
+        // Transfer Task from Club Level to Carnival Level
+        function transferTaskToCarnival(carnivalId, clubId, taskId, taskDescription) {
+            if (!confirm(`Transfer "${taskDescription}" from club level to carnival level?\n\nThis will:\n• Remove the task from ${clubList.find(c => c.id == clubId)?.name || 'this club'}\n• Add it as a carnival-level task\n• Apply to ALL clubs in this carnival\n\nContinue?`)) {
+                return;
+            }
+
+            try {
+                // Find the task in club tasks
+                const carnival = allTasks[carnivalId];
+                if (!carnival || !carnival.clubs[clubId]) {
+                    alert('Club tasks not found.');
+                    return;
+                }
+
+                const clubTasks = carnival.clubs[clubId];
+                const taskIndex = clubTasks.findIndex(task => task.id === taskId);
+
+                if (taskIndex === -1) {
+                    alert('Task not found in club.');
+                    return;
+                }
+
+                const taskToTransfer = clubTasks[taskIndex];
+
+                // Create carnival-level task
+                const carnivalTask = {
+                    ...taskToTransfer,
+                    id: Date.now().toString(),
+                    transferredFrom: clubList.find(c => c.id == clubId)?.name || 'Unknown Club',
+                    transferredAt: new Date().toISOString().split('T')[0]
+                };
+
+                // Add to carnival-level tasks
+                if (!carnival.carnivalTasks) {
+                    carnival.carnivalTasks = [];
+                }
+                carnival.carnivalTasks.push(carnivalTask);
+
+                // Remove from club tasks
+                clubTasks.splice(taskIndex, 1);
+
+                // Update UI
+                renderTaskTracker();
+
+                alert(`Task "${taskDescription}" transferred to carnival level successfully!\n\nIt now applies to all clubs in this carnival.`);
+
+            } catch (error) {
+                console.error("Error transferring task:", error);
+                alert("Error transferring task to carnival level.");
+            }
+        }
+
+        // Enhanced Task Management Functions
+        let currentTaskDetails = null;
+
+        function updateProgressDisplay() {
+            const progress = document.getElementById('task-detail-progress').value;
+            document.getElementById('progress-display').textContent = progress + '%';
+        }
+
+        function openTaskDetails(taskId, carnivalId, clubId) {
+            // Find the task
+            let task = null;
+            let carnival = null;
+            let club = null;
+
+            if (carnivalId === 'null' || !carnivalId) {
+                // Template task
+                task = taskTemplate.find(t => t.id == taskId);
+                currentTaskDetails = { task, location: 'template', carnivalId: null, clubId: null };
+            } else if (clubId === 'null' || !clubId) {
+                // Carnival task
+                task = allTasks[carnivalId]?.carnivalTasks.find(t => t.id == taskId);
+                carnival = carnivalsList.find(c => c.id == carnivalId);
+                currentTaskDetails = { task, location: 'carnival', carnivalId, clubId: null };
+            } else {
+                // Club task
+                task = allTasks[carnivalId]?.clubs[clubId]?.find(t => t.id == taskId);
+                carnival = carnivalsList.find(c => c.id == carnivalId);
+                club = clubsList.find(c => c.id == clubId);
+                currentTaskDetails = { task, location: 'club', carnivalId, clubId };
+            }
+
+            if (!task) {
+                alert('Task not found!');
+                return;
+            }
+
+            // Populate modal fields
+            document.getElementById('task-detail-description').value = task.description || '';
+            document.getElementById('task-detail-team').value = task.team || 'Operations';
+            document.getElementById('task-detail-owner').value = task.owner || '';
+            document.getElementById('task-detail-status').value = task.status || 'pending';
+            document.getElementById('task-detail-expected-date').value = task.expectedDate || '';
+            document.getElementById('task-detail-actual-date').value = task.actualDate || '';
+            document.getElementById('task-detail-notes').value = task.notes || '';
+            document.getElementById('task-detail-link1').value = task.link1 || '';
+            document.getElementById('task-detail-link2').value = task.link2 || '';
+            document.getElementById('task-detail-link3').value = task.link3 || '';
+            document.getElementById('task-detail-priority').value = task.priority || 'medium';
+            document.getElementById('task-detail-progress').value = task.progress || 0;
+            updateProgressDisplay();
+
+            // Update context information
+            document.getElementById('task-context-carnival').textContent = carnival?.name || 'Template Task';
+            document.getElementById('task-context-club').textContent = club?.name || (currentTaskDetails.location === 'carnival' ? 'Carnival Level' : '-');
+            document.getElementById('task-context-type').textContent = currentTaskDetails.location.charAt(0).toUpperCase() + currentTaskDetails.location.slice(1);
+            document.getElementById('task-context-created').textContent = task.createdAt || 'Unknown';
+
+            // Show modal
+            document.getElementById('task-details-modal').classList.remove('hidden');
+        }
+
+        function closeTaskDetailsModal() {
+            document.getElementById('task-details-modal').classList.add('hidden');
+            currentTaskDetails = null;
+        }
+
+        function saveTaskDetails() {
+            if (!currentTaskDetails) return;
+
+            const task = currentTaskDetails.task;
+
+            // Update task properties
+            task.description = document.getElementById('task-detail-description').value;
+            task.team = document.getElementById('task-detail-team').value;
+            task.owner = document.getElementById('task-detail-owner').value;
+            task.status = document.getElementById('task-detail-status').value;
+            task.expectedDate = document.getElementById('task-detail-expected-date').value;
+            task.actualDate = document.getElementById('task-detail-actual-date').value;
+            task.notes = document.getElementById('task-detail-notes').value;
+            task.link1 = document.getElementById('task-detail-link1').value;
+            task.link2 = document.getElementById('task-detail-link2').value;
+            task.link3 = document.getElementById('task-detail-link3').value;
+            task.priority = document.getElementById('task-detail-priority').value;
+            task.progress = parseInt(document.getElementById('task-detail-progress').value);
+            task.updatedAt = new Date().toLocaleDateString();
+
+            // Save to Firebase
+            saveToFirebase('tasks', allTasks);
+
+            // Update all views
+            updateAllDropdowns();
+            renderDashboard();
+            renderTaskTracker();
+            renderTimeline();
+            if (templateExpanded) renderTaskTemplate();
+
+            closeTaskDetailsModal();
+            alert('Task details saved successfully!');
+        }
+
+        function deleteCurrentTask() {
+            if (!currentTaskDetails) return;
+
+            const confirmed = confirm('Are you sure you want to delete this task?\n\n' + currentTaskDetails.task.description);
+            if (!confirmed) return;
+
+            if (currentTaskDetails.location === 'template') {
+                // Remove from template
+                const index = taskTemplate.findIndex(t => t.id === currentTaskDetails.task.id);
+                if (index > -1) {
+                    taskTemplate.splice(index, 1);
+                }
+            } else if (currentTaskDetails.location === 'carnival') {
+                // Remove carnival task
+                const carnivalTasks = allTasks[currentTaskDetails.carnivalId].carnivalTasks;
+                const index = carnivalTasks.findIndex(t => t.id === currentTaskDetails.task.id);
+                if (index > -1) {
+                    carnivalTasks.splice(index, 1);
+                }
+            } else if (currentTaskDetails.location === 'club') {
+                // Remove club task
+                const clubTasks = allTasks[currentTaskDetails.carnivalId].clubs[currentTaskDetails.clubId];
+                const index = clubTasks.findIndex(t => t.id === currentTaskDetails.task.id);
+                if (index > -1) {
+                    clubTasks.splice(index, 1);
+                }
+            }
+
+            // Update all views
+            updateAllDropdowns();
+            renderDashboard();
+            renderTaskTracker();
+            renderTimeline();
+            if (templateExpanded) renderTaskTemplate();
+
+            closeTaskDetailsModal();
+            alert('Task deleted successfully!');
+        }
+
+        // Toggle task status function for timeline
+        function toggleTaskStatus(taskId, carnivalId, clubId) {
+            // Find and update the task status
+            let task = null;
+            let location = '';
+
+            if (carnivalId === 'null' || !carnivalId) {
+                // Template task
+                task = taskTemplate.find(t => t.id == taskId);
+                location = 'template';
+            } else if (clubId === 'null' || !clubId) {
+                // Carnival task
+                task = allTasks[carnivalId]?.carnivalTasks?.find(t => t.id == taskId);
+                location = 'carnival';
+            } else {
+                // Club task
+                task = allTasks[carnivalId]?.clubs?.[clubId]?.find(t => t.id == taskId);
+                location = 'club';
+            }
+
+            if (!task) {
+                alert('Task not found for status update!');
+                return;
+            }
+
+            // Show status selection dialog for better UX
+            const currentStatus = task.status || 'pending';
+            const statusOptions = [
+                { value: 'To Do', label: '📋 To Do' },
+                { value: 'In Progress', label: '🔄 In Progress' },
+                { value: 'Done', label: '✅ Done' },
+                { value: 'Blocked', label: '🚫 Blocked' }
+            ];
+
+            let statusChoice = prompt(
+                `Update status for: "${task.description.substring(0, 50)}..."\n\nSelect new status:\n1. 📋 To Do\n2. 🔄 In Progress\n3. ✅ Done\n4. 🚫 Blocked\n\nCurrent: ${currentStatus}\nEnter 1, 2, 3, or 4:`
+            );
+
+            if (statusChoice === null) return; // User cancelled
+
+            const statusIndex = parseInt(statusChoice) - 1;
+            if (statusIndex >= 0 && statusIndex < statusOptions.length) {
+                const oldStatus = task.status;
+                task.status = statusOptions[statusIndex].value;
+
+                // Update actual date if completed
+                if (task.status === 'Done' && oldStatus !== 'Done') {
+                    task.actualDate = new Date().toISOString().split('T')[0];
+                }
+
+                // Try to save to Firebase (graceful failure for localhost)
+                try {
+                    if (window.firebase && saveToFirebase) {
+                        saveToFirebase('tasks', allTasks);
+                    }
+                } catch (error) {
+                    console.log('Firebase save not available, using local storage');
+                }
+
+                // Update all views
+                renderTimeline();
+                if (typeof renderDashboard === 'function') renderDashboard();
+
+                alert(`✅ Task status updated to: ${statusOptions[statusIndex].label}\n\n${task.status === 'Done' ? '🎉 Great job completing this task!' : ''}`);
+            } else {
+                alert('❌ Invalid selection. Please choose 1, 2, 3, or 4.');
+            }
+        }
+
+        // Test function to manually trigger dropdown updates
+        window.debugTimelineDropdowns = function() {
+            console.log('🧪 Manual debug of timeline dropdowns...');
+            console.log('Carnivals:', carnivalsList.length);
+            console.log('Clubs:', clubsList.length);
+            console.log('AllTasks keys:', Object.keys(allTasks));
+            updateTimelineDropdowns();
+        };
+
+        // Initialize dummy test data if available
+        function loadTestDataIfAvailable() {
+            const testData = localStorage.getItem('carnivalManagerTestData');
+            if (testData) {
+                try {
+                    const data = JSON.parse(testData);
+
+                    // Load carnivals
+                    if (data.carnivals) {
+                        data.carnivals.forEach(carnival => {
+                            carnivalsList.push(carnival);
+                            nextCarnivalId = Math.max(nextCarnivalId, carnival.id + 1);
+                            allTasks[carnival.id] = { carnivalTasks: [], clubs: {} };
+
+                            // Add sample carnival tasks
+                            const carnivalTasks = [
+                                { description: "Deciding the fest name which is deciding the carnival name", team: "Operations", owner: "Joy", status: "completed", id: Date.now() + Math.random() },
+                                { description: "Announcement to leaders group", team: "Operations", owner: "Joy", status: "in-progress", id: Date.now() + Math.random() + 1 },
+                                { description: "Budget planning for " + carnival.name, team: "Finance", owner: "Tauheed", status: "pending", id: Date.now() + Math.random() + 2, expectedDate: "2025-01-20", priority: "high" }
+                            ];
+                            allTasks[carnival.id].carnivalTasks = carnivalTasks;
+                        });
+                    }
+
+                    // Load clubs
+                    if (data.clubs) {
+                        data.clubs.forEach(club => {
+                            clubsList.push(club);
+                            nextClubId = Math.max(nextClubId, club.id + 1);
+
+                            // Create tasks for each carnival the club is part of
+                            club.carnivals.forEach(carnivalId => {
+                                if (!allTasks[carnivalId].clubs[club.id]) {
+                                    allTasks[carnivalId].clubs[club.id] = [];
+                                }
+
+                                // Create enhanced copies of template tasks
+                                const clubTasks = taskTemplate.map((task, index) => {
+                                    const enhancedTask = {
+                                        ...task,
+                                        id: Date.now() + Math.random() + index,
+                                        clubId: club.id,
+                                        carnivalId: carnivalId
+                                    };
+
+                                    // Add sample enhanced data to some tasks
+                                    if (index < 5) {
+                                        enhancedTask.expectedDate = new Date(Date.now() + (index * 7 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0];
+                                        enhancedTask.priority = index < 2 ? 'high' : 'medium';
+                                        enhancedTask.progress = Math.floor(Math.random() * 100);
+
+                                        if (index === 0) {
+                                            enhancedTask.status = 'completed';
+                                            enhancedTask.actualDate = enhancedTask.expectedDate;
+                                            enhancedTask.notes = 'Completed successfully with venue confirmed.';
+                                            enhancedTask.link1 = 'https://docs.google.com/document/venue-contract';
+                                        } else if (index === 1) {
+                                            enhancedTask.status = 'in-progress';
+                                            enhancedTask.notes = 'Working on final details, 75% complete.';
+                                            enhancedTask.link1 = 'https://drive.google.com/venue-photos';
+                                        }
+
+                                        // Create some overdue tasks for testing
+                                        if (index === 2) {
+                                            enhancedTask.expectedDate = '2025-01-05'; // Overdue
+                                            enhancedTask.priority = 'urgent';
+                                            enhancedTask.notes = 'This task is overdue and needs immediate attention!';
+                                        }
+                                    }
+
+                                    return enhancedTask;
+                                });
+
+                                allTasks[carnivalId].clubs[club.id] = clubTasks;
+                            });
+                        });
+                    }
+
+                    console.log('✅ Test data loaded successfully!');
+                    console.log('Carnivals:', carnivalsList.length);
+                    console.log('Clubs:', clubsList.length);
+                    console.log('Total tasks created:', Object.values(allTasks).reduce((total, carnival) => {
+                        return total + carnival.carnivalTasks.length + Object.values(carnival.clubs).reduce((clubTotal, tasks) => clubTotal + tasks.length, 0);
+                    }, 0));
+
+                    // Clear test data to prevent re-loading
+                    localStorage.removeItem('carnivalManagerTestData');
+
+                } catch (e) {
+                    console.error('Error loading test data:', e);
+                }
+            }
+        }
+
+        function loadLocalTestData() {
+            // Create test carnivals
+            const carnival1 = {
+                id: 1,
+                name: "Summer Sports Fest 2025",
+                description: "Annual summer sports festival",
+                startDate: "2025-06-01",
+                endDate: "2025-06-15"
+            };
+
+            const carnival2 = {
+                id: 2,
+                name: "Winter Arts Carnival 2025",
+                description: "Winter arts and cultural fest",
+                startDate: "2025-12-10",
+                endDate: "2025-12-20"
+            };
+
+            carnivalsList.push(carnival1, carnival2);
+            nextCarnivalId = 3;
+
+            // Initialize tasks structure
+            allTasks[1] = { carnivalTasks: [], clubs: {} };
+            allTasks[2] = { carnivalTasks: [], clubs: {} };
+
+            // Add carnival-level tasks
+            allTasks[1].carnivalTasks = [
+                { id: 101, description: "Deciding the fest name for Summer Sports Fest", team: "Operations", owner: "Joy", status: "completed", expectedDate: "2025-05-01", priority: "high" },
+                { id: 102, description: "Announcement to leaders group for Sports Fest", team: "Operations", owner: "Joy", status: "in-progress", expectedDate: "2025-05-15", priority: "medium" }
+            ];
+
+            allTasks[2].carnivalTasks = [
+                { id: 201, description: "Deciding the fest name for Winter Arts Carnival", team: "Operations", owner: "Joy", status: "pending", expectedDate: "2025-11-15", priority: "high" },
+                { id: 202, description: "Artist invitations for Arts Carnival", team: "Marketing", owner: "Ayushi", status: "pending", expectedDate: "2025-11-01", priority: "medium" }
+            ];
+
+            // Create test clubs
+            const club1 = {
+                id: 1,
+                name: "Delhi Football Club",
+                activity: "Football",
+                commissionType: "Percentage",
+                commissionAmount: "5",
+                carnivals: [1] // Only Summer Sports
+            };
+
+            const club2 = {
+                id: 2,
+                name: "Mumbai Music Society",
+                activity: "Music",
+                commissionType: "Fixed",
+                commissionAmount: "10000",
+                carnivals: [2] // Only Winter Arts
+            };
+
+            const club3 = {
+                id: 3,
+                name: "Bangalore Dance Troupe",
+                activity: "Dance",
+                commissionType: "Revenue Share",
+                commissionAmount: "8",
+                carnivals: [1, 2] // Both carnivals
+            };
+
+            clubsList.push(club1, club2, club3);
+            nextClubId = 4;
+
+            // Create club tasks
+            club1.carnivals.forEach(carnivalId => {
+                allTasks[carnivalId].clubs[club1.id] = taskTemplate.slice(0, 5).map((task, index) => ({
+                    ...task,
+                    id: 1000 + carnivalId * 100 + club1.id * 10 + index,
+                    clubId: club1.id,
+                    carnivalId: carnivalId,
+                    status: index < 2 ? 'completed' : index < 4 ? 'in-progress' : 'pending',
+                    expectedDate: new Date(Date.now() + (index * 7 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
+                    priority: index < 2 ? 'high' : 'medium'
+                }));
+            });
+
+            club2.carnivals.forEach(carnivalId => {
+                allTasks[carnivalId].clubs[club2.id] = taskTemplate.slice(0, 6).map((task, index) => ({
+                    ...task,
+                    id: 1000 + carnivalId * 100 + club2.id * 10 + index,
+                    clubId: club2.id,
+                    carnivalId: carnivalId,
+                    status: index < 1 ? 'completed' : index < 3 ? 'in-progress' : 'pending',
+                    expectedDate: new Date(Date.now() + (index * 5 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
+                    priority: index < 3 ? 'high' : 'medium'
+                }));
+            });
+
+            club3.carnivals.forEach(carnivalId => {
+                allTasks[carnivalId].clubs[club3.id] = taskTemplate.slice(0, 4).map((task, index) => ({
+                    ...task,
+                    id: 1000 + carnivalId * 100 + club3.id * 10 + index,
+                    clubId: club3.id,
+                    carnivalId: carnivalId,
+                    status: index < 1 ? 'completed' : index < 2 ? 'in-progress' : 'pending',
+                    expectedDate: new Date(Date.now() + (index * 10 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
+                    priority: index < 2 ? 'high' : 'medium'
+                }));
+            });
+
+            console.log('✅ Test data loaded:', {
+                carnivals: carnivalsList.length,
+                clubs: clubsList.length,
+                totalTasks: Object.values(allTasks).reduce((total, carnival) => {
+                    return total + carnival.carnivalTasks.length + Object.values(carnival.clubs).reduce((clubTotal, tasks) => clubTotal + tasks.length, 0);
+                }, 0)
+            });
+        }
+
+        // Initialize on page load
+        window.onload = function() {
+            console.log('Misfits Carnival Manager loaded');
+            console.log('Template tasks:', taskTemplate.length);
+
+            // For localhost testing - load immediate test data
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                console.log('🧪 Loading test data for localhost testing');
+                loadLocalTestData();
+            } else {
+                // Initialize Firebase first for production
+                initializeFirebase();
+
+                // Load test data if available (only if Firebase fails)
+                setTimeout(() => {
+                    if (!isFirebaseReady && carnivalsList.length === 0) {
+                        loadTestDataIfAvailable();
+                    }
+                }, 2000);
+            }
+
+            updateAllDropdowns();
+            renderDashboard();
+
+            // Show welcome message if test data was loaded
+            if (carnivalsList.length > 0) {
+                setTimeout(() => {
+                    alert('🎪 Welcome! Test data has been loaded with 2 carnivals, 3 clubs, and 90+ tasks. Try clicking on any task to see the enhanced details modal!');
+                }, 1000);
+            }
+        };
+    </script>
+</body>
+</html>
