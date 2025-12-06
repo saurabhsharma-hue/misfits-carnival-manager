@@ -85,9 +85,84 @@
         body { font-family: 'Inter', sans-serif; }
         .hidden { display: none !important; }
         .view { display: block; }
+
+        /* Toast Notification Styles */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
+            max-width: 500px;
+            animation: slideIn 0.3s ease-out;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .toast-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .toast-message {
+            font-size: 14px;
+            opacity: 0.95;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        .toast.removing {
+            animation: slideOut 0.3s ease-in forwards;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
     <div id="app" class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <header class="mb-8">
             <h1 class="text-4xl font-extrabold text-indigo-700 tracking-tight">
@@ -836,6 +911,31 @@
             console.log('✅ Sample data initialized:', { carnivals: carnivalsList.length, tasks: Object.keys(allTasks).length });
         }
 
+        // Toast Notification Function
+        function showToast(title, message, duration = 4000) {
+            const container = document.getElementById('toast-container');
+
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `
+                <div class="toast-icon">✅</div>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+            `;
+
+            container.appendChild(toast);
+
+            // Auto remove after duration
+            setTimeout(() => {
+                toast.classList.add('removing');
+                setTimeout(() => {
+                    container.removeChild(toast);
+                }, 300); // Wait for animation to complete
+            }, duration);
+        }
+
         // Real-time collaboration setup (BroadcastChannel for multi-tab sync + Firebase fallback)
         let broadcastChannel;
 
@@ -878,6 +978,10 @@
                 switch(type) {
                     case 'carnivals-updated':
                         carnivalsList = data;
+                        // Update nextCarnivalId based on synced data
+                        if (carnivalsList.length > 0) {
+                            nextCarnivalId = Math.max(...carnivalsList.map(c => c.id)) + 1;
+                        }
                         updateAllDropdowns();
                         renderDashboard();
                         console.log('🔄 Carnivals synced from another tab');
@@ -885,6 +989,10 @@
                         break;
                     case 'clubs-updated':
                         clubsList = data;
+                        // Update nextClubId based on synced data
+                        if (clubsList.length > 0) {
+                            nextClubId = Math.max(...clubsList.map(c => c.id)) + 1;
+                        }
                         updateAllDropdowns();
                         renderDashboard();
                         console.log('🔄 Clubs synced from another tab');
@@ -969,18 +1077,33 @@
                 const carnivalsSnapshot = await window.firebase.get(window.firebase.ref(window.firebase.database, 'carnivals'));
                 if (carnivalsSnapshot.exists()) {
                     carnivalsList = Object.values(carnivalsSnapshot.val()) || [];
+                    // Update nextCarnivalId based on loaded data
+                    if (carnivalsList.length > 0) {
+                        nextCarnivalId = Math.max(...carnivalsList.map(c => c.id)) + 1;
+                    }
                 }
 
                 // Load clubs
                 const clubsSnapshot = await window.firebase.get(window.firebase.ref(window.firebase.database, 'clubs'));
                 if (clubsSnapshot.exists()) {
                     clubsList = Object.values(clubsSnapshot.val()) || [];
+                    // Update nextClubId based on loaded data
+                    if (clubsList.length > 0) {
+                        nextClubId = Math.max(...clubsList.map(c => c.id)) + 1;
+                    }
                 }
 
                 // Load tasks
                 const tasksSnapshot = await window.firebase.get(window.firebase.ref(window.firebase.database, 'tasks'));
                 if (tasksSnapshot.exists()) {
                     allTasks = tasksSnapshot.val() || {};
+                }
+
+                // Load revenue data
+                const revenueSnapshot = await window.firebase.get(window.firebase.ref(window.firebase.database, 'revenue'));
+                if (revenueSnapshot.exists()) {
+                    revenueData = revenueSnapshot.val() || {};
+                    console.log('✅ Revenue data loaded from Firebase:', revenueData);
                 }
 
                 console.log('Data loaded from Firebase');
@@ -998,6 +1121,10 @@
             window.firebase.onValue(window.firebase.ref(window.firebase.database, 'carnivals'), (snapshot) => {
                 if (snapshot.exists()) {
                     carnivalsList = Object.values(snapshot.val()) || [];
+                    // Update nextCarnivalId based on loaded data
+                    if (carnivalsList.length > 0) {
+                        nextCarnivalId = Math.max(...carnivalsList.map(c => c.id)) + 1;
+                    }
                     updateAllDropdowns();
                     renderDashboard();
                 }
@@ -1007,6 +1134,10 @@
             window.firebase.onValue(window.firebase.ref(window.firebase.database, 'clubs'), (snapshot) => {
                 if (snapshot.exists()) {
                     clubsList = Object.values(snapshot.val()) || [];
+                    // Update nextClubId based on loaded data
+                    if (clubsList.length > 0) {
+                        nextClubId = Math.max(...clubsList.map(c => c.id)) + 1;
+                    }
                     updateAllDropdowns();
                     renderDashboard();
                 }
@@ -1023,6 +1154,21 @@
                         if (currentView === 'task-tracker-view') renderTaskTracker();
                         if (currentView === 'timeline-view') renderTimeline();
                     }
+                }
+            });
+
+            // Listen for revenue changes
+            window.firebase.onValue(window.firebase.ref(window.firebase.database, 'revenue'), (snapshot) => {
+                if (snapshot.exists()) {
+                    revenueData = snapshot.val() || {};
+                    console.log('🔄 Revenue data updated from Firebase:', revenueData);
+                    // Refresh revenue section if currently viewing it
+                    const currentSection = document.querySelector('.dashboard-section:not(.hidden)')?.id;
+                    if (currentSection === 'dashboard-section-revenue') {
+                        renderRevenueSection();
+                    }
+                    // Also update dashboard overview which shows total revenue
+                    renderDashboard();
                 }
             });
         }
@@ -1043,8 +1189,20 @@
                 const savedTasks = localStorage.getItem('allTasks');
                 const savedRevenue = localStorage.getItem('revenueData');
 
-                if (savedCarnivals) carnivalsList = JSON.parse(savedCarnivals);
-                if (savedClubs) clubsList = JSON.parse(savedClubs);
+                if (savedCarnivals) {
+                    carnivalsList = JSON.parse(savedCarnivals);
+                    // Update nextCarnivalId based on loaded data
+                    if (carnivalsList.length > 0) {
+                        nextCarnivalId = Math.max(...carnivalsList.map(c => c.id)) + 1;
+                    }
+                }
+                if (savedClubs) {
+                    clubsList = JSON.parse(savedClubs);
+                    // Update nextClubId based on loaded data
+                    if (clubsList.length > 0) {
+                        nextClubId = Math.max(...clubsList.map(c => c.id)) + 1;
+                    }
+                }
                 if (savedTasks) allTasks = JSON.parse(savedTasks);
                 if (savedRevenue) {
                     revenueData = JSON.parse(savedRevenue);
@@ -1273,6 +1431,14 @@
             checkboxes.forEach(checkbox => checkbox.checked = false);
 
             updateAllDropdowns();
+
+            // Show success notification
+            showToast(
+                '🎉 Club Registered Successfully!',
+                `"${name}" has been registered for ${selectedCarnivals.length} carnival(s) with ${taskTemplate.length} tasks each!`
+            );
+
+            // Also show basic alert as backup
             alert(`Club "${name}" registered successfully for ${selectedCarnivals.length} carnival(s) with ${taskTemplate.length} tasks each!`);
         }
 
@@ -4626,12 +4792,33 @@
                     renderCarnivalMatrix();
                     break;
                 case 'revenue':
-                    renderRevenueSection();
+                    // Fetch fresh revenue data from Firebase before rendering
+                    fetchRevenueDataAndRender();
                     break;
                 case 'alerts':
                     renderAlertsSection();
                     break;
             }
+        }
+
+        async function fetchRevenueDataAndRender() {
+            // Fetch fresh revenue data from Firebase
+            if (isFirebaseReady) {
+                try {
+                    const revenueSnapshot = await window.firebase.get(window.firebase.ref(window.firebase.database, 'revenue'));
+                    if (revenueSnapshot.exists()) {
+                        revenueData = revenueSnapshot.val() || {};
+                        console.log('✅ Fresh revenue data fetched:', revenueData);
+                    } else {
+                        console.log('ℹ️ No revenue data in Firebase yet');
+                        revenueData = {};
+                    }
+                } catch (error) {
+                    console.error('❌ Failed to fetch revenue data:', error);
+                }
+            }
+            // Always render, even if fetch fails (will use cached data)
+            renderRevenueSection();
         }
 
         function renderOverviewSection() {

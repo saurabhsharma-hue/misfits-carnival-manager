@@ -2,16 +2,16 @@
 
 # Misfits Carnival Manager - Production Deployment Script
 # Server: 13.201.15.180
-# Key: cdk-key-staging.pem
+# Key: misfits-staging.pem
 
 echo "🎪 Deploying Misfits Carnival Manager to Production"
 echo "=================================================="
 
 # Configuration
 SERVER_IP="13.201.15.180"
-KEY_FILE="~/Downloads/cdk-key-staging.pem"
+KEY_FILE="~/Users/rental/Downloads/misfits-staging.pem"
 SERVER_USER="ec2-user"
-LOCAL_FILE="Misfits_Carnival_Manager_LOCALHOST.html"
+LOCAL_FILE="index.html"
 REMOTE_PATH="/var/www/html/index.html"
 BACKUP_PATH="/var/www/html/backup"
 
@@ -24,8 +24,8 @@ NC='\033[0m' # No Color
 echo -e "${YELLOW}Step 1: Checking prerequisites...${NC}"
 
 # Check if key file exists
-if [ ! -f ~/Downloads/cdk-key-staging.pem ]; then
-    echo -e "${RED}Error: Key file not found at ~/Downloads/cdk-key-staging.pem${NC}"
+if [ ! -f ~/Downloads/misfits-staging.pem ]; then
+    echo -e "${RED}Error: Key file not found at ~/Downloads/misfits-staging.pem${NC}"
     exit 1
 fi
 
@@ -37,13 +37,13 @@ if [ ! -f "$LOCAL_FILE" ]; then
 fi
 
 # Set key file permissions
-chmod 600 ~/Downloads/cdk-key-staging.pem
+chmod 600 ~/Downloads/misfits-staging.pem
 echo -e "${GREEN}✓ Key file permissions set${NC}"
 
 echo -e "${YELLOW}Step 2: Testing connection to server...${NC}"
 
 # Test SSH connection
-ssh -i ~/Downloads/cdk-key-staging.pem -o ConnectTimeout=10 $SERVER_USER@$SERVER_IP "echo 'Connection successful'" 2>/dev/null
+ssh -i ~/Downloads/misfits-staging.pem -o ConnectTimeout=10 $SERVER_USER@$SERVER_IP "echo 'Connection successful'" 2>/dev/null
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✓ SSH connection successful${NC}"
 else
@@ -57,7 +57,7 @@ fi
 echo -e "${YELLOW}Step 3: Preparing server environment...${NC}"
 
 # Create backup directory and backup existing files
-ssh -i ~/Downloads/cdk-key-staging.pem $SERVER_USER@$SERVER_IP << 'EOF'
+ssh -i ~/Downloads/misfits-staging.pem $SERVER_USER@$SERVER_IP << 'EOF'
     # Create backup directory
     sudo mkdir -p /var/www/html/backup
 
@@ -119,7 +119,7 @@ grep -m 1 "title.*v[0-9]" "$LOCAL_FILE" | sed 's/.*<title>//' | sed 's/<\/title>
 
 # Upload the file
 echo "📤 Uploading $LOCAL_FILE to server..."
-scp -i ~/Downloads/cdk-key-staging.pem "$LOCAL_FILE" $SERVER_USER@$SERVER_IP:/tmp/carnival_manager.html
+scp -i ~/Downloads/misfits-staging.pem "$LOCAL_FILE" $SERVER_USER@$SERVER_IP:/tmp/carnival_manager.html
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✓ File uploaded successfully${NC}"
@@ -129,7 +129,7 @@ else
 fi
 
 # Move file to final location and set permissions
-ssh -i ~/Downloads/cdk-key-staging.pem $SERVER_USER@$SERVER_IP << 'EOF'
+ssh -i ~/Downloads/misfits-staging.pem $SERVER_USER@$SERVER_IP << 'EOF'
     # Move file to web directory
     sudo mv /tmp/carnival_manager.html /var/www/html/index.html
 
@@ -158,7 +158,7 @@ echo -e "${GREEN}✓ Application deployed successfully${NC}"
 echo -e "${YELLOW}Step 5: Configuring web server...${NC}"
 
 # Configure web server for optimal performance
-ssh -i ~/Downloads/cdk-key-staging.pem $SERVER_USER@$SERVER_IP << 'EOF'
+ssh -i ~/Downloads/misfits-staging.pem $SERVER_USER@$SERVER_IP << 'EOF'
     # Check if we need to configure Apache or Nginx
     if systemctl is-active --quiet apache2; then
         # Configure Apache
@@ -250,7 +250,7 @@ fi
 # Get server info
 echo -e "${YELLOW}Step 7: Deployment summary...${NC}"
 
-ssh -i ~/Downloads/cdk-key-staging.pem $SERVER_USER@$SERVER_IP << 'EOF'
+ssh -i ~/Downloads/misfits-staging.pem $SERVER_USER@$SERVER_IP << 'EOF'
     echo "================== DEPLOYMENT SUMMARY =================="
     echo "Server IP: $(curl -s ifconfig.me || hostname -I | awk '{print $1}')"
     echo "Deployment time: $(date)"
