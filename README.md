@@ -19,11 +19,18 @@ A comprehensive Firebase-powered carnival management system for tracking events,
 ## 📁 Project Structure
 
 ```
-├── Misfits_Carnival_Manager_LOCALHOST.html  # Main Firebase-enabled application
-├── carnival_website_current.html            # Alternative version
-├── localhost_carnival_manager.html          # Local development version
-├── deploy_to_production.sh                  # Deployment script
-└── README.md                                # This file
+misfits-carnival-manager/
+├── index.html                      # 🎯 Production application (v2.1.14)
+├── deploy_to_production.sh         # 🚀 Deployment script
+├── README.md                       # 📖 This file
+├── .gitignore                      # Git configuration
+├── .claude/                        # Claude configuration
+└── archive/                        # 📦 Archived old files
+    ├── old-versions/              # Previous HTML versions
+    ├── old-scripts/               # Old deployment scripts
+    ├── old-docs/                  # Old documentation
+    ├── python-scripts/            # Legacy Python scripts
+    └── debug-files/               # Debug and test files
 ```
 
 ## 🛠 Setup & Installation
@@ -34,9 +41,13 @@ A comprehensive Firebase-powered carnival management system for tracking events,
 - AWS EC2 instance (for deployment)
 
 ### Local Development
-1. Open `Misfits_Carnival_Manager_LOCALHOST.html` in your browser
-2. Firebase will automatically initialize
-3. Start creating carnivals and managing tasks
+1. Start a local web server:
+   ```bash
+   python3 -m http.server 8000
+   ```
+2. Open browser to `http://localhost:8000`
+3. Firebase will automatically initialize
+4. Start creating carnivals and managing tasks
 
 ### Production Deployment
 ```bash
@@ -145,15 +156,19 @@ The application is configured with:
 
 ## 📝 Version History
 
-### v3.0.0 - Firebase-Only Release
-- Removed all hardcoded test data
-- Implemented pure Firebase integration
-- Added localStorage clearing on load
-- Enhanced real-time collaboration
+### v2.1.14 (Current) - Enhanced UX & Revenue Fix
+- ✅ Toast notifications for club registration
+- ✅ Real-time revenue data fetching from Firebase
+- ✅ Auto-fetch revenue when opening Revenue Tracking tab
+- ✅ Firebase real-time listener for revenue changes
+- ✅ Improved project structure with archived old files
 
 ### v2.1.10 - Data Contamination Fix
 - Fixed calculation issues
 - Improved data persistence
+
+### Earlier Versions
+- See `archive/old-versions/` for previous versions
 
 ## 🤝 Contributing
 
