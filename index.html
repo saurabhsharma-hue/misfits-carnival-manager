@@ -492,7 +492,7 @@
             <div class="bg-white p-6 rounded-lg shadow mb-6">
                 <h3 class="text-lg font-medium mb-4">Timeline Filters</h3>
                 <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
-                    <select id="timeline-carnival-filter" class="border rounded-lg px-3 py-2" onchange="renderTimeline()">
+                    <select id="timeline-carnival-filter" class="border rounded-lg px-3 py-2" onchange="updateTimelineView()">
                         <option value="all">All Carnivals</option>
                     </select>
                     <select id="timeline-club-filter" class="border rounded-lg px-3 py-2" onchange="renderTimeline()">
@@ -1075,12 +1075,26 @@
             try {
                 // Load carnivals
                 const carnivalsSnapshot = await window.firebase.get(window.firebase.ref(window.firebase.database, 'carnivals'));
+                console.log('🔍 Carnivals snapshot exists:', carnivalsSnapshot.exists());
                 if (carnivalsSnapshot.exists()) {
-                    carnivalsList = Object.values(carnivalsSnapshot.val()) || [];
+                    const carnivalsData = carnivalsSnapshot.val();
+                    console.log('🔍 Raw carnivals data from Firebase:', carnivalsData);
+                    console.log('🔍 Is array?', Array.isArray(carnivalsData));
+
+                    // Handle both array and object structures
+                    if (Array.isArray(carnivalsData)) {
+                        carnivalsList = carnivalsData;
+                    } else {
+                        carnivalsList = Object.values(carnivalsData) || [];
+                    }
+
+                    console.log('✅ Carnivals loaded from Firebase:', carnivalsList.length, carnivalsList);
                     // Update nextCarnivalId based on loaded data
                     if (carnivalsList.length > 0) {
                         nextCarnivalId = Math.max(...carnivalsList.map(c => c.id)) + 1;
                     }
+                } else {
+                    console.log('⚠️ No carnivals found in Firebase');
                 }
 
                 // Load clubs
@@ -1106,6 +1120,21 @@
                     console.log('✅ Revenue data loaded from Firebase:', revenueData);
                 }
 
+                // Load mandatory tasks template
+                const mandatoryTasksSnapshot = await window.firebase.get(window.firebase.ref(window.firebase.database, 'mandatoryTasks'));
+                if (mandatoryTasksSnapshot.exists()) {
+                    const loadedTemplate = mandatoryTasksSnapshot.val();
+                    if (loadedTemplate && loadedTemplate.length > 0) {
+                        taskTemplate = loadedTemplate;
+                        console.log('✅ Mandatory tasks loaded from Firebase:', taskTemplate.length);
+                    }
+                } else {
+                    // If no mandatory tasks in Firebase, save the default template
+                    console.log('📝 Saving default mandatory tasks to Firebase');
+                    await window.firebase.set(window.firebase.ref(window.firebase.database, 'mandatoryTasks'), mandatoryTemplate);
+                    console.log('✅ Default mandatory tasks saved to Firebase');
+                }
+
                 console.log('Data loaded from Firebase');
                 updateAllDropdowns();
                 renderDashboard();
@@ -1119,14 +1148,28 @@
 
             // Listen for carnival changes
             window.firebase.onValue(window.firebase.ref(window.firebase.database, 'carnivals'), (snapshot) => {
+                console.log('🔄 Real-time carnival update triggered');
                 if (snapshot.exists()) {
-                    carnivalsList = Object.values(snapshot.val()) || [];
+                    const carnivalsData = snapshot.val();
+                    console.log('🔍 Real-time carnivals data:', carnivalsData);
+                    console.log('🔍 Is array?', Array.isArray(carnivalsData));
+
+                    // Handle both array and object structures
+                    if (Array.isArray(carnivalsData)) {
+                        carnivalsList = carnivalsData;
+                    } else {
+                        carnivalsList = Object.values(carnivalsData) || [];
+                    }
+
+                    console.log('✅ Carnivals list updated:', carnivalsList.length, carnivalsList);
                     // Update nextCarnivalId based on loaded data
                     if (carnivalsList.length > 0) {
                         nextCarnivalId = Math.max(...carnivalsList.map(c => c.id)) + 1;
                     }
                     updateAllDropdowns();
                     renderDashboard();
+                } else {
+                    console.log('⚠️ Real-time: No carnivals in Firebase');
                 }
             });
 
@@ -1147,12 +1190,26 @@
             window.firebase.onValue(window.firebase.ref(window.firebase.database, 'tasks'), (snapshot) => {
                 if (snapshot.exists()) {
                     allTasks = snapshot.val() || {};
+                    updateAllDropdowns(); // Update dropdowns when task data changes
                     renderDashboard();
                     // Refresh current view if it's tasks-related
                     const currentView = document.querySelector('.view:not(.hidden)')?.id;
                     if (currentView === 'task-tracker-view' || currentView === 'timeline-view') {
                         if (currentView === 'task-tracker-view') renderTaskTracker();
                         if (currentView === 'timeline-view') renderTimeline();
+                    }
+                }
+            });
+
+            // Listen for mandatory tasks changes
+            window.firebase.onValue(window.firebase.ref(window.firebase.database, 'mandatoryTasks'), (snapshot) => {
+                if (snapshot.exists()) {
+                    const loadedTemplate = snapshot.val();
+                    if (loadedTemplate && loadedTemplate.length > 0) {
+                        taskTemplate = loadedTemplate;
+                        console.log('🔄 Mandatory tasks updated from Firebase:', taskTemplate.length);
+                        updateAllDropdowns();
+                        renderDashboard();
                     }
                 }
             });
@@ -1485,6 +1542,8 @@
 
             if (taskType === 'template') {
                 taskTemplate.push(task);
+                // Save to Firebase
+                saveToFirebase('mandatoryTasks', taskTemplate);
                 alert('Template task added! This will be assigned to all future club registrations.');
             } else if (taskType === 'carnival') {
                 const carnivalId = parseInt(document.getElementById('task-carnival-select').value);
@@ -1534,6 +1593,7 @@
 
         // Dropdown Update Functions
         function updateAllDropdowns() {
+            console.log('🔄 updateAllDropdowns called. carnivalsList length:', carnivalsList.length, 'clubsList length:', clubsList.length);
             updateCarnivalDropdown('dashboard-carnival-filter');
             updateCarnivalDropdown('task-carnival-select');
             updateClubDropdown('dashboard-club-filter');
@@ -1544,6 +1604,14 @@
 
             // Update revenue management dropdowns
             updateRevenueDropdowns();
+
+            // Update Timeline dropdowns
+            console.log('🔄 About to call updateTimelineDropdowns()');
+            updateTimelineDropdowns();
+
+            // Update Task Tracker dropdowns
+            console.log('🔄 About to call updateTrackerDropdowns()');
+            updateTrackerDropdowns();
         }
 
         function updateCarnivalDropdown(selectId) {
@@ -1645,10 +1713,19 @@
             const tasks = [...taskTemplate];
 
             Object.values(allTasks).forEach(carnival => {
-                tasks.push(...carnival.carnivalTasks);
-                Object.values(carnival.clubs).forEach(clubTasks => {
-                    tasks.push(...clubTasks);
-                });
+                if (!carnival) return;
+
+                if (carnival.carnivalTasks && Array.isArray(carnival.carnivalTasks)) {
+                    tasks.push(...carnival.carnivalTasks);
+                }
+
+                if (carnival.clubs && typeof carnival.clubs === 'object') {
+                    Object.values(carnival.clubs).forEach(clubTasks => {
+                        if (clubTasks && Array.isArray(clubTasks)) {
+                            tasks.push(...clubTasks);
+                        }
+                    });
+                }
             });
 
             return tasks;
@@ -1744,14 +1821,16 @@
                     });
 
                     // Get teams/owners from club tasks
-                    const clubs = clubsList.filter(club => club.carnivals.includes(carnival.id));
+                    const clubs = clubsList.filter(club => club.carnivals && club.carnivals.includes(carnival.id));
                     clubs.forEach(club => {
-                        const clubTasks = carnivalData.clubs[club.id] || [];
-                        clubTasks.forEach(task => {
-                            if (task.team) teams.add(task.team);
-                            if (task.owner) owners.add(task.owner);
-                            if (task.status) statuses.add(task.status);
-                        });
+                        if (carnivalData.clubs && carnivalData.clubs[club.id]) {
+                            const clubTasks = carnivalData.clubs[club.id] || [];
+                            clubTasks.forEach(task => {
+                                if (task && task.team) teams.add(task.team);
+                                if (task && task.owner) owners.add(task.owner);
+                                if (task && task.status) statuses.add(task.status);
+                            });
+                        }
                     });
                 });
 
@@ -1828,14 +1907,16 @@
                 carnivalSelect.appendChild(option);
             });
 
-            // Update team and owner filters
+            // Update team, owner, and status filters from actual task data
             const allTasks = getAllTasksFlat();
             const teams = new Set(['Operations', 'Marketing', 'Finance', 'Tech']);
             const owners = new Set(['Joy', 'Ayushi', 'Tauheed', 'Team Lead']);
+            const statuses = new Set(['Pending', 'In Progress', 'Completed', 'Done', 'Blocked']);
 
             allTasks.forEach(task => {
                 if (task.team) teams.add(task.team);
                 if (task.owner) owners.add(task.owner);
+                if (task.status) statuses.add(task.status);
             });
 
             const teamFilter = document.getElementById('tracker-team-filter');
@@ -1854,6 +1935,15 @@
                 option.value = owner;
                 option.textContent = owner;
                 ownerFilter.appendChild(option);
+            });
+
+            const statusFilter = document.getElementById('tracker-status-filter');
+            statusFilter.innerHTML = '<option value="all">All Status</option>';
+            Array.from(statuses).sort().forEach(status => {
+                const option = document.createElement('option');
+                option.value = status.toLowerCase().replace(/\s+/g, '-');
+                option.textContent = status;
+                statusFilter.appendChild(option);
             });
         }
 
@@ -2140,15 +2230,65 @@
         function updateTimelineDropdowns() {
             console.log('🔄 updateTimelineDropdowns called');
             try {
-                // Use same data approach as getFilteredTimelineTasks (working approach)
+                console.log('📋 Carnivals list:', carnivalsList.length);
+                console.log('📋 Clubs list:', clubsList.length);
+
+                // UPDATE CARNIVAL AND CLUB FILTERS FIRST (before any complex processing)
+                // This ensures dropdowns are populated even if later processing fails
+
+                // Update carnival filter
+                console.log('🔄 Updating carnival filter');
+                const carnivalFilter = document.getElementById('timeline-carnival-filter');
+                if (!carnivalFilter) {
+                    console.error('❌ Carnival filter element not found!');
+                    return;
+                }
+                carnivalFilter.innerHTML = '<option value="all">All Carnivals</option>';
+                if (carnivalsList.length === 0) {
+                    const option = document.createElement('option');
+                    option.value = "";
+                    option.textContent = "(No carnivals yet - Create one in Dashboard)";
+                    option.disabled = true;
+                    carnivalFilter.appendChild(option);
+                }
+                carnivalsList.forEach(carnival => {
+                    const option = document.createElement('option');
+                    option.value = carnival.id;
+                    option.textContent = carnival.name;
+                    carnivalFilter.appendChild(option);
+                });
+                console.log(`✅ Carnival filter updated with ${carnivalsList.length} options`);
+
+                // Update club filter
+                console.log('🔄 Updating club filter');
+                const clubFilter = document.getElementById('timeline-club-filter');
+                if (!clubFilter) {
+                    console.error('❌ Club filter element not found!');
+                    return;
+                }
+                clubFilter.innerHTML = '<option value="all">All Clubs</option>';
+                if (clubsList.length === 0) {
+                    const option = document.createElement('option');
+                    option.value = "";
+                    option.textContent = "(No clubs yet - Register one in Dashboard)";
+                    option.disabled = true;
+                    clubFilter.appendChild(option);
+                }
+                clubsList.forEach(club => {
+                    const option = document.createElement('option');
+                    option.value = club.id;
+                    option.textContent = `${club.name} (${club.activity})`;
+                    clubFilter.appendChild(option);
+                });
+                console.log(`✅ Club filter updated with ${clubsList.length} options`);
+
+                // NOW process teams, owners, and statuses
                 const teams = new Set(['Operations', 'Marketing', 'Finance', 'Tech']);
                 const owners = new Set(['Joy', 'Ayushi', 'Tauheed', 'Team Lead']);
                 const statuses = new Set(['Pending', 'In Progress', 'Completed', 'Done', 'Blocked']);
 
                 console.log('📋 Initial teams:', Array.from(teams));
                 console.log('📋 Initial owners:', Array.from(owners));
-                console.log('📋 Carnivals list:', carnivalsList.length);
-                console.log('📋 Clubs list:', clubsList.length);
 
                 // Collect teams and owners from actual task data (same approach as filtering)
                 carnivalsList.forEach(carnival => {
@@ -2186,39 +2326,8 @@
                 console.log('📋 Final teams collected:', Array.from(teams));
                 console.log('📋 Final owners collected:', Array.from(owners));
 
-                // Update carnival filter
-                console.log('🔄 Updating carnival filter');
-                const carnivalFilter = document.getElementById('timeline-carnival-filter');
-                if (!carnivalFilter) {
-                    console.error('❌ Carnival filter element not found!');
-                    return;
-                }
-                carnivalFilter.innerHTML = '<option value="all">All Carnivals</option>';
-                carnivalsList.forEach(carnival => {
-                    const option = document.createElement('option');
-                    option.value = carnival.id;
-                    option.textContent = carnival.name;
-                    carnivalFilter.appendChild(option);
-                });
-                console.log(`✅ Carnival filter updated with ${carnivalsList.length} options`);
-
-                // Update club filter
-                console.log('🔄 Updating club filter');
-                const clubFilter = document.getElementById('timeline-club-filter');
-                if (!clubFilter) {
-                    console.error('❌ Club filter element not found!');
-                    return;
-                }
-                clubFilter.innerHTML = '<option value="all">All Clubs</option>';
-                clubsList.forEach(club => {
-                    const option = document.createElement('option');
-                    option.value = club.id;
-                    option.textContent = `${club.name} (${club.activity})`;
-                    clubFilter.appendChild(option);
-                });
-                console.log(`✅ Club filter updated with ${clubsList.length} options`);
-
-                // Update team filter
+                // Carnival and club filters already updated at the beginning of function
+                // Now update team filter
                 console.log('🔄 Updating team filter');
                 const teamFilter = document.getElementById('timeline-team-filter');
                 if (!teamFilter) {
@@ -2280,8 +2389,46 @@
         }
 
         function updateTimelineView() {
-            console.log('🔍 Timeline filters triggered');
-            // Simplified Timeline - just re-render with current filters
+            console.log('🔍 Timeline carnival filter triggered');
+            const selectedCarnival = document.getElementById('timeline-carnival-filter').value;
+            const clubFilter = document.getElementById('timeline-club-filter');
+
+            // Update club dropdown based on selected carnival (same as Task Tracker)
+            if (selectedCarnival && selectedCarnival !== 'all') {
+                const carnivalId = parseInt(selectedCarnival);
+                const clubs = clubsList.filter(club => club.carnivals.includes(carnivalId));
+                clubFilter.innerHTML = '<option value="all">All Clubs in Carnival</option>';
+                if (clubs.length === 0) {
+                    const option = document.createElement('option');
+                    option.value = "";
+                    option.textContent = "(No clubs in this carnival)";
+                    option.disabled = true;
+                    clubFilter.appendChild(option);
+                }
+                clubs.forEach(club => {
+                    const option = document.createElement('option');
+                    option.value = club.id;
+                    option.textContent = `${club.name} (${club.activity})`;
+                    clubFilter.appendChild(option);
+                });
+            } else {
+                // Show all clubs when "All Carnivals" is selected
+                clubFilter.innerHTML = '<option value="all">All Clubs</option>';
+                if (clubsList.length === 0) {
+                    const option = document.createElement('option');
+                    option.value = "";
+                    option.textContent = "(No clubs yet - Register one in Dashboard)";
+                    option.disabled = true;
+                    clubFilter.appendChild(option);
+                }
+                clubsList.forEach(club => {
+                    const option = document.createElement('option');
+                    option.value = club.id;
+                    option.textContent = `${club.name} (${club.activity})`;
+                    clubFilter.appendChild(option);
+                });
+            }
+
             renderTimeline();
         }
 
@@ -3024,18 +3171,22 @@
                 });
 
                 // Add club tasks
-                const clubs = clubsList.filter(club => club.carnivals.includes(carnival.id));
+                const clubs = clubsList.filter(club => club.carnivals && club.carnivals.includes(carnival.id));
                 clubs.forEach(club => {
-                    (carnivalData.clubs[club.id] || []).forEach(task => {
-                        allTasksFlat.push({
-                            ...task,
-                            carnivalId: carnival.id,
-                            carnivalName: carnival.name,
-                            clubId: club.id,
-                            clubName: club.name,
-                            taskType: 'club'
+                    if (carnivalData.clubs && carnivalData.clubs[club.id]) {
+                        (carnivalData.clubs[club.id] || []).forEach(task => {
+                            if (task) {
+                                allTasksFlat.push({
+                                    ...task,
+                                    carnivalId: carnival.id,
+                                    carnivalName: carnival.name,
+                                    clubId: club.id,
+                                    clubName: club.name,
+                                    taskType: 'club'
+                                });
+                            }
                         });
-                    });
+                    }
                 });
             });
 
@@ -3132,6 +3283,8 @@
 
             if (confirmed) {
                 taskTemplate.splice(index, 1);
+                // Save to Firebase
+                saveToFirebase('mandatoryTasks', taskTemplate);
                 renderTaskTemplate();
                 updateTemplateCount();
                 alert('Mandatory task deleted successfully! You now have ' + taskTemplate.length + ' mandatory tasks.');
@@ -3350,6 +3503,8 @@
 
             // Remove from template
             taskTemplate.splice(taskIndex, 1);
+            // Save mandatory tasks to Firebase
+            saveToFirebase('mandatoryTasks', taskTemplate);
 
             closeTaskDetailsModal();
             renderTaskTemplate();
@@ -3460,6 +3615,8 @@
             const taskIndex = taskTemplate.findIndex(t => t.id === task.id);
             if (taskIndex !== -1) {
                 taskTemplate.splice(taskIndex, 1);
+                // Save mandatory tasks to Firebase
+                saveToFirebase('mandatoryTasks', taskTemplate);
             }
 
             closeTaskDetailsModal();
@@ -3503,6 +3660,8 @@
                 const taskIndex = taskTemplate.findIndex(t => t.id == taskId);
                 if (taskIndex !== -1) {
                     Object.assign(taskTemplate[taskIndex], updatedTaskData);
+                    // Save mandatory tasks to Firebase
+                    saveToFirebase('mandatoryTasks', taskTemplate);
                 }
             } else if (currentTaskDetails.location === 'carnival') {
                 // Update carnival task
@@ -5380,6 +5539,8 @@
                 const index = taskTemplate.findIndex(t => t.id === currentTaskDetails.task.id);
                 if (index > -1) {
                     taskTemplate.splice(index, 1);
+                    // Save mandatory tasks to Firebase
+                    saveToFirebase('mandatoryTasks', taskTemplate);
                 }
             } else if (currentTaskDetails.location === 'carnival') {
                 // Remove carnival task
