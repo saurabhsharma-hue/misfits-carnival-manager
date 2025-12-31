@@ -531,10 +531,10 @@
                 <h3 class="text-lg font-medium mb-3">Navigation</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <select id="tracker-carnival-select" class="border rounded-lg px-3 py-2" onchange="updateTrackerView()">
-                        <option value="">Select Carnival to View Tasks</option>
+                        <option value="">Select Carnival</option>
                     </select>
                     <select id="tracker-club-select" class="border rounded-lg px-3 py-2" onchange="renderTaskTracker()">
-                        <option value="all">All Clubs</option>
+                        <option value="">Select Club</option>
                     </select>
                 </div>
             </div>
@@ -580,10 +580,10 @@
                 <h3 class="text-lg font-medium mb-4">Timeline Filters</h3>
                 <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
                     <select id="timeline-carnival-filter" class="border rounded-lg px-3 py-2" onchange="updateTimelineView()">
-                        <option value="all">All Carnivals</option>
+                        <option value="">Select Carnival</option>
                     </select>
                     <select id="timeline-club-filter" class="border rounded-lg px-3 py-2" onchange="renderTimeline()">
-                        <option value="all">All Clubs</option>
+                        <option value="">Select Club</option>
                     </select>
                     <select id="timeline-team-filter" class="border rounded-lg px-3 py-2" onchange="renderTimeline()">
                         <option value="all">All Teams</option>
@@ -1525,18 +1525,21 @@
             };
 
             carnivalsList.push(carnival);
-            allTasks[carnival.id] = { carnivalTasks: [], clubs: {} };
+            allTasks[carnival.id] = { carnivalTasks: {}, clubs: {} };
 
             // Save to Firebase
             saveToFirebase('carnivals', carnivalsList);
             saveToFirebase('tasks', allTasks);
 
-            // Auto-create carnival-level tasks
-            const carnivalTasks = [
-                { description: "Deciding tushar the fest name which is deciding the carnival name", team: "Operations", owner: "Joy", status: "pending", id: Date.now() },
-                { description: "Announcement to leaders group", team: "Operations", owner: "Joy", status: "pending", id: Date.now() + 1 }
-            ];
+            // Auto-create carnival-level tasks with unique IDs
+            const task1Id = Date.now();
+            const task2Id = Date.now() + 1;
+            const carnivalTasks = {
+                [task1Id]: { description: "Deciding tushar the fest name which is deciding the carnival name", team: "Operations", owner: "Joy", status: "pending", id: task1Id, createdAt: new Date().toISOString().split('T')[0] },
+                [task2Id]: { description: "Announcement to leaders group", team: "Operations", owner: "Joy", status: "pending", id: task2Id, createdAt: new Date().toISOString().split('T')[0] }
+            };
             allTasks[carnival.id].carnivalTasks = carnivalTasks;
+            console.log(`📝 Created carnival with tasks at path: tasks/${carnival.id}/carnivalTasks`);
 
             // Save updated tasks to Firebase
             saveToFirebase('tasks', allTasks);
@@ -1737,28 +1740,35 @@
             // Create tasks for each carnival - fetching from mandatory tasks template
             selectedCarnivals.forEach(carnivalId => {
                 if (!allTasks[carnivalId]) {
-                    allTasks[carnivalId] = { carnivalTasks: [], clubs: {} };
-                    console.log(`🆕 Created new task structure for carnival ${carnivalId}`);
+                    allTasks[carnivalId] = { carnivalTasks: {}, clubs: {} };
+                    console.log(`🆕 Created new task structure for carnival ${carnivalId} with object-based carnivalTasks`);
                 }
 
                 // Create deep copies of tasks with unique IDs for this specific club
                 // Fetching from taskTemplate (mandatory tasks)
-                const clubTasks = taskTemplate.map((task, index) => ({
-                    ...task,
-                    id: `club_${club.id}_carnival_${carnivalId}_task_${Date.now()}_${index}_${Math.random().toString(36).substr(2, 9)}`,
-                    clubId: club.id,
-                    carnivalId: carnivalId,
-                    // Ensure all properties are copied as new values, not references
-                    description: task.description,
-                    team: task.team,
-                    owner: task.owner,
-                    status: task.status,
-                    createdAt: task.createdAt || new Date().toISOString().split('T')[0]
-                }));
+                // Initialize as object instead of array
+                allTasks[carnivalId].clubs[club.id] = {};
 
-                allTasks[carnivalId].clubs[club.id] = clubTasks;
-                console.log(`✅ Assigned ${clubTasks.length} tasks to club ${club.id} for carnival ${carnivalId}`);
-                console.log(`📊 Tasks for club ${club.id} in carnival ${carnivalId}:`, clubTasks);
+                taskTemplate.forEach((task, index) => {
+                    const taskId = `club_${club.id}_carnival_${carnivalId}_task_${Date.now()}_${index}_${Math.random().toString(36).substr(2, 9)}`;
+                    allTasks[carnivalId].clubs[club.id][taskId] = {
+                        ...task,
+                        id: taskId,
+                        clubId: club.id,
+                        carnivalId: carnivalId,
+                        // Ensure all properties are copied as new values, not references
+                        description: task.description,
+                        team: task.team,
+                        owner: task.owner,
+                        status: task.status,
+                        createdAt: task.createdAt || new Date().toISOString().split('T')[0]
+                    };
+                });
+
+                const taskCount = Object.keys(allTasks[carnivalId].clubs[club.id]).length;
+                console.log(`✅ Assigned ${taskCount} tasks to club ${club.id} for carnival ${carnivalId}`);
+                console.log(`📊 Tasks for club ${club.id} in carnival ${carnivalId}:`, allTasks[carnivalId].clubs[club.id]);
+                console.log(`📊 Firebase path: tasks/${carnivalId}/clubs/${club.id}/[taskId]`);
             });
 
             console.log(`✅ Successfully assigned ${taskTemplate.length * selectedCarnivals.length} tasks to club "${name}"`);
@@ -1859,6 +1869,8 @@
             const carnivalId = parseInt(document.getElementById('task-carnival-select').value);
             const clubSelect = document.getElementById('task-club-select');
 
+            console.log(`🔄 Carnival changed to: ${carnivalId}, task type: ${taskType}`);
+
             // Only fetch clubs if task type is 'club'
             if (taskType !== 'club' || !carnivalId) {
                 clubSelect.innerHTML = '<option value="">Select Club</option>';
@@ -1866,7 +1878,8 @@
             }
 
             // Show loading state
-            clubSelect.innerHTML = '<option value="">Loading clubs...</option>';
+            clubSelect.innerHTML = '<option value="">Loading clubs from Firebase...</option>';
+            console.log(`📡 Fetching clubs for carnival ${carnivalId} from Firebase...`);
 
             try {
                 // Fetch clubs from Firebase
@@ -1874,15 +1887,20 @@
 
                 if (clubsSnapshot.exists()) {
                     const allClubs = Object.values(clubsSnapshot.val()) || [];
+                    console.log(`📊 Total clubs in Firebase: ${allClubs.length}`);
+
                     // Filter clubs that are registered under the selected carnival
                     const filteredClubs = allClubs.filter(club =>
                         club.carnivals && club.carnivals.includes(carnivalId)
                     );
 
+                    console.log(`🔍 Filtered clubs for carnival ${carnivalId}:`, filteredClubs.map(c => c.name));
+
                     clubSelect.innerHTML = '<option value="">Select Club</option>';
 
                     if (filteredClubs.length === 0) {
                         clubSelect.innerHTML = '<option value="">No clubs registered for this carnival</option>';
+                        console.log(`⚠️ No clubs found for carnival ${carnivalId}`);
                     } else {
                         filteredClubs.forEach(club => {
                             const option = document.createElement('option');
@@ -1890,19 +1908,19 @@
                             option.textContent = `${club.name} (${club.activity})`;
                             clubSelect.appendChild(option);
                         });
+                        console.log(`✅ Successfully populated ${filteredClubs.length} clubs in dropdown`);
                     }
-
-                    console.log(`✅ Fetched ${filteredClubs.length} clubs for carnival ${carnivalId} from Firebase`);
                 } else {
                     clubSelect.innerHTML = '<option value="">No clubs found</option>';
+                    console.log('⚠️ No clubs collection exists in Firebase');
                 }
             } catch (error) {
-                console.error('Error fetching clubs from Firebase:', error);
+                console.error('❌ Error fetching clubs from Firebase:', error);
                 clubSelect.innerHTML = '<option value="">Error loading clubs</option>';
             }
         }
 
-        function createCustomTask() {
+        async function createCustomTask() {
             const taskType = document.getElementById('task-type-select').value;
             const description = document.getElementById('task-description-input').value.trim();
             const team = document.getElementById('task-team-input').value.trim();
@@ -1919,24 +1937,55 @@
                 owner: owner,
                 status: 'pending',
                 id: Date.now(),
-                createdAt: new Date().toLocaleDateString(),
+                createdAt: new Date().toISOString().split('T')[0],
                 priority: 'medium',
                 progress: 0
             };
 
             if (taskType === 'template') {
                 taskTemplate.push(task);
+                console.log('📝 New template task created:', task);
+                console.log('📊 Total mandatory tasks now:', taskTemplate.length);
+
                 // Save to Firebase
-                saveToFirebase('mandatoryTasks', taskTemplate);
-                alert('Template task added! This will be assigned to all future club registrations.');
+                try {
+                    await saveToFirebase('mandatoryTasks', taskTemplate);
+                    console.log('✅ Template task saved to Firebase mandatoryTasks collection');
+                    alert(`Template task added successfully! Total mandatory tasks: ${taskTemplate.length}\n\nThis will be assigned to all future club registrations.`);
+                } catch (error) {
+                    console.error('❌ Error saving template task to Firebase:', error);
+                    alert('Error saving template task. Please try again.');
+                    // Remove the task from local array if Firebase save failed
+                    taskTemplate.pop();
+                    return;
+                }
             } else if (taskType === 'carnival') {
                 const carnivalId = parseInt(document.getElementById('task-carnival-select').value);
                 if (!carnivalId) {
                     alert('Please select a carnival');
                     return;
                 }
-                allTasks[carnivalId].carnivalTasks.push(task);
-                alert('Carnival-level task created successfully!');
+
+                // Initialize carnivalTasks as object if it doesn't exist or is an array
+                if (!allTasks[carnivalId].carnivalTasks || Array.isArray(allTasks[carnivalId].carnivalTasks)) {
+                    allTasks[carnivalId].carnivalTasks = {};
+                }
+
+                // Store carnival task with taskId as key
+                allTasks[carnivalId].carnivalTasks[task.id] = task;
+                console.log(`📝 Carnival task created for carnival ${carnivalId}:`, task);
+                console.log(`📊 Firebase path: tasks/${carnivalId}/carnivalTasks/${task.id}`);
+
+                // Save to Firebase
+                try {
+                    await saveToFirebase('tasks', allTasks);
+                    console.log('✅ Carnival task saved to Firebase at tasks/' + carnivalId + '/carnivalTasks/' + task.id);
+                    alert('Carnival-level task created successfully!');
+                } catch (error) {
+                    console.error('❌ Error saving carnival task to Firebase:', error);
+                    alert('Error saving carnival task. Please try again.');
+                    return;
+                }
             } else if (taskType === 'club') {
                 const carnivalId = parseInt(document.getElementById('task-carnival-select').value);
                 const clubId = parseInt(document.getElementById('task-club-select').value);
@@ -1945,10 +1994,22 @@
                     return;
                 }
                 if (!allTasks[carnivalId].clubs[clubId]) {
-                    allTasks[carnivalId].clubs[clubId] = [];
+                    allTasks[carnivalId].clubs[clubId] = {};
                 }
-                allTasks[carnivalId].clubs[clubId].push(task);
-                alert('Club-specific task created successfully!');
+                allTasks[carnivalId].clubs[clubId][task.id] = task;
+                console.log(`📝 Club task created for club ${clubId} in carnival ${carnivalId}:`, task);
+                console.log(`📊 Firebase path: tasks/${carnivalId}/clubs/${clubId}/${task.id}`);
+
+                // Save to Firebase
+                try {
+                    await saveToFirebase('tasks', allTasks);
+                    console.log('✅ Club task saved to Firebase');
+                    alert('Club-specific task created successfully!');
+                } catch (error) {
+                    console.error('❌ Error saving club task to Firebase:', error);
+                    alert('Error saving club task. Please try again.');
+                    return;
+                }
             }
 
             // Clear form
@@ -2003,7 +2064,7 @@
             if (!select) return;
 
             const currentValue = select.value;
-            select.innerHTML = selectId.includes('filter') ? '<option value="all">All Carnivals</option>' : '<option value="">Select Carnival</option>';
+            select.innerHTML = selectId.includes('filter') ? '<option value="all">Select Carnivals</option>' : '<option value="">Select Carnival</option>';
 
             carnivalsList.forEach(carnival => {
                 const option = document.createElement('option');
@@ -2014,10 +2075,8 @@
 
             if (currentValue) select.value = currentValue;
 
-            // Update club dropdown when carnival changes
-            if (selectId === 'task-carnival-select') {
-                select.onchange = () => updateClubDropdown('task-club-select');
-            }
+            // Note: task-carnival-select uses onTaskCarnivalChange() defined in HTML
+            // which fetches clubs directly from Firebase
         }
 
         function updateClubDropdown(selectId) {
@@ -2025,7 +2084,7 @@
             if (!select) return;
 
             const currentValue = select.value;
-            select.innerHTML = selectId.includes('filter') ? '<option value="all">All Clubs</option>' : '<option value="">Select Club</option>';
+            select.innerHTML = selectId.includes('filter') ? '<option value="all">Select Clubs</option>' : '<option value="">Select Club</option>';
 
             let clubsToShow = clubsList;
 
@@ -2197,8 +2256,8 @@
                     if (!carnivalData) return;
 
                     // Get teams/owners from carnival tasks
-                    const carnivalTasks = carnivalData.carnivalTasks || [];
-                    carnivalTasks.forEach(task => {
+                    const carnivalTasks = carnivalData.carnivalTasks || {};
+                    Object.values(carnivalTasks).forEach(task => {
                         if (task.team) teams.add(task.team);
                         if (task.owner) owners.add(task.owner);
                         if (task.status) statuses.add(task.status);
@@ -2208,8 +2267,8 @@
                     const clubs = clubsList.filter(club => club.carnivals && club.carnivals.includes(carnival.id));
                     clubs.forEach(club => {
                         if (carnivalData.clubs && carnivalData.clubs[club.id]) {
-                            const clubTasks = carnivalData.clubs[club.id] || [];
-                            clubTasks.forEach(task => {
+                            const clubTasks = carnivalData.clubs[club.id] || {};
+                            Object.values(clubTasks).forEach(task => {
                                 if (task && task.team) teams.add(task.team);
                                 if (task && task.owner) owners.add(task.owner);
                                 if (task && task.status) statuses.add(task.status);
@@ -2336,18 +2395,35 @@
             const selectedCarnival = parseInt(document.getElementById('tracker-carnival-select').value);
             const clubSelect = document.getElementById('tracker-club-select');
 
+            console.log('📊 Task Tracker Debug:');
+            console.log('  Selected carnival:', selectedCarnival);
+            console.log('  Total clubs:', clubsList.length);
+
             // Update club dropdown based on selected carnival
             if (selectedCarnival) {
-                const clubs = clubsList.filter(club => club.carnivals.includes(selectedCarnival));
-                clubSelect.innerHTML = '<option value="all">All Clubs in Carnival</option>';
-                clubs.forEach(club => {
+                const clubs = clubsList.filter(club => club.carnivals && club.carnivals.includes(selectedCarnival));
+                console.log(`  Filtered clubs for carnival ${selectedCarnival}:`, clubs.length);
+
+                clubSelect.innerHTML = '<option value="">Select Club</option>';
+
+                if (clubs.length === 0) {
                     const option = document.createElement('option');
-                    option.value = club.id;
-                    option.textContent = `${club.name} (${club.activity})`;
+                    option.value = "";
+                    option.textContent = "(No clubs in this carnival)";
+                    option.disabled = true;
                     clubSelect.appendChild(option);
-                });
+                } else {
+                    clubs.forEach(club => {
+                        const option = document.createElement('option');
+                        option.value = club.id;
+                        option.textContent = `${club.name} (${club.activity})`;
+                        clubSelect.appendChild(option);
+                        console.log(`  ✅ Added club: ${club.name}`);
+                    });
+                }
             } else {
-                clubSelect.innerHTML = '<option value="all">Select Carnival First</option>';
+                clubSelect.innerHTML = '<option value="">Select Club</option>';
+                console.log('  ⚠️ No carnival selected - club filter cleared');
             }
 
             renderTaskTracker();
@@ -2389,7 +2465,7 @@
                 </div>`;
             } else {
                 const carnival = carnivalsList.find(c => c.id === selectedCarnival);
-                const carnivalTasks = allTasks[selectedCarnival]?.carnivalTasks || [];
+                const carnivalTasks = Object.values(allTasks[selectedCarnival]?.carnivalTasks || {});
                 const clubs = clubsList.filter(club => club.carnivals.includes(selectedCarnival));
 
                 // Timeline intelligence for Task Tracker
@@ -2511,8 +2587,8 @@
                     // Show all clubs
                     html += `<div><h4 class="text-md font-medium text-green-700 mb-3">Club Tasks</h4>`;
                     clubs.forEach(club => {
-                        const clubTasks = allTasks[selectedCarnival]?.clubs[club.id] || [];
-                        const filteredClubTasks = sortTasks(filterTasks(clubTasks));
+                        const clubTasks = allTasks[selectedCarnival]?.clubs[club.id] || {};
+                        const filteredClubTasks = sortTasks(filterTasks(Object.values(clubTasks)));
 
                         if (filteredClubTasks.length > 0) {
                             html += `<div class="mb-4 bg-green-50 p-4 rounded-lg border border-green-200">
@@ -2563,8 +2639,8 @@
                     const selectedClubId = parseInt(selectedClub);
                     const club = clubs.find(c => c.id === selectedClubId);
                     if (club) {
-                        const clubTasks = allTasks[selectedCarnival]?.clubs[selectedClubId] || [];
-                        const filteredClubTasks = sortTasks(filterTasks(clubTasks));
+                        const clubTasks = allTasks[selectedCarnival]?.clubs[selectedClubId] || {};
+                        const filteredClubTasks = sortTasks(filterTasks(Object.values(clubTasks)));
 
                         html += `<div><h4 class="text-md font-medium text-green-700 mb-3">${club.name} Tasks (${filteredClubTasks.length})</h4>
                             <div class="space-y-3">
@@ -2627,14 +2703,7 @@
                     console.error('❌ Carnival filter element not found!');
                     return;
                 }
-                carnivalFilter.innerHTML = '<option value="all">All Carnivals</option>';
-                if (carnivalsList.length === 0) {
-                    const option = document.createElement('option');
-                    option.value = "";
-                    option.textContent = "(No carnivals yet - Create one in Dashboard)";
-                    option.disabled = true;
-                    carnivalFilter.appendChild(option);
-                }
+                carnivalFilter.innerHTML = '<option value="">Select Carnival</option>';
                 carnivalsList.forEach(carnival => {
                     const option = document.createElement('option');
                     option.value = carnival.id;
@@ -2643,28 +2712,9 @@
                 });
                 console.log(`✅ Carnival filter updated with ${carnivalsList.length} options`);
 
-                // Update club filter
-                console.log('🔄 Updating club filter');
-                const clubFilter = document.getElementById('timeline-club-filter');
-                if (!clubFilter) {
-                    console.error('❌ Club filter element not found!');
-                    return;
-                }
-                clubFilter.innerHTML = '<option value="all">All Clubs</option>';
-                if (clubsList.length === 0) {
-                    const option = document.createElement('option');
-                    option.value = "";
-                    option.textContent = "(No clubs yet - Register one in Dashboard)";
-                    option.disabled = true;
-                    clubFilter.appendChild(option);
-                }
-                clubsList.forEach(club => {
-                    const option = document.createElement('option');
-                    option.value = club.id;
-                    option.textContent = `${club.name} (${club.activity})`;
-                    clubFilter.appendChild(option);
-                });
-                console.log(`✅ Club filter updated with ${clubsList.length} options`);
+                // DON'T update club filter here - it's managed by updateTimelineView() when carnival changes
+                // This function only handles teams, owners, and statuses
+                console.log('⏭️ Skipping club filter update (managed by updateTimelineView)');
 
                 // NOW process teams, owners, and statuses
                 const teams = new Set(['Operations', 'Marketing', 'Finance', 'Tech']);
@@ -2685,9 +2735,9 @@
                     console.log(`✅ Processing carnival ${carnival.id} (${carnival.name})`);
 
                     // Get teams/owners from carnival tasks
-                    const carnivalTasks = carnivalData.carnivalTasks || [];
-                    console.log(`📋 Carnival tasks: ${carnivalTasks.length}`);
-                    carnivalTasks.forEach(task => {
+                    const carnivalTasks = carnivalData.carnivalTasks || {};
+                    console.log(`📋 Carnival tasks: ${Object.keys(carnivalTasks).length}`);
+                    Object.values(carnivalTasks).forEach(task => {
                         if (task.team) teams.add(task.team);
                         if (task.owner) owners.add(task.owner);
                         if (task.status) statuses.add(task.status);
@@ -2697,13 +2747,19 @@
                     const clubs = clubsList.filter(club => club.carnivals.includes(carnival.id));
                     console.log(`📋 Clubs for carnival ${carnival.id}: ${clubs.length}`);
                     clubs.forEach(club => {
-                        const clubTasks = carnivalData.clubs[club.id] || [];
-                        console.log(`📋 Club ${club.id} tasks: ${clubTasks.length}`);
-                        clubTasks.forEach(task => {
-                            if (task.team) teams.add(task.team);
-                            if (task.owner) owners.add(task.owner);
-                            if (task.status) statuses.add(task.status);
-                        });
+                        // Check if carnivalData.clubs exists before accessing
+                        if (carnivalData.clubs && carnivalData.clubs[club.id]) {
+                            const clubTasks = carnivalData.clubs[club.id] || {};
+                            const clubTasksArray = Object.values(clubTasks);
+                            console.log(`📋 Club ${club.id} tasks: ${clubTasksArray.length}`);
+                            clubTasksArray.forEach(task => {
+                                if (task.team) teams.add(task.team);
+                                if (task.owner) owners.add(task.owner);
+                                if (task.status) statuses.add(task.status);
+                            });
+                        } else {
+                            console.log(`⚠️ No tasks found for club ${club.id} in carnival ${carnival.id}`);
+                        }
                     });
                 });
 
@@ -2777,40 +2833,51 @@
             const selectedCarnival = document.getElementById('timeline-carnival-filter').value;
             const clubFilter = document.getElementById('timeline-club-filter');
 
-            // Update club dropdown based on selected carnival (same as Task Tracker)
-            if (selectedCarnival && selectedCarnival !== 'all') {
+            console.log('📊 Debug info:');
+            console.log('  Selected carnival value:', selectedCarnival);
+            console.log('  Total clubs in clubsList:', clubsList.length);
+            console.log('  All clubs:', clubsList);
+
+            // Update club dropdown based on selected carnival
+            if (selectedCarnival) {
                 const carnivalId = parseInt(selectedCarnival);
-                const clubs = clubsList.filter(club => club.carnivals.includes(carnivalId));
-                clubFilter.innerHTML = '<option value="all">All Clubs in Carnival</option>';
+                console.log('  Parsed carnival ID:', carnivalId, typeof carnivalId);
+
+                // Check each club's carnival associations
+                clubsList.forEach(club => {
+                    console.log(`  Club "${club.name}":`, {
+                        id: club.id,
+                        carnivals: club.carnivals,
+                        includes: club.carnivals ? club.carnivals.includes(carnivalId) : 'no carnivals array'
+                    });
+                });
+
+                const clubs = clubsList.filter(club => club.carnivals && club.carnivals.includes(carnivalId));
+                console.log('  Filtered clubs:', clubs);
+
+                clubFilter.innerHTML = '<option value="">Select Club</option>';
+
                 if (clubs.length === 0) {
                     const option = document.createElement('option');
                     option.value = "";
                     option.textContent = "(No clubs in this carnival)";
                     option.disabled = true;
                     clubFilter.appendChild(option);
+                    console.log('⚠️ No clubs found for carnival', carnivalId);
+                } else {
+                    clubs.forEach(club => {
+                        const option = document.createElement('option');
+                        option.value = club.id;
+                        option.textContent = `${club.name} (${club.activity})`;
+                        clubFilter.appendChild(option);
+                        console.log(`  ✅ Added club option: ${club.name}`);
+                    });
                 }
-                clubs.forEach(club => {
-                    const option = document.createElement('option');
-                    option.value = club.id;
-                    option.textContent = `${club.name} (${club.activity})`;
-                    clubFilter.appendChild(option);
-                });
+                console.log(`✅ Club filter populated with ${clubs.length} clubs for carnival ${carnivalId}`);
             } else {
-                // Show all clubs when "All Carnivals" is selected
-                clubFilter.innerHTML = '<option value="all">All Clubs</option>';
-                if (clubsList.length === 0) {
-                    const option = document.createElement('option');
-                    option.value = "";
-                    option.textContent = "(No clubs yet - Register one in Dashboard)";
-                    option.disabled = true;
-                    clubFilter.appendChild(option);
-                }
-                clubsList.forEach(club => {
-                    const option = document.createElement('option');
-                    option.value = club.id;
-                    option.textContent = `${club.name} (${club.activity})`;
-                    clubFilter.appendChild(option);
-                });
+                // No carnival selected - show only "Select Club"
+                clubFilter.innerHTML = '<option value="">Select Club</option>';
+                console.log('⚠️ No carnival selected - club filter cleared');
             }
 
             renderTimeline();
@@ -2827,14 +2894,14 @@
                 carnivalsList.forEach(carnival => {
                     const carnivalData = allTasks[carnival.id];
                     if (carnivalData) {
-                        // Add all carnival tasks
-                        (carnivalData.carnivalTasks || []).forEach(task => {
+                        // Add all carnival tasks (convert object to array)
+                        Object.values(carnivalData.carnivalTasks || {}).forEach(task => {
                             allTasksList.push({...task, carnivalId: carnival.id, carnivalName: carnival.name, taskType: 'carnival'});
                         });
 
-                        // Add all club tasks
+                        // Add all club tasks (convert object to array)
                         clubsList.filter(club => club.carnivals.includes(carnival.id)).forEach(club => {
-                            (carnivalData.clubs[club.id] || []).forEach(task => {
+                            Object.values(carnivalData.clubs[club.id] || {}).forEach(task => {
                                 allTasksList.push({...task, carnivalId: carnival.id, carnivalName: carnival.name, clubId: club.id, clubName: club.name, taskType: 'club'});
                             });
                         });
@@ -2912,12 +2979,18 @@
                 console.log(`  Carnival filter: "${carnivalFilter}"`);
                 console.log(`  Type check: carnival.id = ${carnival.id} (${typeof carnival.id}), carnivalFilter = ${carnivalFilter} (${typeof carnivalFilter})`);
 
-                // Apply carnival filter first
-                if (carnivalFilter !== 'all' && carnival.id != carnivalFilter) {
-                    console.log(`  ⏭️ Skipping carnival ${carnival.id} due to filter`);
+                // Apply carnival filter - if a specific carnival is selected, only show that one
+                // If no carnival selected (empty string), show all carnivals
+                if (carnivalFilter && carnivalFilter !== '' && carnival.id != carnivalFilter) {
+                    console.log(`  ⏭️ Skipping carnival ${carnival.id} - not matching filter ${carnivalFilter}`);
                     return;
                 }
-                console.log(`  ✅ Carnival ${carnival.id} passed filter`);
+
+                if (!carnivalFilter || carnivalFilter === '') {
+                    console.log(`  ✅ Carnival ${carnival.id} - showing (no filter applied)`);
+                } else {
+                    console.log(`  ✅ Carnival ${carnival.id} - showing (matches filter)`);
+                }
 
                 const carnivalData = allTasks[carnival.id];
                 if (!carnivalData) {
@@ -2926,8 +2999,9 @@
                 }
                 console.log(`  ✅ Found carnival data for ${carnival.id}`);
 
-                // Add carnival tasks
-                const carnivalTasks = carnivalData.carnivalTasks || [];
+                // Add carnival tasks (convert object to array)
+                const carnivalTasks = Object.values(carnivalData.carnivalTasks || {});
+                console.log(`  📋 Carnival ${carnival.id} has ${carnivalTasks.length} carnival tasks`);
                 const filteredCarnivalTasks = filterTasks(carnivalTasks);
                 filteredCarnivalTasks.forEach(task => {
                     if (taskTypeFilter === 'all' || taskTypeFilter === 'carnival') {
@@ -2943,12 +3017,28 @@
                 });
 
                 // Add club tasks (same approach as Task Tracker)
-                const clubs = clubsList.filter(club => club.carnivals.includes(carnival.id));
-                clubs.forEach(club => {
-                    // Apply club filter
-                    if (clubFilter !== 'all' && club.id != clubFilter) return;
+                const clubs = clubsList.filter(club => club.carnivals && club.carnivals.includes(carnival.id));
+                console.log(`  🏢 Found ${clubs.length} clubs for carnival ${carnival.id}`);
 
-                    const clubTasks = carnivalData.clubs[club.id] || [];
+                // If carnival is selected but no club is selected, show ALL clubs from this carnival
+                // If both carnival and club are selected, show only that specific club
+                clubs.forEach(club => {
+                    // Apply club filter - if a specific club is selected, only show that club
+                    // If no club selected (empty string), show all clubs from this carnival
+                    if (clubFilter && clubFilter !== '' && club.id != clubFilter) {
+                        console.log(`  ⏭️ Skipping club ${club.id} (${club.name}) - not matching filter ${clubFilter}`);
+                        return;
+                    }
+
+                    if (!clubFilter || clubFilter === '') {
+                        console.log(`  ✅ Processing club ${club.id} (${club.name}) - showing (no club filter)`);
+                    } else {
+                        console.log(`  ✅ Processing club ${club.id} (${club.name}) - showing (matches filter)`);
+                    }
+
+                    // Convert object to array
+                    const clubTasks = Object.values(carnivalData.clubs[club.id] || {});
+                    console.log(`    📋 Club ${club.name} has ${clubTasks.length} tasks`);
                     const filteredClubTasks = filterTasks(clubTasks);
                     filteredClubTasks.forEach(task => {
                         if (taskTypeFilter === 'all' || taskTypeFilter === 'club') {
@@ -3623,14 +3713,13 @@
                 }
 
                 const clubTasks = carnival.clubs[clubId];
-                const taskIndex = clubTasks.findIndex(task => task.id === taskId);
 
-                if (taskIndex === -1) {
+                if (!clubTasks || !clubTasks[taskId]) {
                     alert('Task not found in club.');
                     return;
                 }
 
-                const taskToTransfer = clubTasks[taskIndex];
+                const taskToTransfer = clubTasks[taskId];
 
                 // Create carnival-level task
                 const carnivalTask = {
@@ -3642,12 +3731,12 @@
 
                 // Add to carnival-level tasks
                 if (!carnival.carnivalTasks) {
-                    carnival.carnivalTasks = [];
+                    carnival.carnivalTasks = {};
                 }
-                carnival.carnivalTasks.push(carnivalTask);
+                carnival.carnivalTasks[carnivalTask.id] = carnivalTask;
 
                 // Remove from club tasks
-                clubTasks.splice(taskIndex, 1);
+                delete clubTasks[taskId];
 
                 // Update UI
                 renderTaskTracker();
@@ -3881,9 +3970,9 @@
             const carnivalTask = { ...task, id: Date.now().toString() };
 
             // Add to carnival
-            if (!allTasks[carnivalId]) allTasks[carnivalId] = { carnivalTasks: [], clubs: {} };
-            if (!allTasks[carnivalId].carnivalTasks) allTasks[carnivalId].carnivalTasks = [];
-            allTasks[carnivalId].carnivalTasks.push(carnivalTask);
+            if (!allTasks[carnivalId]) allTasks[carnivalId] = { carnivalTasks: {}, clubs: {} };
+            if (!allTasks[carnivalId].carnivalTasks) allTasks[carnivalId].carnivalTasks = {};
+            allTasks[carnivalId].carnivalTasks[carnivalTask.id] = carnivalTask;
 
             // Remove from template
             taskTemplate.splice(taskIndex, 1);
@@ -3910,19 +3999,18 @@
             }
 
             // Find task in club tasks
-            const clubTasks = allTasks[carnivalId]?.clubs?.[clubId] || [];
-            const taskIndex = clubTasks.findIndex(t => t.id === task.id);
-            if (taskIndex === -1) return;
+            const clubTasks = allTasks[carnivalId]?.clubs?.[clubId] || {};
+            if (!clubTasks[task.id]) return;
 
             // Create carnival task
             const carnivalTask = { ...task, id: Date.now().toString() };
 
             // Add to carnival level
-            if (!allTasks[carnivalId].carnivalTasks) allTasks[carnivalId].carnivalTasks = [];
-            allTasks[carnivalId].carnivalTasks.push(carnivalTask);
+            if (!allTasks[carnivalId].carnivalTasks) allTasks[carnivalId].carnivalTasks = {};
+            allTasks[carnivalId].carnivalTasks[carnivalTask.id] = carnivalTask;
 
             // Remove from club
-            clubTasks.splice(taskIndex, 1);
+            delete clubTasks[task.id];
 
             closeTaskDetailsModal();
             renderTaskTracker();
@@ -3942,8 +4030,8 @@
                 const clubs = clubsList.filter(c => c.carnivals.includes(parseInt(carnivalId)));
                 clubs.forEach(club => {
                     const clubTask = { ...task, id: Date.now() + Math.random().toString() };
-                    if (!allTasks[carnivalId].clubs[club.id]) allTasks[carnivalId].clubs[club.id] = [];
-                    allTasks[carnivalId].clubs[club.id].push(clubTask);
+                    if (!allTasks[carnivalId].clubs[club.id]) allTasks[carnivalId].clubs[club.id] = {};
+                    allTasks[carnivalId].clubs[club.id][clubTask.id] = clubTask;
                 });
             } else {
                 // Transfer to specific club
@@ -3952,8 +4040,8 @@
                 }
 
                 const clubTask = { ...task, id: Date.now().toString() };
-                if (!allTasks[carnivalId].clubs[clubId]) allTasks[carnivalId].clubs[clubId] = [];
-                allTasks[carnivalId].clubs[clubId].push(clubTask);
+                if (!allTasks[carnivalId].clubs[clubId]) allTasks[carnivalId].clubs[clubId] = {};
+                allTasks[carnivalId].clubs[clubId][clubTask.id] = clubTask;
             }
 
             // Remove from carnival level
@@ -3980,9 +4068,9 @@
                 const clubs = clubsList.filter(c => c.carnivals.includes(parseInt(carnivalId)));
                 clubs.forEach(club => {
                     const clubTask = { ...task, id: Date.now() + Math.random().toString() };
-                    if (!allTasks[carnivalId]) allTasks[carnivalId] = { carnivalTasks: [], clubs: {} };
-                    if (!allTasks[carnivalId].clubs[club.id]) allTasks[carnivalId].clubs[club.id] = [];
-                    allTasks[carnivalId].clubs[club.id].push(clubTask);
+                    if (!allTasks[carnivalId]) allTasks[carnivalId] = { carnivalTasks: {}, clubs: {} };
+                    if (!allTasks[carnivalId].clubs[club.id]) allTasks[carnivalId].clubs[club.id] = {};
+                    allTasks[carnivalId].clubs[club.id][clubTask.id] = clubTask;
                 });
             } else {
                 if (!confirm(`Transfer "${taskDescription}" from template to ${club?.name}?\n\n• Removes from template\n• Adds to ${club?.name} only`)) {
@@ -4059,11 +4147,8 @@
             } else if (currentTaskDetails.location === 'club') {
                 // Update club task - IMPORTANT: Only update the specific club's task
                 const clubTasks = allTasks[carnivalId]?.clubs?.[clubId];
-                if (clubTasks) {
-                    const taskIndex = clubTasks.findIndex(t => t.id == taskId);
-                    if (taskIndex !== -1) {
-                        Object.assign(clubTasks[taskIndex], updatedTaskData);
-                    }
+                if (clubTasks && clubTasks[taskId]) {
+                    Object.assign(clubTasks[taskId], updatedTaskData);
                 }
             }
 
@@ -4267,13 +4352,14 @@
                     Object.entries(parsed).forEach(([carnivalId, carnival]) => {
                         let carnivalTotalTasks = 0;
                         if (carnival.carnivalTasks) {
-                            carnivalTotalTasks += carnival.carnivalTasks.length;
+                            carnivalTotalTasks += Object.keys(carnival.carnivalTasks).length;
                         }
                         if (carnival.clubs) {
                             Object.entries(carnival.clubs).forEach(([clubId, tasks]) => {
-                                if (Array.isArray(tasks)) {
-                                    carnivalTotalTasks += tasks.length;
-                                    console.log(`  Carnival ${carnivalId} Club ${clubId}: ${tasks.length} tasks`);
+                                if (tasks && typeof tasks === 'object') {
+                                    const taskCount = Object.keys(tasks).length;
+                                    carnivalTotalTasks += taskCount;
+                                    console.log(`  Carnival ${carnivalId} Club ${clubId}: ${taskCount} tasks`);
                                 }
                             });
                         }
@@ -4400,7 +4486,7 @@
                 const carnivalData = allTasks[carnival.id];
                 if (carnivalData) {
                     if (carnivalData.carnivalTasks) {
-                        console.log(`  Carnival tasks: ${carnivalData.carnivalTasks.length}`);
+                        console.log(`  Carnival tasks: ${Object.keys(carnivalData.carnivalTasks).length}`);
                     }
                     if (carnivalData.clubs) {
                         Object.entries(carnivalData.clubs).forEach(([clubId, tasks]) => {
@@ -4735,8 +4821,8 @@
                 let clubsWithUrgentTasks = 0;
 
                 // Process carnival-level tasks
-                if (carnivalData.carnivalTasks && Array.isArray(carnivalData.carnivalTasks)) {
-                    carnivalData.carnivalTasks.forEach(task => {
+                if (carnivalData.carnivalTasks && typeof carnivalData.carnivalTasks === 'object') {
+                    Object.values(carnivalData.carnivalTasks).forEach(task => {
                         totalTasks++;
                         const isCompleted = task.status === 'completed' || task.status === 'Completed' || task.actualDate;
                         if (isCompleted) completedTasks++;
@@ -5569,8 +5655,8 @@
                 }
 
                 // Process carnival-level tasks
-                if (carnivalData.carnivalTasks && Array.isArray(carnivalData.carnivalTasks)) {
-                    carnivalData.carnivalTasks.forEach(task => {
+                if (carnivalData.carnivalTasks && typeof carnivalData.carnivalTasks === 'object') {
+                    Object.values(carnivalData.carnivalTasks).forEach(task => {
                         const isCompleted = task.status === 'completed' || task.status === 'Completed' || task.actualDate;
                         if (!isCompleted && task.expectedDate) {
                             const dueDate = new Date(task.expectedDate);
@@ -5875,8 +5961,8 @@
                 const carnivalData = allTasks[carnival.id] || {};
 
                 // Count carnival-level tasks
-                if (carnivalData.carnivalTasks && Array.isArray(carnivalData.carnivalTasks)) {
-                    carnivalData.carnivalTasks.forEach(task => {
+                if (carnivalData.carnivalTasks && typeof carnivalData.carnivalTasks === 'object') {
+                    Object.values(carnivalData.carnivalTasks).forEach(task => {
                         totalTasks++;
                         const isCompleted = task.status === 'completed' || task.status === 'Completed' || task.actualDate;
                         if (isCompleted) completedTasks++;
@@ -5929,16 +6015,14 @@
             } else if (currentTaskDetails.location === 'carnival') {
                 // Remove carnival task
                 const carnivalTasks = allTasks[currentTaskDetails.carnivalId].carnivalTasks;
-                const index = carnivalTasks.findIndex(t => t.id === currentTaskDetails.task.id);
-                if (index > -1) {
-                    carnivalTasks.splice(index, 1);
+                if (carnivalTasks && carnivalTasks[currentTaskDetails.task.id]) {
+                    delete carnivalTasks[currentTaskDetails.task.id];
                 }
             } else if (currentTaskDetails.location === 'club') {
                 // Remove club task
                 const clubTasks = allTasks[currentTaskDetails.carnivalId].clubs[currentTaskDetails.clubId];
-                const index = clubTasks.findIndex(t => t.id === currentTaskDetails.task.id);
-                if (index > -1) {
-                    clubTasks.splice(index, 1);
+                if (clubTasks && clubTasks[currentTaskDetails.task.id]) {
+                    delete clubTasks[currentTaskDetails.task.id];
                 }
             }
 
@@ -6085,7 +6169,7 @@
                     console.log('Carnivals:', carnivalsList.length);
                     console.log('Clubs:', clubsList.length);
                     console.log('Total tasks created:', Object.values(allTasks).reduce((total, carnival) => {
-                        return total + carnival.carnivalTasks.length + Object.values(carnival.clubs).reduce((clubTotal, tasks) => clubTotal + tasks.length, 0);
+                        return total + Object.keys(carnival.carnivalTasks).length + Object.values(carnival.clubs).reduce((clubTotal, tasks) => clubTotal + Object.keys(tasks).length, 0);
                     }, 0));
 
                     // Clear test data to prevent re-loading
