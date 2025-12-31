@@ -1533,7 +1533,7 @@
 
             // Auto-create carnival-level tasks
             const carnivalTasks = [
-                { description: "Deciding the fest name which is deciding the carnival name", team: "Operations", owner: "Joy", status: "pending", id: Date.now() },
+                { description: "Deciding tushar the fest name which is deciding the carnival name", team: "Operations", owner: "Joy", status: "pending", id: Date.now() },
                 { description: "Announcement to leaders group", team: "Operations", owner: "Joy", status: "pending", id: Date.now() + 1 }
             ];
             allTasks[carnival.id].carnivalTasks = carnivalTasks;
@@ -1727,13 +1727,23 @@
             // Save clubs to Firebase
             saveToFirebase('clubs', clubsList);
 
-            // Create tasks for each carnival
+            // Wait 100ms before assigning mandatory tasks
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            console.log(`⏱️ Assigning ${taskTemplate.length} mandatory tasks to club "${name}" (ID: ${club.id}) after 100ms delay...`);
+            console.log('📋 Current taskTemplate:', taskTemplate);
+            console.log('📋 Current allTasks structure:', Object.keys(allTasks));
+
+            // Create tasks for each carnival - fetching from mandatory tasks template
             selectedCarnivals.forEach(carnivalId => {
                 if (!allTasks[carnivalId]) {
                     allTasks[carnivalId] = { carnivalTasks: [], clubs: {} };
+                    console.log(`🆕 Created new task structure for carnival ${carnivalId}`);
                 }
+
                 // Create deep copies of tasks with unique IDs for this specific club
-                allTasks[carnivalId].clubs[club.id] = taskTemplate.map((task, index) => ({
+                // Fetching from taskTemplate (mandatory tasks)
+                const clubTasks = taskTemplate.map((task, index) => ({
                     ...task,
                     id: `club_${club.id}_carnival_${carnivalId}_task_${Date.now()}_${index}_${Math.random().toString(36).substr(2, 9)}`,
                     clubId: club.id,
@@ -1745,10 +1755,22 @@
                     status: task.status,
                     createdAt: task.createdAt || new Date().toISOString().split('T')[0]
                 }));
+
+                allTasks[carnivalId].clubs[club.id] = clubTasks;
+                console.log(`✅ Assigned ${clubTasks.length} tasks to club ${club.id} for carnival ${carnivalId}`);
+                console.log(`📊 Tasks for club ${club.id} in carnival ${carnivalId}:`, clubTasks);
             });
 
+            console.log(`✅ Successfully assigned ${taskTemplate.length * selectedCarnivals.length} tasks to club "${name}"`);
+            console.log('📊 Final allTasks structure:', allTasks);
+
             // Save tasks to Firebase
-            saveToFirebase('tasks', allTasks);
+            try {
+                await saveToFirebase('tasks', allTasks);
+                console.log('✅ Tasks saved to Firebase successfully');
+            } catch (error) {
+                console.error('❌ Error saving tasks to Firebase:', error);
+            }
 
             // Clear inputs
             document.getElementById('club-name-input').value = '';
