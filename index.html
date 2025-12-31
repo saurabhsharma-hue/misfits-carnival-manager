@@ -157,11 +157,98 @@
         .toast.removing {
             animation: slideOut 0.3s ease-in forwards;
         }
+
+        /* Registration Dialog Styles */
+        #registration-dialog .dialog-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        #registration-dialog .dialog-error {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+        #registration-dialog .dialog-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+        #registration-dialog .btn-success {
+            background-color: #10b981;
+            color: white;
+        }
+        #registration-dialog .btn-success:hover {
+            background-color: #059669;
+        }
+        #registration-dialog .btn-error {
+            background-color: #ef4444;
+            color: white;
+        }
+        #registration-dialog .btn-error:hover {
+            background-color: #dc2626;
+        }
+        #registration-dialog .btn-warning {
+            background-color: #f59e0b;
+            color: white;
+        }
+        #registration-dialog .btn-warning:hover {
+            background-color: #d97706;
+        }
+        #registration-dialog .dialog-confirm {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white;
+        }
+        #registration-dialog .btn-confirm {
+            background-color: #6366f1;
+            color: white;
+        }
+        #registration-dialog .btn-confirm:hover {
+            background-color: #4f46e5;
+        }
+        @keyframes dialogFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        #registration-dialog > div {
+            animation: dialogFadeIn 0.2s ease-out;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
     <!-- Toast Notification Container -->
     <div id="toast-container" class="toast-container"></div>
+
+    <!-- Registration Dialog Modal -->
+    <div id="registration-dialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden transform transition-all">
+            <div id="dialog-header" class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                    <div id="dialog-icon" class="text-4xl"></div>
+                    <h3 id="dialog-title" class="text-xl font-bold"></h3>
+                </div>
+            </div>
+            <div class="px-6 py-4">
+                <p id="dialog-message" class="text-gray-600"></p>
+                <div id="dialog-details" class="mt-4 hidden">
+                    <div class="bg-gray-50 rounded-lg p-4 space-y-2">
+                        <div id="dialog-details-content"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="dialog-footer" class="px-6 py-4 bg-gray-50 flex justify-end gap-3">
+                <button onclick="closeRegistrationDialog()" id="dialog-cancel-button" class="hidden px-6 py-2 rounded-lg font-medium transition-colors bg-gray-200 hover:bg-gray-300 text-gray-700">
+                    Cancel
+                </button>
+                <button onclick="closeRegistrationDialog()" id="dialog-button" class="px-6 py-2 rounded-lg font-medium transition-colors">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
 
     <div id="app" class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <header class="mb-8">
@@ -936,6 +1023,118 @@
             }, duration);
         }
 
+        // Registration Dialog Functions
+        let dialogResolve = null;
+
+        function showRegistrationDialog(type, title, message, details = null) {
+            const dialog = document.getElementById('registration-dialog');
+            const header = document.getElementById('dialog-header');
+            const icon = document.getElementById('dialog-icon');
+            const titleEl = document.getElementById('dialog-title');
+            const messageEl = document.getElementById('dialog-message');
+            const detailsContainer = document.getElementById('dialog-details');
+            const detailsContent = document.getElementById('dialog-details-content');
+            const button = document.getElementById('dialog-button');
+            const cancelButton = document.getElementById('dialog-cancel-button');
+
+            // Set content
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+
+            // Reset buttons
+            cancelButton.classList.add('hidden');
+            button.textContent = 'OK';
+            button.onclick = () => closeRegistrationDialog();
+
+            // Set type-specific styling
+            header.className = 'px-6 py-4';
+            if (type === 'success') {
+                header.classList.add('dialog-success');
+                icon.textContent = '✅';
+                button.className = 'px-6 py-2 rounded-lg font-medium transition-colors btn-success';
+            } else if (type === 'error') {
+                header.classList.add('dialog-error');
+                icon.textContent = '❌';
+                button.className = 'px-6 py-2 rounded-lg font-medium transition-colors btn-error';
+            } else if (type === 'warning') {
+                header.classList.add('dialog-warning');
+                icon.textContent = '⚠️';
+                button.className = 'px-6 py-2 rounded-lg font-medium transition-colors btn-warning';
+            } else if (type === 'confirm') {
+                header.classList.add('dialog-confirm');
+                icon.textContent = '📋';
+                button.className = 'px-6 py-2 rounded-lg font-medium transition-colors btn-confirm';
+                button.textContent = 'Confirm & Register';
+                cancelButton.classList.remove('hidden');
+            }
+
+            // Set details if provided
+            if (details) {
+                detailsContainer.classList.remove('hidden');
+                detailsContent.innerHTML = details;
+            } else {
+                detailsContainer.classList.add('hidden');
+            }
+
+            // Show dialog
+            dialog.classList.remove('hidden');
+        }
+
+        function showConfirmationDialog(title, message, details = null) {
+            return new Promise((resolve) => {
+                dialogResolve = resolve;
+
+                const dialog = document.getElementById('registration-dialog');
+                const header = document.getElementById('dialog-header');
+                const icon = document.getElementById('dialog-icon');
+                const titleEl = document.getElementById('dialog-title');
+                const messageEl = document.getElementById('dialog-message');
+                const detailsContainer = document.getElementById('dialog-details');
+                const detailsContent = document.getElementById('dialog-details-content');
+                const button = document.getElementById('dialog-button');
+                const cancelButton = document.getElementById('dialog-cancel-button');
+
+                // Set content
+                titleEl.textContent = title;
+                messageEl.textContent = message;
+
+                // Setup confirm styling
+                header.className = 'px-6 py-4 dialog-confirm';
+                icon.textContent = '📋';
+                button.className = 'px-6 py-2 rounded-lg font-medium transition-colors btn-confirm';
+                button.textContent = 'Confirm & Register';
+                cancelButton.classList.remove('hidden');
+
+                // Set button handlers
+                button.onclick = () => {
+                    closeRegistrationDialog();
+                    if (dialogResolve) dialogResolve(true);
+                };
+                cancelButton.onclick = () => {
+                    closeRegistrationDialog();
+                    if (dialogResolve) dialogResolve(false);
+                };
+
+                // Set details if provided
+                if (details) {
+                    detailsContainer.classList.remove('hidden');
+                    detailsContent.innerHTML = details;
+                } else {
+                    detailsContainer.classList.add('hidden');
+                }
+
+                // Show dialog
+                dialog.classList.remove('hidden');
+            });
+        }
+
+        function closeRegistrationDialog() {
+            const dialog = document.getElementById('registration-dialog');
+            dialog.classList.add('hidden');
+            const cancelButton = document.getElementById('dialog-cancel-button');
+            cancelButton.classList.add('hidden');
+        }
+
         // Real-time collaboration setup (BroadcastChannel for multi-tab sync + Firebase fallback)
         let broadcastChannel;
 
@@ -1401,7 +1600,7 @@
             }
         }
 
-        function registerClub() {
+        async function registerClub() {
             const name = document.getElementById('club-name-input').value.trim();
             let activity = document.getElementById('club-activity-select').value;
             const commissionType = document.getElementById('club-commission-type').value;
@@ -1411,20 +1610,29 @@
             if (activity === 'custom') {
                 const customActivity = document.getElementById('custom-activity-input').value.trim();
                 if (!customActivity) {
-                    alert('Please enter custom activity name');
+                    showRegistrationDialog('error', 'Missing Information', 'Please enter a custom activity name for this club.');
                     return;
                 }
                 activity = customActivity;
             }
 
             if (!name || !activity || !commissionType) {
-                alert('Please fill all required fields');
+                let missingFields = [];
+                if (!name) missingFields.push('Club Name');
+                if (!activity) missingFields.push('Activity Type');
+                if (!commissionType) missingFields.push('Commission Type');
+                showRegistrationDialog(
+                    'error',
+                    'Missing Required Fields',
+                    'Please fill in all required fields before registering the club.',
+                    `<p class="text-sm text-red-600 font-medium">Missing:</p><ul class="list-disc list-inside text-sm text-gray-600">${missingFields.map(f => `<li>${f}</li>`).join('')}</ul>`
+                );
                 return;
             }
 
             // Validate commission amount if commission type is selected
             if (commissionType && !commissionAmount) {
-                alert('Please enter commission amount');
+                showRegistrationDialog('error', 'Missing Commission Amount', 'Please enter the commission amount for the selected commission type.');
                 return;
             }
 
@@ -1436,8 +1644,73 @@
             });
 
             if (selectedCarnivals.length === 0) {
-                alert('Please select at least one carnival');
+                showRegistrationDialog(
+                    'warning',
+                    'No Carnival Selected',
+                    'Please select at least one carnival to register this club for.',
+                    '<p class="text-sm text-gray-600">Tip: You can select multiple carnivals by checking the boxes next to each carnival name.</p>'
+                );
                 return;
+            }
+
+            // Get carnival names for the confirmation
+            const carnivalNames = selectedCarnivals.map(id => {
+                const carnival = carnivalsList.find(c => c.id === id);
+                return carnival ? carnival.name : `Carnival #${id}`;
+            });
+
+            // Generate task list HTML for the dialog
+            const taskListHtml = taskTemplate.map((task, index) => `
+                <div class="flex items-start gap-2 py-1 ${index % 2 === 0 ? 'bg-gray-50' : ''} px-2 rounded">
+                    <span class="text-xs text-gray-400 font-mono w-5">${index + 1}.</span>
+                    <div class="flex-1">
+                        <p class="text-xs text-gray-700">${task.description}</p>
+                        <div class="flex gap-2 mt-0.5">
+                            <span class="text-[10px] px-1.5 py-0.5 rounded ${task.team === 'Operations' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}">${task.team}</span>
+                            <span class="text-[10px] text-gray-500">${task.owner}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Show confirmation dialog before registering
+            const confirmed = await showConfirmationDialog(
+                'Confirm Club Registration',
+                'Please review the details below before registering this club.',
+                `
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Club Name:</span>
+                        <span class="font-medium">${name}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Activity:</span>
+                        <span class="font-medium">${activity}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Commission:</span>
+                        <span class="font-medium">${commissionAmount}${commissionType === 'percentage' ? '%' : ' (Fixed)'}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Carnivals:</span>
+                        <span class="font-medium">${selectedCarnivals.length}</span>
+                    </div>
+                    <div class="pt-2 border-t">
+                        <p class="text-xs text-gray-500 mb-1">Will be registered for:</p>
+                        <p class="text-sm font-medium text-indigo-600">${carnivalNames.join(', ')}</p>
+                    </div>
+                    <div class="pt-2 border-t">
+                        <p class="text-xs text-gray-500 mb-2">Mandatory Tasks to be Assigned (${taskTemplate.length} tasks per carnival):</p>
+                        <div class="max-h-48 overflow-y-auto border rounded-lg bg-white">
+                            ${taskListHtml}
+                        </div>
+                    </div>
+                </div>
+                `
+            );
+
+            if (!confirmed) {
+                return; // User cancelled
             }
 
             const club = {
@@ -1489,14 +1762,54 @@
 
             updateAllDropdowns();
 
-            // Show success notification
-            showToast(
-                '🎉 Club Registered Successfully!',
-                `"${name}" has been registered for ${selectedCarnivals.length} carnival(s) with ${taskTemplate.length} tasks each!`
+            // Show success dialog with details including assigned tasks
+            showRegistrationDialog(
+                'success',
+                'Club Registered Successfully!',
+                `"${name}" has been registered and is ready to participate.`,
+                `
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Club Name:</span>
+                        <span class="font-medium">${name}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Activity:</span>
+                        <span class="font-medium">${activity}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Commission:</span>
+                        <span class="font-medium">${commissionAmount}${commissionType === 'percentage' ? '%' : ' (Fixed)'}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Carnivals:</span>
+                        <span class="font-medium">${selectedCarnivals.length}</span>
+                    </div>
+                    <div class="pt-2 border-t">
+                        <p class="text-xs text-gray-500 mb-1">Registered for:</p>
+                        <p class="text-sm font-medium text-indigo-600">${carnivalNames.join(', ')}</p>
+                    </div>
+                    <div class="pt-2 border-t">
+                        <p class="text-xs text-gray-500 mb-2">Assigned Mandatory Tasks (${taskTemplate.length} tasks per carnival):</p>
+                        <div class="max-h-40 overflow-y-auto border rounded-lg bg-white">
+                            ${taskListHtml}
+                        </div>
+                    </div>
+                </div>
+                `
             );
 
-            // Also show basic alert as backup
-            alert(`Club "${name}" registered successfully for ${selectedCarnivals.length} carnival(s) with ${taskTemplate.length} tasks each!`);
+            // Also show toast notification
+            showToast(
+                '🎉 Club Registered!',
+                `"${name}" added to ${selectedCarnivals.length} carnival(s)`
+            );
+
+            // Sync tasks to all views - Timeline, Dashboard, and Task Tracker
+            console.log('🔄 Syncing new club tasks to all views...');
+            renderTimeline();
+            renderDashboard();
+            console.log('✅ All views synced with', taskTemplate.length * selectedCarnivals.length, 'new tasks for club:', name);
         }
 
         function handleTaskTypeChange() {

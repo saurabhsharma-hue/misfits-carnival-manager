@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Populate Static Data to Firebase</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Populate Static Data to Firebase</h1>
+
+        <div id="status" class="bg-white rounded-lg shadow p-6 mb-6">
+            <p class="text-gray-600">Click the button below to write all static configuration data to Firebase.</p>
+        </div>
+
+        <button onclick="populateFirebase()" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium">
+            Write Static Data to Firebase
+        </button>
+
+        <div id="log" class="mt-6 bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm max-h-96 overflow-y-auto">
+            <p>Waiting to start...</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, set } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCweHkt882pn_1A-KkEqisYU_YlwOsfFxQ",
+            authDomain: "event-management-app-fbbae.firebaseapp.com",
+            databaseURL: "https://event-management-app-fbbae-default-rtdb.asia-southeast1.firebasedatabase.app/",
+            projectId: "event-management-app-fbbae",
+            storageBucket: "event-management-app-fbbae.firebasestorage.app",
+            messagingSenderId: "924131616519",
+            appId: "1:924131616519:web:ad5105519c72963d5ac7a2",
+            measurementId: "G-RGBYH07B4G"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            logDiv.innerHTML += `<p>${new Date().toLocaleTimeString()}: ${message}</p>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        // All Static Data to be written to Firebase
+        const staticData = {
+            config: {
+                // Club Activities
+                activities: [
+                    { id: "football", label: "Football", icon: "⚽" },
+                    { id: "cricket", label: "Cricket", icon: "🏏" },
+                    { id: "basketball", label: "Basketball", icon: "🏀" },
+                    { id: "badminton", label: "Badminton", icon: "🏸" },
+                    { id: "chess", label: "Chess", icon: "♟️" },
+                    { id: "music", label: "Music", icon: "🎵" },
+                    { id: "dance", label: "Dance", icon: "💃" },
+                    { id: "art", label: "Art", icon: "🎨" },
+                    { id: "drama", label: "Drama", icon: "🎭" },
+                    { id: "photography", label: "Photography", icon: "📷" }
+                ],
+
+                // Commission Types
+                commissionTypes: [
+                    { id: "percentage", label: "Percentage Based", symbol: "%" },
+                    { id: "fixed", label: "Fixed Amount", symbol: "₹" },
+                    { id: "revenue-share", label: "Revenue Share", symbol: "%" }
+                ],
+
+                // Teams
+                teams: [
+                    { id: "operations", label: "Operations", color: "#3B82F6" },
+                    { id: "marketing", label: "Marketing", color: "#10B981" },
+                    { id: "finance", label: "Finance", color: "#F59E0B" },
+                    { id: "tech", label: "Tech", color: "#8B5CF6" }
+                ],
+
+                // Team Members/Owners
+                owners: [
+                    { id: "joy", label: "Joy", team: "Operations" },
+                    { id: "ayushi", label: "Ayushi", team: "Marketing" },
+                    { id: "tauheed", label: "Tauheed", team: "Operations" },
+                    { id: "team-lead", label: "Team Lead", team: "All" }
+                ],
+
+                // Task Statuses
+                taskStatuses: [
+                    { id: "pending", label: "Pending", color: "#F59E0B", bgColor: "bg-yellow-100" },
+                    { id: "in-progress", label: "In Progress", color: "#3B82F6", bgColor: "bg-blue-100" },
+                    { id: "completed", label: "Completed", color: "#10B981", bgColor: "bg-green-100" }
+                ],
+
+                // Priority Levels
+                priorities: [
+                    { id: "low", label: "Low Priority", color: "#6B7280", order: 1 },
+                    { id: "medium", label: "Medium Priority", color: "#F59E0B", order: 2 },
+                    { id: "high", label: "High Priority", color: "#EF4444", order: 3 },
+                    { id: "urgent", label: "Urgent", color: "#DC2626", order: 4 }
+                ],
+
+                // Sort Options
+                sortOptions: [
+                    { id: "urgency", label: "Sort by Timeline Urgency" },
+                    { id: "due-date-asc", label: "Sort by Due Date (Earliest First)" },
+                    { id: "due-date-desc", label: "Sort by Due Date (Latest First)" },
+                    { id: "overdue-first", label: "Overdue Tasks First" },
+                    { id: "completed-last", label: "Completed Tasks Last" }
+                ],
+
+                // Time Range Filters
+                timeFilters: [
+                    { id: "all", label: "All Time" },
+                    { id: "upcoming", label: "Next 7 Days" },
+                    { id: "this-week", label: "This Week" },
+                    { id: "this-month", label: "This Month" },
+                    { id: "overdue", label: "Overdue Tasks" }
+                ],
+
+                // Task Type Filters
+                taskTypeFilters: [
+                    { id: "all", label: "All Task Types" },
+                    { id: "carnival", label: "Carnival Tasks" },
+                    { id: "club", label: "Club Tasks" }
+                ],
+
+                // Task Transfer Options
+                transferOptions: [
+                    { id: "template-to-carnival", label: "Move from Template to Carnival Level" },
+                    { id: "club-to-carnival", label: "Move from Club to Carnival Level" },
+                    { id: "carnival-to-club", label: "Move from Carnival to Club Level" },
+                    { id: "template-to-club", label: "Move from Template to Specific Club" }
+                ],
+
+                // Timeline Urgency Statuses
+                timelineUrgency: [
+                    { id: "no-date", label: "No Date Set", color: "gray", bgClass: "bg-gray-100", textClass: "text-gray-600" },
+                    { id: "completed", label: "Completed", color: "green", bgClass: "bg-green-100", textClass: "text-green-600" },
+                    { id: "overdue", label: "Overdue", color: "red", bgClass: "bg-red-100", textClass: "text-red-600" },
+                    { id: "due-today", label: "Due Today", color: "red", bgClass: "bg-red-100", textClass: "text-red-600" },
+                    { id: "due-soon", label: "Due Soon (2 days)", color: "orange", bgClass: "bg-orange-100", textClass: "text-orange-600" },
+                    { id: "due-this-week", label: "Due This Week", color: "yellow", bgClass: "bg-yellow-100", textClass: "text-yellow-600" },
+                    { id: "upcoming", label: "Upcoming", color: "blue", bgClass: "bg-blue-100", textClass: "text-blue-600" }
+                ],
+
+                // Dashboard Sections/Tabs
+                dashboardTabs: [
+                    { id: "overview", label: "Overview", icon: "📊" },
+                    { id: "carnivals", label: "Carnivals", icon: "🎪" },
+                    { id: "revenue", label: "Revenue", icon: "💰" },
+                    { id: "alerts", label: "Alerts", icon: "🔔" }
+                ]
+            },
+
+            // Mandatory Task Templates
+            templates: {
+                mandatoryTasks: [
+                    {
+                        id: 1,
+                        description: "Once the leader reverts, event coordinator to sit with them, finalise the dates, event flow and commission %",
+                        team: "Operations",
+                        owner: "Joy",
+                        defaultStatus: "pending",
+                        order: 1
+                    },
+                    {
+                        id: 2,
+                        description: "Get the venue requested by the venue team and map a venue to the event",
+                        team: "Operations",
+                        owner: "Tauheed",
+                        defaultStatus: "pending",
+                        order: 2
+                    },
+                    {
+                        id: 3,
+                        description: "Prepare the content plan with marketing team - how much hype to be done, how etc etc and when",
+                        team: "Marketing",
+                        owner: "Joy",
+                        defaultStatus: "pending",
+                        order: 3
+                    },
+                    {
+                        id: 4,
+                        description: "Logistical requirement to be taken on a doc by the club and keep it somewhere against the club with the status of what all is done",
+                        team: "Operations",
+                        owner: "Joy",
+                        defaultStatus: "pending",
+                        order: 4
+                    },
+                    {
+                        id: 5,
+                        description: "Banner to be created by the marketing team - alignment and completion",
+                        team: "Marketing",
+                        owner: "Ayushi",
+                        defaultStatus: "pending",
+                        order: 5
+                    },
+                    {
+                        id: 6,
+                        description: "Sharing event flow details with marketing team",
+                        team: "Operations",
+                        owner: "Joy",
+                        defaultStatus: "pending",
+                        order: 6
+                    },
+                    {
+                        id: 7,
+                        description: "Logo to be created by the marketing team - alignment and completion",
+                        team: "Marketing",
+                        owner: "Ayushi",
+                        defaultStatus: "pending",
+                        order: 7
+                    },
+                    {
+                        id: 8,
+                        description: "Marketing asset requirement - Ideally I should be able to add under this section (Example - medals, certificate, standees)",
+                        team: "Marketing",
+                        owner: "Joy",
+                        defaultStatus: "pending",
+                        order: 8
+                    },
+                    {
+                        id: 9,
+                        description: "Banner to be placed in the festival section of the app",
+                        team: "Operations",
+                        owner: "Joy",
+                        defaultStatus: "pending",
+                        order: 9
+                    },
+                    {
+                        id: 10,
+                        description: "Meetup creation and linking to the festival section",
+                        team: "Operations",
+                        owner: "Joy",
+                        defaultStatus: "pending",
+                        order: 10
+                    },
+                    {
+                        id: 11,
+                        description: "Asset making by marketing team",
+                        team: "Marketing",
+                        owner: "Ayushi",
+                        defaultStatus: "pending",
+                        order: 11
+                    },
+                    {
+                        id: 12,
+                        description: "Asset printing",
+                        team: "Marketing",
+                        owner: "Joy",
+                        defaultStatus: "pending",
+                        order: 12
+                    },
+                    {
+                        id: 13,
+                        description: "Asset delivery",
+                        team: "Operations",
+                        owner: "Joy",
+                        defaultStatus: "pending",
+                        order: 13
+                    },
+                    {
+                        id: 14,
+                        description: "Logistical requirement delivery",
+                        team: "Operations",
+                        owner: "Joy",
+                        defaultStatus: "pending",
+                        order: 14
+                    },
+                    {
+                        id: 15,
+                        description: "Logistical and asset implementation",
+                        team: "Operations",
+                        owner: "Joy",
+                        defaultStatus: "pending",
+                        order: 15
+                    },
+                    {
+                        id: 16,
+                        description: "Videographer requirement and alignment",
+                        team: "Marketing",
+                        owner: "Joy",
+                        defaultStatus: "pending",
+                        order: 16
+                    },
+                    {
+                        id: 17,
+                        description: "Post event content",
+                        team: "Marketing",
+                        owner: "Joy",
+                        defaultStatus: "pending",
+                        order: 17
+                    },
+                    {
+                        id: 18,
+                        description: "On ground assistant requirements",
+                        team: "Operations",
+                        owner: "Joy",
+                        defaultStatus: "pending",
+                        order: 18
+                    },
+                    {
+                        id: 19,
+                        description: "On ground assistant implementation",
+                        team: "Operations",
+                        owner: "Joy",
+                        defaultStatus: "pending",
+                        order: 19
+                    }
+                ]
+            }
+        };
+
+        async function populateFirebase() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = '<p class="text-blue-600 font-medium">Writing data to Firebase...</p>';
+
+            try {
+                log('Starting Firebase population...');
+
+                // Write config data
+                log('Writing config/activities...');
+                await set(ref(database, 'config/activities'), staticData.config.activities);
+
+                log('Writing config/commissionTypes...');
+                await set(ref(database, 'config/commissionTypes'), staticData.config.commissionTypes);
+
+                log('Writing config/teams...');
+                await set(ref(database, 'config/teams'), staticData.config.teams);
+
+                log('Writing config/owners...');
+                await set(ref(database, 'config/owners'), staticData.config.owners);
+
+                log('Writing config/taskStatuses...');
+                await set(ref(database, 'config/taskStatuses'), staticData.config.taskStatuses);
+
+                log('Writing config/priorities...');
+                await set(ref(database, 'config/priorities'), staticData.config.priorities);
+
+                log('Writing config/sortOptions...');
+                await set(ref(database, 'config/sortOptions'), staticData.config.sortOptions);
+
+                log('Writing config/timeFilters...');
+                await set(ref(database, 'config/timeFilters'), staticData.config.timeFilters);
+
+                log('Writing config/taskTypeFilters...');
+                await set(ref(database, 'config/taskTypeFilters'), staticData.config.taskTypeFilters);
+
+                log('Writing config/transferOptions...');
+                await set(ref(database, 'config/transferOptions'), staticData.config.transferOptions);
+
+                log('Writing config/timelineUrgency...');
+                await set(ref(database, 'config/timelineUrgency'), staticData.config.timelineUrgency);
+
+                log('Writing config/dashboardTabs...');
+                await set(ref(database, 'config/dashboardTabs'), staticData.config.dashboardTabs);
+
+                // Write template data
+                log('Writing templates/mandatoryTasks (19 tasks)...');
+                await set(ref(database, 'templates/mandatoryTasks'), staticData.templates.mandatoryTasks);
+
+                log('✅ All data written successfully!');
+                statusDiv.innerHTML = '<p class="text-green-600 font-medium">✅ All static data has been written to Firebase successfully!</p>';
+
+            } catch (error) {
+                log(`❌ Error: ${error.message}`);
+                statusDiv.innerHTML = `<p class="text-red-600 font-medium">❌ Error: ${error.message}</p>`;
+            }
+        }
+
+        // Make function available globally
+        window.populateFirebase = populateFirebase;
+    </script>
+</body>
+</html>
