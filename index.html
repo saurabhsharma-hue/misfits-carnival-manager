@@ -738,7 +738,7 @@
                         </select>
 
                         <div id="carnival-select-container" class="hidden">
-                            <select id="task-carnival-select" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                            <select id="task-carnival-select" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500" onchange="onTaskCarnivalChange()">
                                 <option value="">Select Carnival</option>
                             </select>
                         </div>
@@ -1850,6 +1850,55 @@
 
             if (taskType === 'club') {
                 clubContainer.classList.remove('hidden');
+            }
+        }
+
+        // Fetch clubs from Firebase when carnival is selected for club-specific tasks
+        async function onTaskCarnivalChange() {
+            const taskType = document.getElementById('task-type-select').value;
+            const carnivalId = parseInt(document.getElementById('task-carnival-select').value);
+            const clubSelect = document.getElementById('task-club-select');
+
+            // Only fetch clubs if task type is 'club'
+            if (taskType !== 'club' || !carnivalId) {
+                clubSelect.innerHTML = '<option value="">Select Club</option>';
+                return;
+            }
+
+            // Show loading state
+            clubSelect.innerHTML = '<option value="">Loading clubs...</option>';
+
+            try {
+                // Fetch clubs from Firebase
+                const clubsSnapshot = await window.firebase.get(window.firebase.ref(window.firebase.database, 'clubs'));
+
+                if (clubsSnapshot.exists()) {
+                    const allClubs = Object.values(clubsSnapshot.val()) || [];
+                    // Filter clubs that are registered under the selected carnival
+                    const filteredClubs = allClubs.filter(club =>
+                        club.carnivals && club.carnivals.includes(carnivalId)
+                    );
+
+                    clubSelect.innerHTML = '<option value="">Select Club</option>';
+
+                    if (filteredClubs.length === 0) {
+                        clubSelect.innerHTML = '<option value="">No clubs registered for this carnival</option>';
+                    } else {
+                        filteredClubs.forEach(club => {
+                            const option = document.createElement('option');
+                            option.value = club.id;
+                            option.textContent = `${club.name} (${club.activity})`;
+                            clubSelect.appendChild(option);
+                        });
+                    }
+
+                    console.log(`✅ Fetched ${filteredClubs.length} clubs for carnival ${carnivalId} from Firebase`);
+                } else {
+                    clubSelect.innerHTML = '<option value="">No clubs found</option>';
+                }
+            } catch (error) {
+                console.error('Error fetching clubs from Firebase:', error);
+                clubSelect.innerHTML = '<option value="">Error loading clubs</option>';
             }
         }
 
