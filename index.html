@@ -2056,7 +2056,8 @@
 
             // Update Task Tracker dropdowns
             console.log('🔄 About to call updateTrackerDropdowns()');
-            updateTrackerDropdowns();
+            updateCarnivalDropdown('tracker-carnival-select'); // Populate carnival dropdown
+            updateTrackerDropdowns(); // Populate team/owner/status filters
         }
 
         function updateCarnivalDropdown(selectId) {
@@ -2158,14 +2159,16 @@
             Object.values(allTasks).forEach(carnival => {
                 if (!carnival) return;
 
-                if (carnival.carnivalTasks && Array.isArray(carnival.carnivalTasks)) {
-                    tasks.push(...carnival.carnivalTasks);
+                // Convert carnivalTasks object to array
+                if (carnival.carnivalTasks && typeof carnival.carnivalTasks === 'object') {
+                    tasks.push(...Object.values(carnival.carnivalTasks));
                 }
 
+                // Convert club tasks objects to array
                 if (carnival.clubs && typeof carnival.clubs === 'object') {
                     Object.values(carnival.clubs).forEach(clubTasks => {
-                        if (clubTasks && Array.isArray(clubTasks)) {
-                            tasks.push(...clubTasks);
+                        if (clubTasks && typeof clubTasks === 'object') {
+                            tasks.push(...Object.values(clubTasks));
                         }
                     });
                 }
@@ -2340,17 +2343,10 @@
 
         // Update tracker dropdowns
         function updateTrackerDropdowns() {
-            // Update carnival dropdown
-            const carnivalSelect = document.getElementById('tracker-carnival-select');
-            carnivalSelect.innerHTML = '<option value="">Select Carnival to View Tasks</option>';
-            carnivalsList.forEach(carnival => {
-                const option = document.createElement('option');
-                option.value = carnival.id;
-                option.textContent = carnival.name;
-                carnivalSelect.appendChild(option);
-            });
+            console.log('🔄 updateTrackerDropdowns called');
 
-            // Update team, owner, and status filters from actual task data
+            // DON'T update carnival dropdown here - it's managed by initial load and shouldn't reset
+            // Only update team, owner, and status filters from actual task data
             const allTasks = getAllTasksFlat();
             const teams = new Set(['Operations', 'Marketing', 'Finance', 'Tech']);
             const owners = new Set(['Joy', 'Ayushi', 'Tauheed', 'Team Lead']);
@@ -2426,14 +2422,20 @@
                 console.log('  ⚠️ No carnival selected - club filter cleared');
             }
 
+            // Update filter dropdowns (team, owner, status) based on available tasks
+            updateTrackerDropdowns();
+
             renderTaskTracker();
         }
 
         // Render task tracker with filtering
         function renderTaskTracker() {
-            console.log('📋 Rendering Task Tracker view');
+            console.log('📋 Rendering Task Tracker view - START');
             const container = document.getElementById('tracker-task-list');
-            if (!container) return;
+            if (!container) {
+                console.log('❌ Container not found!');
+                return;
+            }
 
             const selectedCarnival = parseInt(document.getElementById('tracker-carnival-select').value);
             const selectedClub = document.getElementById('tracker-club-select').value;
@@ -2444,12 +2446,14 @@
 
             console.log('📋 Task Tracker Filters:', {
                 carnival: selectedCarnival,
+                carnivalIsNaN: isNaN(selectedCarnival),
                 club: selectedClub,
                 team: teamFilter,
                 owner: ownerFilter,
                 status: statusFilter,
                 sort: sortFilter
             });
+            console.log('📋 Current allTasks for carnival', selectedCarnival, ':', allTasks[selectedCarnival]);
 
             let html = '';
 
@@ -2580,6 +2584,21 @@
                             }).join('')}
                         </div>
                     </div>`;
+                } else {
+                    // No carnival tasks - show create task component
+                    html += `<div class="mb-6">
+                        <h4 class="text-md font-medium text-purple-700 mb-3">Carnival-Level Tasks (0)</h4>
+                        <div class="bg-purple-50 border-2 border-dashed border-purple-300 rounded-lg p-8 text-center">
+                            <svg class="w-16 h-16 mx-auto text-purple-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                            </svg>
+                            <h3 class="text-lg font-medium text-purple-800 mb-2">No Carnival Tasks Yet</h3>
+                            <p class="text-purple-600 mb-4">Create carnival-level tasks to track activities for this carnival.</p>
+                            <button onclick="showView('setup-view'); document.getElementById('task-type-select').value='carnival'; document.getElementById('task-carnival-select').value='${selectedCarnival}'; onTaskCarnivalChange();" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg transition-colors">
+                                Create Carnival Task
+                            </button>
+                        </div>
+                    </div>`;
                 }
 
                 // Club tasks
@@ -2631,6 +2650,15 @@
                                     }).join('')}
                                 </div>
                             </div>`;
+                        } else {
+                            // Club has no tasks - show create task component
+                            html += `<div class="mb-4 bg-green-50 border-2 border-dashed border-green-300 rounded-lg p-6 text-center">
+                                <h5 class="font-medium text-green-800 mb-2">${club.name} (${club.activity})</h5>
+                                <p class="text-green-600 text-sm mb-3">No tasks yet for this club.</p>
+                                <button onclick="showView('setup-view'); document.getElementById('task-type-select').value='club'; document.getElementById('task-carnival-select').value='${selectedCarnival}'; onTaskCarnivalChange(); setTimeout(() => { document.getElementById('task-club-select').value='${club.id}'; }, 100);" class="bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-2 rounded-lg transition-colors">
+                                    Create Club Task
+                                </button>
+                            </div>`;
                         }
                     });
                     html += `</div>`;
@@ -2642,9 +2670,10 @@
                         const clubTasks = allTasks[selectedCarnival]?.clubs[selectedClubId] || {};
                         const filteredClubTasks = sortTasks(filterTasks(Object.values(clubTasks)));
 
-                        html += `<div><h4 class="text-md font-medium text-green-700 mb-3">${club.name} Tasks (${filteredClubTasks.length})</h4>
-                            <div class="space-y-3">
-                                ${filteredClubTasks.map(task => `
+                        if (filteredClubTasks.length > 0) {
+                            html += `<div><h4 class="text-md font-medium text-green-700 mb-3">${club.name} Tasks (${filteredClubTasks.length})</h4>
+                                <div class="space-y-3">
+                                    ${filteredClubTasks.map(task => `
                                 <div class="bg-green-50 p-4 rounded-lg border border-green-200 hover:shadow-md transition-shadow cursor-pointer" onclick="openTaskDetails('${task.id}', '${selectedCarnival}', '${selectedClubId}')">
                                     <div class="flex items-start justify-between">
                                         <div class="flex-1">
@@ -2674,16 +2703,34 @@
                                         </button>
                                     </div>
                                 </div>
-                                `).join('')}
-                            </div>
-                        </div>`;
+                                    `).join('')}
+                                </div>
+                            </div>`;
+                        } else {
+                            // No tasks for this specific club
+                            html += `<div>
+                                <h4 class="text-md font-medium text-green-700 mb-3">${club.name} Tasks (0)</h4>
+                                <div class="bg-green-50 border-2 border-dashed border-green-300 rounded-lg p-8 text-center">
+                                    <svg class="w-16 h-16 mx-auto text-green-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                    </svg>
+                                    <h3 class="text-lg font-medium text-green-800 mb-2">No Tasks for ${club.name}</h3>
+                                    <p class="text-green-600 mb-4">Create tasks to track activities for this club.</p>
+                                    <button onclick="showView('setup-view'); document.getElementById('task-type-select').value='club'; document.getElementById('task-carnival-select').value='${selectedCarnival}'; onTaskCarnivalChange(); setTimeout(() => { document.getElementById('task-club-select').value='${selectedClubId}'; }, 100);" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors">
+                                        Create Club Task
+                                    </button>
+                                </div>
+                            </div>`;
+                        }
                     }
                 }
 
                 html += `</div>`;
             }
 
+            console.log('✅ Setting container.innerHTML - HTML length:', html.length);
             container.innerHTML = html;
+            console.log('✅ Task Tracker rendering complete');
         }
 
         // Update timeline dropdowns and filters
