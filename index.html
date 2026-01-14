@@ -3969,6 +3969,17 @@
                 return;
             }
 
+            // Clear any previous validation errors
+            const expectedDateError = document.getElementById('expected-date-error');
+            const actualDateError = document.getElementById('actual-date-error');
+            const expectedDateInput = document.getElementById('task-detail-expected-date');
+            const actualDateInput = document.getElementById('task-detail-actual-date');
+
+            if (expectedDateError) expectedDateError.classList.add('hidden');
+            if (actualDateError) actualDateError.classList.add('hidden');
+            if (expectedDateInput) expectedDateInput.classList.remove('border-red-500');
+            if (actualDateInput) actualDateInput.classList.remove('border-red-500');
+
             // Populate modal fields
             document.getElementById('task-detail-description').value = task.description || '';
             document.getElementById('task-detail-team').value = task.team || 'Operations';
@@ -4920,36 +4931,17 @@
         }
 
         function validateTaskDate(dateType) {
-            if (!currentTaskDetails || !currentTaskDetails.task) return;
-
-            const task = currentTaskDetails.task;
-            const createdDate = task.createdAt ? new Date(task.createdAt) : new Date();
+            // No validation - dates can be any value
+            // Just ensure error messages are hidden
             const inputId = dateType === 'expected' ? 'task-detail-expected-date' : 'task-detail-actual-date';
             const errorId = dateType === 'expected' ? 'expected-date-error' : 'actual-date-error';
 
             const inputElement = document.getElementById(inputId);
             const errorElement = document.getElementById(errorId);
-            const selectedDate = new Date(inputElement.value);
 
-            // Reset border color
-            inputElement.classList.remove('border-red-500');
-            errorElement.classList.add('hidden');
-
-            // Validate if selected date is before creation date
-            if (inputElement.value && selectedDate < createdDate) {
-                inputElement.classList.add('border-red-500');
-                errorElement.classList.remove('hidden');
-                errorElement.textContent = `${dateType === 'expected' ? 'Expected' : 'Actual'} date cannot be before task creation date (${createdDate.toLocaleDateString()})`;
-
-                // Clear the invalid date
-                setTimeout(() => {
-                    inputElement.value = '';
-                    inputElement.classList.remove('border-red-500');
-                    errorElement.classList.add('hidden');
-                }, 2000);
-
-                return false;
-            }
+            // Always clear any errors
+            if (inputElement) inputElement.classList.remove('border-red-500');
+            if (errorElement) errorElement.classList.add('hidden');
 
             return true;
         }
