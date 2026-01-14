@@ -285,7 +285,7 @@
             <div class="bg-white p-4 rounded-lg shadow mb-6">
                 <h3 class="text-lg font-medium mb-3">Filters</h3>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <select id="dashboard-carnival-filter" class="border rounded-lg px-3 py-2" onchange="renderDashboard()">
+                    <select id="dashboard-carnival-filter" class="border rounded-lg px-3 py-2" onchange="onDashboardCarnivalChange()">
                         <option value="all">All Carnivals</option>
                     </select>
                     <select id="dashboard-club-filter" class="border rounded-lg px-3 py-2" onchange="renderDashboard()">
@@ -1922,6 +1922,76 @@
             }
         }
 
+        // Fetch clubs from Firebase when carnival is selected in Dashboard
+        async function onDashboardCarnivalChange() {
+            const carnivalFilter = document.getElementById('dashboard-carnival-filter');
+            const clubSelect = document.getElementById('dashboard-club-filter');
+            const carnivalId = carnivalFilter ? carnivalFilter.value : 'all';
+
+            console.log(`🔄 Dashboard carnival changed to: ${carnivalId}`);
+
+            // If "All Carnivals" is selected, show all clubs from local data
+            if (carnivalId === 'all') {
+                updateClubDropdown('dashboard-club-filter');
+                renderDashboard();
+                return;
+            }
+
+            const carnivalIdNum = parseInt(carnivalId);
+            if (isNaN(carnivalIdNum)) {
+                updateClubDropdown('dashboard-club-filter');
+                renderDashboard();
+                return;
+            }
+
+            // Show loading state
+            clubSelect.innerHTML = '<option value="all">Loading clubs from Firebase...</option>';
+            console.log(`📡 Dashboard: Fetching clubs for carnival ${carnivalIdNum} from Firebase...`);
+
+            try {
+                // Fetch clubs from Firebase
+                const clubsSnapshot = await window.firebase.get(window.firebase.ref(window.firebase.database, 'clubs'));
+
+                if (clubsSnapshot.exists()) {
+                    const allClubs = Object.values(clubsSnapshot.val()) || [];
+                    console.log(`📊 Dashboard: Total clubs in Firebase: ${allClubs.length}`);
+
+                    // Filter clubs that are registered under the selected carnival
+                    const filteredClubs = allClubs.filter(club =>
+                        club.carnivals && club.carnivals.includes(carnivalIdNum)
+                    );
+
+                    console.log(`🔍 Dashboard: Filtered ${filteredClubs.length} clubs for carnival ${carnivalIdNum}`);
+
+                    clubSelect.innerHTML = '<option value="all">All Clubs</option>';
+
+                    if (filteredClubs.length === 0) {
+                        console.log(`⚠️ Dashboard: No clubs found for carnival ${carnivalIdNum}`);
+                    } else {
+                        // Update clubsList with fresh data from Firebase
+                        clubsList = allClubs;
+
+                        filteredClubs.forEach(club => {
+                            const option = document.createElement('option');
+                            option.value = club.id;
+                            option.textContent = `${club.name} (${club.activity})`;
+                            clubSelect.appendChild(option);
+                        });
+                        console.log(`✅ Dashboard: Successfully populated ${filteredClubs.length} clubs in dropdown`);
+                    }
+                } else {
+                    clubSelect.innerHTML = '<option value="all">No clubs found</option>';
+                    console.log('⚠️ Dashboard: No clubs collection exists in Firebase');
+                }
+            } catch (error) {
+                console.error('❌ Dashboard: Error fetching clubs from Firebase:', error);
+                clubSelect.innerHTML = '<option value="all">Error loading clubs</option>';
+            }
+
+            // Render dashboard with updated data
+            renderDashboard();
+        }
+
         async function createCustomTask() {
             const taskType = document.getElementById('task-type-select').value;
             const description = document.getElementById('task-description-input').value.trim();
@@ -2099,6 +2169,16 @@
                 }
             }
 
+            // Filter clubs based on selected carnival for dashboard
+            if (selectId === 'dashboard-club-filter') {
+                const carnivalFilter = document.getElementById('dashboard-carnival-filter');
+                const selectedCarnival = carnivalFilter ? parseInt(carnivalFilter.value) : null;
+                if (selectedCarnival && selectedCarnival !== 'all' && !isNaN(selectedCarnival)) {
+                    clubsToShow = clubsList.filter(club => club.carnivals && club.carnivals.includes(selectedCarnival));
+                    console.log(`🔍 Dashboard: Filtered ${clubsToShow.length} clubs for carnival ${selectedCarnival}`);
+                }
+            }
+
             clubsToShow.forEach(club => {
                 const option = document.createElement('option');
                 option.value = club.id;
@@ -2106,7 +2186,17 @@
                 select.appendChild(option);
             });
 
-            if (currentValue) select.value = currentValue;
+            // Only restore value if the option still exists in the filtered list
+            if (currentValue && selectId === 'dashboard-club-filter') {
+                const optionExists = Array.from(select.options).some(opt => opt.value === currentValue);
+                if (optionExists) {
+                    select.value = currentValue;
+                } else {
+                    select.value = 'all'; // Reset to "All Clubs" if current selection is not available
+                }
+            } else if (currentValue) {
+                select.value = currentValue;
+            }
         }
 
         function updateCarnivalCheckboxes() {
