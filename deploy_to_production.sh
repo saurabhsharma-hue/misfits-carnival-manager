@@ -12,8 +12,8 @@ SERVER_IP="13.201.15.180"
 KEY_FILE="~/Users/rental/Downloads/misfits-staging.pem"
 SERVER_USER="ec2-user"
 LOCAL_FILE="index.html"
-REMOTE_PATH="/var/www/html/index.html"
-BACKUP_PATH="/var/www/html/backup"
+REMOTE_PATH="/var/www/carnival/index.html"
+BACKUP_PATH="/var/www/carnival/backup"
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -59,11 +59,11 @@ echo -e "${YELLOW}Step 3: Preparing server environment...${NC}"
 # Create backup directory and backup existing files
 ssh -i ~/Downloads/misfits-staging.pem $SERVER_USER@$SERVER_IP << 'EOF'
     # Create backup directory
-    sudo mkdir -p /var/www/html/backup
+    sudo mkdir -p /var/www/carnival/backup
 
     # Backup existing index.html if it exists
-    if [ -f /var/www/html/index.html ]; then
-        sudo cp /var/www/html/index.html /var/www/html/backup/index_backup_$(date +%Y%m%d_%H%M%S).html
+    if [ -f /var/www/carnival/index.html ]; then
+        sudo cp /var/www/carnival/index.html /var/www/carnival/backup/index_backup_$(date +%Y%m%d_%H%M%S).html
         echo "✓ Existing file backed up"
     fi
 
@@ -84,8 +84,8 @@ ssh -i ~/Downloads/misfits-staging.pem $SERVER_USER@$SERVER_IP << 'EOF'
     echo 3 | sudo tee /proc/sys/vm/drop_caches > /dev/null
 
     # Remove existing web files
-    sudo rm -f /var/www/html/index.html 2>/dev/null || true
-    sudo rm -f /var/www/html/carnival-manager.html 2>/dev/null || true
+    sudo rm -f /var/www/carnival/index.html 2>/dev/null || true
+    sudo rm -f /var/www/carnival/carnival-manager.html 2>/dev/null || true
 
     echo "✓ All cache and files cleared"
 
@@ -119,7 +119,7 @@ grep -m 1 "title.*v[0-9]" "$LOCAL_FILE" | sed 's/.*<title>//' | sed 's/<\/title>
 
 # Upload the file
 echo "📤 Uploading $LOCAL_FILE to server..."
-scp -i ~/Downloads/misfits-staging.pem "$LOCAL_FILE" $SERVER_USER@$SERVER_IP:/tmp/carnival_manager.html
+scp -i ~/Downloads/misfits-staging.pem "$LOCAL_FILE" $SERVER_USER@$SERVER_IP:/tmp/index.html
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✓ File uploaded successfully${NC}"
@@ -131,26 +131,26 @@ fi
 # Move file to final location and set permissions
 ssh -i ~/Downloads/misfits-staging.pem $SERVER_USER@$SERVER_IP << 'EOF'
     # Move file to web directory
-    sudo mv /tmp/carnival_manager.html /var/www/html/index.html
+    sudo mv /tmp/index.html /var/www/carnival/index.html
 
     # Set proper ownership and permissions
-    sudo chown www-data:www-data /var/www/html/index.html
-    sudo chmod 644 /var/www/html/index.html
+    sudo chown www-data:www-data /var/www/carnival/index.html
+    sudo chmod 644 /var/www/carnival/index.html
 
     # Create a symbolic link for easier access
-    sudo ln -sf /var/www/html/index.html /var/www/html/carnival-manager.html
+    sudo ln -sf /var/www/carnival/index.html /var/www/carnival/carnival-manager.html
 
     # Clear browser cache by updating file timestamp
-    sudo touch /var/www/html/index.html
+    sudo touch /var/www/carnival/index.html
 
     # Verify what was actually deployed
     echo "🔍 DEPLOYED FILE VERIFICATION:"
     echo "  📋 Title/Version on server:"
-    grep -m 1 "title.*v[0-9]" /var/www/html/index.html | sed 's/.*<title>//' | sed 's/<\/title>.*//' | head -1
-    echo "  📏 File size: $(ls -lh /var/www/html/index.html | awk '{print $5}')"
-    echo "  🕒 Modified: $(ls -l /var/www/html/index.html | awk '{print $6, $7, $8}')"
+    grep -m 1 "title.*v[0-9]" /var/www/carnival/index.html | sed 's/.*<title>//' | sed 's/<\/title>.*//' | head -1
+    echo "  📏 File size: $(ls -lh /var/www/carnival/index.html | awk '{print $5}')"
+    echo "  🕒 Modified: $(ls -l /var/www/carnival/index.html | awk '{print $6, $7, $8}')"
 
-    echo "✓ Application deployed to /var/www/html/index.html"
+    echo "✓ Application deployed to /var/www/carnival/index.html"
 EOF
 
 echo -e "${GREEN}✓ Application deployed successfully${NC}"
@@ -254,9 +254,9 @@ ssh -i ~/Downloads/misfits-staging.pem $SERVER_USER@$SERVER_IP << 'EOF'
     echo "================== DEPLOYMENT SUMMARY =================="
     echo "Server IP: $(curl -s ifconfig.me || hostname -I | awk '{print $1}')"
     echo "Deployment time: $(date)"
-    echo "File location: /var/www/html/index.html"
-    echo "File size: $(ls -lh /var/www/html/index.html | awk '{print $5}')"
-    echo "Permissions: $(ls -l /var/www/html/index.html | awk '{print $1, $3, $4}')"
+    echo "File location: /var/www/carnival/index.html"
+    echo "File size: $(ls -lh /var/www/carnival/index.html | awk '{print $5}')"
+    echo "Permissions: $(ls -l /var/www/carnival/index.html | awk '{print $1, $3, $4}')"
 
     if systemctl is-active --quiet apache2; then
         echo "Web server: Apache2 ($(systemctl is-active apache2))"
